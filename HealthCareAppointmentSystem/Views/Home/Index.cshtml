@@ -2,37 +2,92 @@
     ViewData["Title"] = "Home";
 }
 
-<div class="hero">
-    <h1>Modern Healthcare<br/>Made Simple</h1>
-    <p>Book appointments, manage your medical profile, and consult with top-rated professionals seamlessly.</p>
-
-    <div style="margin-top: 2rem;">
+<div class="corporate-hero">
+    <h1>Transforming the future of <span style="color: var(--primary);">patient care</span>.</h1>
+    <p>A comprehensive, intelligent platform designed for both patients and healthcare professionals to simplify scheduling and improve outcomes.</p>
+    
+    <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem;">
         @if (User.Identity != null && User.Identity.IsAuthenticated)
         {
-            <a class="btn btn-primary" asp-controller="Dashboard" asp-action="Index">Go to Dashboard</a>
+            <a class="btn btn-primary" asp-controller="Dashboard" asp-action="Index" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 99px;">Access Dashboard</a>
         }
         else
         {
-            <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register" style="margin-right: 1rem;">Get Started</a>
-            <a class="btn btn-secondary" asp-area="Identity" asp-page="/Account/Login">Sign In</a>
+            <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 99px;">Get Started</a>
+            <a class="btn btn-secondary" asp-area="Identity" asp-page="/Account/Login" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 99px;">Sign In</a>
         }
     </div>
 </div>
 
-<div class="feature-grid">
-    <div class="feature-card text-center" style="padding: 2rem;">
-        <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"><i class="fa-solid fa-user-injured"></i></div>
-        <h3>For Patients</h3>
-        <p>Book appointments with the right specialist instantly. Track your status and maintain your complete visit history securely.</p>
+<div class="corporate-section" style="padding-top: 0;">
+    <div style="max-width: 1000px; margin: 0 auto; background: white; border-radius: 24px; padding: 3rem; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid var(--border);">
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">10,000+</div>
+            <div style="color: var(--text-muted); font-weight: 600;">Active Patients</div>
+        </div>
+        <div style="width: 1px; height: 60px; background: var(--border);"></div>
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">500+</div>
+            <div style="color: var(--text-muted); font-weight: 600;">Verified Specialists</div>
+        </div>
+        <div style="width: 1px; height: 60px; background: var(--border);"></div>
+        <div style="text-align: center;">
+            <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">99.9%</div>
+            <div style="color: var(--text-muted); font-weight: 600;">Uptime SLA</div>
+        </div>
     </div>
-    <div class="feature-card text-center" style="padding: 2rem;">
-        <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"><i class="fa-solid fa-user-doctor"></i></div>
-        <h3>For Doctors</h3>
-        <p>Manage your schedule effortlessly. Update appointment statuses, manage patient history, and build your digital practice.</p>
+</div>
+
+<div class="corporate-section" style="background: #f8fafc; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+        <h2 class="corporate-section-title">Core Capabilities</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div style="font-size: 2.5rem; margin-bottom: 1.5rem; color: var(--primary);"><i class="fa-solid fa-calendar-check"></i></div>
+                <h3 style="font-size: 1.3rem;">Instant Scheduling</h3>
+                <p style="margin-bottom: 0;">Browse availability across our entire network of doctors and lock in your appointment time instantly without calling.</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 2.5rem; margin-bottom: 1.5rem; color: var(--primary);"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3 style="font-size: 1.3rem;">Secure Records</h3>
+                <p style="margin-bottom: 0;">Your medical history, appointment logs, and personal data are encrypted and protected under strict compliance protocols.</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 2.5rem; margin-bottom: 1.5rem; color: var(--primary);"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                <h3 style="font-size: 1.3rem;">AI-Driven Insights</h3>
+                <p style="margin-bottom: 0;">Leverage our advanced predictive analytics to understand your health trends and catch potential issues before they become severe.</p>
+            </div>
+        </div>
     </div>
-    <div class="feature-card text-center" style="padding: 2rem;">
-        <div style="font-size: 2rem; margin-bottom: 1rem; color: var(--primary);"><i class="fa-solid fa-gear"></i></div>
-        <h3>Administration</h3>
-        <p>Maintain the system smoothly. Verify and approve doctors, manage specializations, and oversee global operations.</p>
+</div>
+
+<div class="corporate-section">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+        <h2 class="corporate-section-title">How It Works</h2>
+        <div class="step-grid">
+            <div class="step-card">
+                <div class="step-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                <h3>1. Find a Specialist</h3>
+                <p style="color: var(--text-muted);">Search our comprehensive directory of verified medical professionals by specialty and location.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon"><i class="fa-regular fa-calendar-days"></i></div>
+                <h3>2. Pick a Time</h3>
+                <p style="color: var(--text-muted);">View real-time availability and select a slot that perfectly fits your schedule.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-icon"><i class="fa-solid fa-stethoscope"></i></div>
+                <h3>3. Receive Care</h3>
+                <p style="color: var(--text-muted);">Attend your appointment, receive world-class care, and securely track your visit history online.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
+    <div class="cta-banner">
+        <h2 style="font-size: 2.5rem; font-weight: 800; margin-top: 0; margin-bottom: 1rem;">Ready to take control of your health?</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">Join thousands of patients who trust our platform for their medical needs.</p>
+        <a class="btn" asp-area="Identity" asp-page="/Account/Register" style="background: white; color: var(--primary); padding: 1rem 3rem; font-size: 1.1rem; border-radius: 99px; font-weight: 700;">Create an Account</a>
     </div>
 </div>

@@ -257,36 +257,122 @@ body {
 .footer {
     background: var(--card-bg);
     border-top: 1px solid var(--border);
-    padding: 3rem 0;
-    margin-top: 4rem;
+    padding: 5rem 0 2rem 0;
+    margin-top: 6rem;
 }
 
 .footer-content {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
-.footer p {
-    color: var(--text-muted);
-    margin: 0;
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 3rem;
 }
 
-.footer-links {
-    display: flex;
-    gap: 1.5rem;
+.footer-column h4 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+    font-size: 1.1rem;
 }
 
-.footer-links a {
+.footer-column a {
+    display: block;
     color: var(--text-muted);
     text-decoration: none;
+    margin-bottom: 0.75rem;
+    transition: color 0.2s;
 }
 
-.footer-links a:hover {
+.footer-column a:hover {
     color: var(--primary);
+}
+
+/* Corporate Landing Page */
+.corporate-hero {
+    text-align: center;
+    padding: 6rem 2rem 4rem 2rem;
+    background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%);
+    margin-top: -3rem; /* pull up to navbar */
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+}
+
+.corporate-hero h1 {
+    font-size: 3.8rem;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    color: var(--text);
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.corporate-hero h1 span {
+    color: var(--primary);
+}
+
+.corporate-hero p {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    max-width: 650px;
+    margin: 0 auto 3rem auto;
+}
+
+.corporate-section {
+    padding: 5rem 0;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+}
+
+.corporate-section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 3rem;
+}
+
+.step-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 3rem;
+    text-align: center;
+}
+
+.step-card {
+    padding: 1rem;
+}
+
+.step-icon {
+    width: 80px;
+    height: 80px;
+    background: #eff6ff;
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1.5rem auto;
+}
+
+.cta-banner {
+    background: var(--primary);
+    color: white;
+    padding: 4rem 2rem;
+    border-radius: 24px;
+    text-align: center;
+    margin: 4rem 0;
+    box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.2);
 }
 
 .w-100 { width: 100%; }

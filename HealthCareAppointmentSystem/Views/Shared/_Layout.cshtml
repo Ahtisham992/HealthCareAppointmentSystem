@@ -50,13 +50,34 @@
     </main>
 
     <footer class="footer">
-        <div class="footer-content">
-            <p>&copy; @DateTime.Now.Year - HealthCare Appointment System. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Contact Us</a>
+        <div class="footer-content footer-grid">
+            <div class="footer-column">
+                <h3 style="color: var(--primary); font-weight: 800; letter-spacing: -0.5px; margin-top: 0;">HealthCare System</h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">Providing world-class medical appointments and AI-driven insights to make preventive care accessible to everyone.</p>
+                <div style="font-weight: 600; color: var(--text);">Made by Ahtisham</div>
             </div>
+            <div class="footer-column">
+                <h4>Quick Links</h4>
+                <a asp-controller="Home" asp-action="Index">Home</a>
+                <a asp-area="Identity" asp-page="/Account/Login">Login</a>
+                <a asp-area="Identity" asp-page="/Account/Register">Register</a>
+                <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+            </div>
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <a asp-controller="Home" asp-action="Privacy">Privacy Policy</a>
+                <a asp-controller="Home" asp-action="Terms">Terms & Conditions</a>
+                <a asp-controller="Home" asp-action="Contact">Contact Us</a>
+            </div>
+            <div class="footer-column">
+                <h4>Connect</h4>
+                <a href="https://github.com/Ahtisham992/HealthCareAppointmentSystem" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                    <i class="fa-brands fa-github" style="font-size: 1.5rem; color: #1e293b;"></i> <span style="font-weight: 600;">GitHub</span>
+                </a>
+            </div>
+        </div>
+        <div style="text-align: center; border-top: 1px solid var(--border); margin-top: 3rem; padding-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+            &copy; @DateTime.Now.Year - HealthCare Appointment System. All rights reserved.
         </div>
     </footer>
 
