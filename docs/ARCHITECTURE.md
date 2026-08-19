@@ -2,21 +2,21 @@
 
 ## 1. Overview
 
-A healthcare appointment booking and management system built with **ASP.NET Core MVC (.NET 8)**, using **Entity Framework Core** for data access and **ASP.NET Core Identity** for authentication and role-based authorization.
+A comprehensive, enterprise-grade healthcare appointment booking and management system built with **ASP.NET Core MVC (.NET 8)**, using **Entity Framework Core** for data access and **ASP.NET Core Identity** for authentication and robust role-based authorization.
 
-The system supports three roles:
-- **Admin** — manages doctors, specializations, and has full visibility over all appointments.
-- **Doctor** — views their own schedule and manages appointment status (confirm/complete/cancel).
-- **Patient** — books appointments, views their own appointment history.
+The system supports three distinct roles with isolated workflows:
+- **Admin** — Manages doctors, specializations, system-wide audit logs, and has full visibility over the platform via a centralized dashboard with statistical charts.
+- **Doctor** — Manages their daily schedule, processes appointment statuses, handles patient cancellation requests, and tracks their patient reviews.
+- **Patient** — Books appointments, requests cancellations, tracks appointment history, and submits post-appointment reviews for doctors.
 
 ## 2. Architectural Pattern
 
-The project follows the standard **ASP.NET Core MVC** pattern (Model-View-Controller), with a light **Service/Repository-free** approach for simplicity (Controllers talk to `ApplicationDbContext` directly via EF Core). This is intentional for a learning/portfolio project — in a larger production system, you would typically introduce a **Repository + Unit of Work pattern** or a **Service layer** to decouple controllers from EF Core directly. That's a natural "next step" to mention in an interview if asked how you'd scale this.
+The project follows the **ASP.NET Core MVC** pattern (Model-View-Controller) utilizing a direct-to-DbContext architecture, suitable for rapid iteration and clear data flow. 
 
-```
+```text
 ┌─────────────┐      ┌──────────────┐      ┌───────────────────┐      ┌─────────────┐
 │   Browser   │ ───> │  Controllers │ ───> │ ApplicationDbContext│ ───> │ SQL Server  │
-│  (Views/    │ <─── │   (MVC)      │ <─── │      (EF Core)     │ <─── │  Database   │
+│  (Views/    │ <─── │   (MVC)      │ <─── │      (EF Core)     │ <─── │  (Docker)   │
 │   Razor)    │      └──────────────┘      └───────────────────┘      └─────────────┘
 └─────────────┘             │
                              ▼
@@ -27,44 +27,41 @@ The project follows the standard **ASP.NET Core MVC** pattern (Model-View-Contro
                       └──────────────┘
 ```
 
-## 3. Layers
+## 3. Core Subsystems
 
-### 3.1 Models (`/Models`)
-Plain C# classes representing the domain entities, decorated with Data Annotations for validation (`[Required]`, `[StringLength]`, etc.) and EF Core relationship attributes.
+### 3.1 Two-Step Cancellation Workflow
+To prevent accidental or unilateral cancellations that disrupt scheduling, the system implements a strict two-step cancellation workflow:
+- If a Patient wants to cancel, they trigger a `PatientCancellationRequested` status. The Doctor is notified via their dashboard and must formally confirm it to `Cancelled`.
+- If a Doctor initiates a cancellation, it triggers `DoctorCancellationRequested`, requiring Patient confirmation.
 
-- `ApplicationUser` — extends `IdentityUser`, adds `FullName`. This is the base identity account for every logged-in user (Admin, Doctor, or Patient).
-- `Doctor` — profile data for a doctor (linked 1:1 to an `ApplicationUser`), includes `SpecializationId`.
-- `Patient` — profile data for a patient (linked 1:1 to an `ApplicationUser`).
-- `Specialization` — lookup table (Cardiology, Dermatology, etc.)
-- `Appointment` — the core booking entity: links a `Doctor`, a `Patient`, a date/time, a status enum, and notes.
+### 3.2 Audit Logging
+All critical state changes (e.g., appointment bookings, status updates, doctor profile modifications) are intercepted and logged into an `AuditLogs` table. The Admin dashboard provides a real-time, scrollable view of these logs for system compliance and monitoring.
 
-### 3.2 Data (`/Data`)
-- `ApplicationDbContext` — extends `IdentityDbContext<ApplicationUser>`, defines `DbSet<>` properties for each entity, and configures relationships (Fluent API) in `OnModelCreating`.
-- `DbInitializer` — seeds the database on startup: creates the Admin/Doctor/Patient roles, creates one default Admin user, and seeds a few Specializations so the app isn't empty on first run.
+### 3.3 Patient Reviews & Ratings
+Upon an appointment reaching the `Completed` status, the patient can submit a 1-5 star rating and review. These are aggregated to calculate a Doctor's overall rating, displayed on the platform.
 
-### 3.3 Controllers (`/Controllers`)
-Each controller is annotated with `[Authorize]` at the appropriate level:
+## 4. Application Layers
 
-- `HomeController` — public landing page.
-- `AppointmentsController` — full CRUD for appointments, with role-aware logic (a Patient only sees their own appointments; a Doctor only sees theirs; Admin sees all).
-- `DoctorsController` — Admin-only CRUD for managing doctor profiles.
-- `PatientsController` — Admin-only view of patient list; patients manage their own profile separately (not included in this scope, noted as a future extension).
+### 4.1 Models (`/Models`)
+Rich domain entities mapped via EF Core.
+- `ApplicationUser`: Extends `IdentityUser` with a `FullName` property.
+- `Doctor` & `Patient`: Profile entities linked 1:1 with `ApplicationUser`.
+- `Specialization`: Lookup taxonomy for doctor categorization.
+- `Appointment`: The core transactional entity linking Doctors, Patients, Time, and Status.
+- `Review`: Post-appointment rating and feedback.
+- `AuditLog`: System-generated tracking of user actions.
 
-### 3.4 Views (`/Views`)
-Razor views using the standard MVC scaffolded structure — Index (list), Create, Edit, Details, Delete per controller, sharing a common `_Layout.cshtml`.
+### 4.2 Data Access (`/Data`)
+- `ApplicationDbContext`: Inherits `IdentityDbContext<ApplicationUser>`, configuring all database relationships via the Fluent API in `OnModelCreating`.
+- `DbInitializer`: Ensures the database is seeded on startup with Roles (Admin, Doctor, Patient), a default Admin user, and base Specializations.
 
-### 3.5 Authentication & Authorization
-Uses **ASP.NET Core Identity** with cookie-based authentication. Role-based authorization (`[Authorize(Roles = "Admin")]`) gates access to sensitive actions. Identity's default scaffolded UI (`/Identity/Account/Login`, `/Identity/Account/Register`) handles login/registration.
+### 4.3 Presentation (`/Views` & `/Controllers`)
+- **Controllers**: Granular controllers mapped to domain concerns (`AppointmentsController`, `DashboardController`, `ReviewsController`, etc.), secured via `[Authorize(Roles = "...")]`.
+- **UI/UX**: The frontend is built using standard Razor syntax but heavily stylized using modern CSS principles. It features a bright, corporate "Health Tech" landing page, scrollable data tables, responsive CSS grids, and professional `FontAwesome` iconography instead of emojis.
 
-## 4. Key Design Decisions (talking points for interviews)
+## 5. Design Decisions
 
-1. **Why EF Core Code-First?** Lets the database schema live in source control as C# code (migrations), making it easy to evolve and review changes — the same instinct behind using Prisma migrations in your Node.js projects.
-2. **Why role-based authorization instead of claims-based?** For a project this size, three fixed roles (Admin/Doctor/Patient) are simpler to reason about than a full claims/policy system. In a larger system with more granular permissions, ASP.NET Core's **Policy-based authorization** would be the next step.
-3. **Why no separate Service layer yet?** Kept the project scoped to be genuinely finishable and understandable end-to-end. The natural evolution (and a great "what would you improve" interview answer) is introducing an `IAppointmentService` interface between controllers and the DbContext, to make business logic testable independent of EF Core.
-4. **1:1 relationship between ApplicationUser and Doctor/Patient**: Keeps authentication concerns (handled by Identity) separate from domain profile data (Doctor/Patient specific fields), following the Single Responsibility Principle.
-
-## 5. Possible Future Extensions
-- Email notifications on appointment booking/cancellation (using `IEmailSender`, already an Identity interface).
-- A Web API layer (ASP.NET Core Web API) alongside the MVC app, so a future mobile/React frontend could consume the same backend.
-- Appointment conflict validation (prevent double-booking the same doctor at the same time).
-- Audit logging for appointment status changes.
+1. **EF Core Code-First:** Enables the database schema to be entirely defined by the C# codebase and version-controlled via Migrations. This pairs excellently with containerized SQL Server instances.
+2. **Role-Based Authorization:** Utilizing fixed roles (`Admin`, `Doctor`, `Patient`) provides a clear, understandable security matrix without the overhead of complex claims policies.
+3. **Decoupled Profiles:** Keeping `ApplicationUser` separate from `Doctor` and `Patient` adheres to the Single Responsibility Principle, isolating authentication concerns from domain-specific profile data.
+4. **Modern UI without JavaScript Frameworks:** The system achieves a "Premium SaaS" look and feel purely through structured HTML, robust CSS (CSS variables, flexbox, grid, sticky headers), and minimal vanilla JS, proving that heavy SPA frameworks (React/Angular) aren't strictly necessary for a premium user experience.

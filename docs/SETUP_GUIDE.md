@@ -1,74 +1,80 @@
 # Setup Guide — HealthCare Appointment System
 
+This guide outlines the recommended workflow for setting up and running the HealthCare Appointment System locally, optimized for modern developer environments utilizing Docker and VS Code-based editors (like Antigravity IDE).
+
 ## Prerequisites
 
-1. **.NET 8 SDK** — download from https://dotnet.microsoft.com/download/dotnet/8.0
-   Verify with: `dotnet --version` (should show 8.x)
-2. **SQL Server** — any of these work:
-   - SQL Server Express / Developer Edition (Windows)
-   - SQL Server via Docker (`docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong!Passw0rd" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest`)
-   - **Or**, for the fastest local setup, swap the connection string to use **LocalDB** (comes bundled with Visual Studio on Windows) — already configured as the default in `appsettings.json`.
-3. **An IDE**: Visual Studio 2022 (recommended, see note at bottom) or VS Code / Antigravity with the C# extension.
+1. **.NET 8 SDK**
+   - Download from: https://dotnet.microsoft.com/download/dotnet/8.0
+   - Verify installation: `dotnet --version`
+2. **Docker Desktop**
+   - Required for running the localized SQL Server container seamlessly.
+3. **Antigravity IDE / VS Code**
+   - Ensure the standard C# extension is installed for syntax highlighting and basic IntelliSense.
 
 ## Step-by-Step Setup
 
-### 1. Open the project
-- **Visual Studio**: Open `HealthCareAppointmentSystem.sln`
-- **VS Code / Antigravity / CLI**: `cd HealthCareAppointmentSystem` (the inner project folder)
-
-### 2. Restore packages
+### 1. Start the SQL Server Container
+The most reliable way to run the database across any operating system is via a Docker container. Run the following command in your terminal to spin up an ephemeral SQL Server 2022 instance:
 ```bash
-dotnet restore
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong!Passw0rd" -p 1433:1433 --name hc_db -d mcr.microsoft.com/mssql/server:2022-latest
 ```
 
-### 3. Update the connection string (if needed)
-Open `appsettings.json` and confirm/update the `DefaultConnection` string to match your SQL Server setup. The default uses LocalDB:
-```json
-"DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=HealthCareAppointmentDb;Trusted_Connection=True;MultipleActiveResultSets=true"
-```
-If you're using Docker/SQL auth instead, it'll look more like:
+### 2. Configure the Connection String
+Open `appsettings.json` in the root of the project and ensure your `DefaultConnection` points to your Docker instance:
 ```json
 "DefaultConnection": "Server=localhost,1433;Database=HealthCareAppointmentDb;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True"
 ```
 
-### 4. Install the EF Core CLI tool (one-time, machine-wide)
+### 3. Restore Packages & Install EF Tools
+Navigate to the project directory containing the `.csproj` file:
+```bash
+cd HealthCareAppointmentSystem
+```
+
+Restore the .NET packages:
+```bash
+dotnet restore
+```
+
+Install the Entity Framework Core CLI tools (if you haven't globally already):
 ```bash
 dotnet tool install --global dotnet-ef
 ```
 
-### 5. Create and apply the database migration
+### 4. Apply Database Migrations
+Initialize your Docker database with the necessary schema (Tables: Users, Appointments, Reviews, AuditLogs, etc.):
 ```bash
-dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
-This creates the database and all tables based on the models.
 
-### 6. Run the project
+### 5. Run the Application
+Start the local Kestrel web server:
 ```bash
 dotnet run
 ```
-Or press **F5** in Visual Studio.
+The application will boot up, and the terminal will output the local URL (usually `https://localhost:5001` or similar). Open this in your browser to view the premium corporate landing page.
 
-The app will be available at `https://localhost:5001` (or the port shown in your terminal).
+## Initial System State
 
-### 7. Default seeded login
-On first run, `DbInitializer` seeds one Admin account:
-- **Email:** admin@healthcare.local
-- **Password:** Admin@123
+On the very first run, the `DbInitializer` automatically provisions the database with:
+- System Roles: `Admin`, `Doctor`, `Patient`
+- A master admin account:
+  - **Email:** `admin@healthcare.local`
+  - **Password:** `Admin@123`
+- Default Specializations (e.g., Cardiology, Neurology).
 
-Log in as Admin to add Specializations and Doctors, then register additional Patient/Doctor accounts through the normal registration page to explore all three roles.
-
-## Running on Visual Studio vs. VS Code-based editors (Antigravity, Cursor, etc.)
-
-**Visual Studio (Windows) — recommended for this project.**
-Full native support: IntelliSense, integrated debugger, EF Core migration tooling built into the Package Manager Console, NuGet management UI, and it's genuinely what most Pakistani job postings asking for ".NET experience" mean when they say "Visual Studio" as a required tool. If your goal is a resume-ready, fully working project you can demo confidently, build and run it in Visual Studio at least once.
-
-**Google Antigravity / Cursor / Windsurf (VS Code forks).**
-You *can* open and edit this project's code in Antigravity, and its AI agent can run `dotnet build` / `dotnet run` via the integrated terminal. However, Microsoft's official **C# Dev Kit** extension (which provides IntelliSense, solution explorer, and the integrated debugger for C#) is **not licensed for use in third-party VS Code forks** like Antigravity, Cursor, or Windsurf — Microsoft restricts it to genuine VS Code and Visual Studio. You'd be limited to the older/basic C# extension or unofficial community alternatives, and debugging support has been reported as inconsistent. Good for quick edits or letting an AI agent scaffold something, not ideal as your primary environment for a project you want to deeply understand and demo reliably.
-
-**Recommendation:** Use Antigravity/AI tools to help you understand or extend the code (exactly like we're doing now), but do your actual build/run/debug cycle in real Visual Studio, or plain VS Code with the standard (non-Dev Kit) C# extension if you're not on Windows.
+**Next Steps:** Log in with the admin credentials, navigate to the Dashboard to view the system statistics and Audit Logs, and begin registering Doctors and Patients to explore the two-step appointment workflows.
 
 ## Troubleshooting
-- **"A network-related or instance-specific error..."** — SQL Server isn't running, or the connection string is wrong. Double check step 3.
-- **"No migrations configuration type was found"** — you're not in the project folder containing the `.csproj` file when running `dotnet ef` commands.
-- **Port already in use** — check `Properties/launchSettings.json` and change the port, or stop whatever else is using it.
+
+- **"A network-related or instance-specific error occurred while establishing a connection to SQL Server"**
+  - Ensure your Docker container is actually running: `docker ps`. If it stopped, start it with `docker start hc_db`.
+- **"The database operation was expected to affect 1 row(s), but actually affected 0"**
+  - Usually occurs during concurrent editing or stale data. Refresh the page or check the Audit Logs.
+- **"Port already in use"**
+  - If `dotnet run` complains about a used port, check your `Properties/launchSettings.json` and change the `applicationUrl` port, or kill the process using the current port.
+
+
+
+1 more thing i want you to build invoice like slip as patient do appointment. he get payment slip like to submit bank transfer or 1 link payment o something like that.  after that doctor approve payment done or something like that. then before on slip it write payment due or something like then and after that paid or something print on slip. you have to think professionally and plan how to implement this thing. professionally or some other better recommedation alternate to this
