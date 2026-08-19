@@ -4,7 +4,7 @@ An enterprise-grade, role-based healthcare appointment booking and management sy
 
 This project has been carefully architected and styled to serve as a comprehensive portfolio piece, showcasing backend .NET/C# proficiency alongside a premium, modern "SaaS-style" corporate frontend.
 
-## 🚀 Key Features
+## Key Features
 
 - **Three Distinct Roles:** 
   - **Admin**: Complete system visibility, doctor/patient management, and access to a centralized dashboard featuring statistical charts and real-time audit logs.
@@ -15,19 +15,19 @@ This project has been carefully architected and styled to serve as a comprehensi
 - **Review & Rating Subsystem:** Patients can rate (1-5 stars) and review doctors after an appointment is completed.
 - **Premium Corporate UI:** A completely custom-built, highly polished frontend using modern CSS grids, flexbox, and FontAwesome. Features a massive, detailed footer, legal pages, scrollable data tables, and an "AI Dashboard Mockup" hero section without the bloat of a JavaScript SPA framework.
 
-## 💻 Tech Stack
+## Tech Stack
 - **Backend:** ASP.NET Core MVC (.NET 8), C#
 - **Database & ORM:** Entity Framework Core (Code-First), SQL Server (Dockerized)
 - **Auth:** ASP.NET Core Identity (Cookie-based, Role-based authorization)
 - **Frontend:** Razor Views, custom vanilla CSS, FontAwesome
 
-## 📚 Documentation
+## Documentation
 For an in-depth understanding of the system, please refer to the dedicated documentation files:
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — System design, layers, robust workflows, and key technical decisions.
 - [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) — Entity relationship diagram, table structures, and relationships.
 - [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md) — Full, step-by-step setup instructions explicitly tailored for Docker and modern IDEs (like Antigravity / VS Code).
 
-## ⚡ Quick Start
+## Quick Start
 
 Ensure you have .NET 8 and Docker installed.
 
