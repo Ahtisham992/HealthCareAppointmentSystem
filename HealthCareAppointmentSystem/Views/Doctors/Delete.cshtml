@@ -1,0 +1,22 @@
+@model Doctor
+@{
+    ViewData["Title"] = "Delete Doctor";
+}
+
+<h1>Delete Doctor Profile</h1>
+<p class="warning-text">Are you sure you want to delete Dr. @Model.ApplicationUser?.FullName? This action cannot be undone.</p>
+
+<div class="detail-card">
+    <dl>
+        <dt>Specialization</dt>
+        <dd>@Model.Specialization?.Name</dd>
+        <dt>License Number</dt>
+        <dd>@Model.LicenseNumber</dd>
+    </dl>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

@@ -1,0 +1,35 @@
+@model IEnumerable<Patient>
+@{
+    ViewData["Title"] = "Patients";
+}
+
+<h1>Patients</h1>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Date of Birth</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.ApplicationUser?.FullName</td>
+                <td>@(item.PhoneNumber ?? "-")</td>
+                <td>@(item.DateOfBirth?.ToString("dd MMM yyyy") ?? "-")</td>
+                <td class="actions">
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <p class="empty-state">No patients registered yet.</p>
+}

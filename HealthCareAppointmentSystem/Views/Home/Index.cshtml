@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="hero">
+    <h1>Modern Healthcare<br/>Made Simple</h1>
+    <p>Book appointments, manage your medical profile, and consult with top-rated professionals seamlessly.</p>
+
+    <div style="margin-top: 2rem;">
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <a class="btn btn-primary" asp-controller="Dashboard" asp-action="Index">Go to Dashboard</a>
+        }
+        else
+        {
+            <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register" style="margin-right: 1rem;">Get Started</a>
+            <a class="btn btn-secondary" asp-area="Identity" asp-page="/Account/Login">Sign In</a>
+        }
+    </div>
+</div>
+
+<div class="feature-grid">
+    <div class="feature-card">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">👨‍⚕️</div>
+        <h3>For Patients</h3>
+        <p>Book appointments with the right specialist instantly. Track your status and maintain your complete visit history securely.</p>
+    </div>
+    <div class="feature-card">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">🩺</div>
+        <h3>For Doctors</h3>
+        <p>Manage your schedule effortlessly. Update appointment statuses, manage patient history, and build your digital practice.</p>
+    </div>
+    <div class="feature-card">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">⚙️</div>
+        <h3>Administration</h3>
+        <p>Maintain the system smoothly. Verify and approve doctors, manage specializations, and oversee global operations.</p>
+    </div>
+</div>

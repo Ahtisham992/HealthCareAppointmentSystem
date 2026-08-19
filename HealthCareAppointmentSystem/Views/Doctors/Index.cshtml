@@ -1,0 +1,56 @@
+@model IEnumerable<Doctor>
+@{
+    ViewData["Title"] = "Doctors";
+}
+
+<div class="page-header">
+    <h1>Doctors</h1>
+    <a class="btn btn-primary" asp-action="Create">+ Add Doctor</a>
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Specialization</th>
+            <th>License #</th>
+            <th>Experience</th>
+            <th>Fee</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>Dr. @item.ApplicationUser?.FullName</td>
+                <td>@item.Specialization?.Name</td>
+                <td>@item.LicenseNumber</td>
+                <td>@item.YearsOfExperience yrs</td>
+                <td>Rs. @item.ConsultationFee.ToString("N0")</td>
+                <td>
+                    @if (item.IsApproved)
+                    {
+                        <span class="status-badge status-completed">Approved</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge status-pending">Pending</span>
+                    }
+                </td>
+                <td class="actions">
+                    @if (!item.IsApproved)
+                    {
+                        <form asp-action="Approve" asp-route-id="@item.Id" method="post" style="display:inline;">
+                            <button type="submit" class="link-button" style="color: green;">Approve</button>
+                        </form>
+                    }
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,54 @@
+@model Doctor
+@{
+    ViewData["Title"] = "Add Doctor";
+}
+
+<h1>Add Doctor Profile</h1>
+<p class="hint-text">Note: the user account must already be registered (via the normal Register page) and assigned the "Doctor" role before creating their profile here.</p>
+
+<form asp-action="Create" method="post" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+    <div class="form-group">
+        <label asp-for="ApplicationUserId">User Account</label>
+        <select asp-for="ApplicationUserId" class="form-control" asp-items="ViewBag.Users">
+            <option value="">-- Select User Account --</option>
+        </select>
+        <span asp-validation-for="ApplicationUserId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="SpecializationId">Specialization</label>
+        <select asp-for="SpecializationId" class="form-control" asp-items="ViewBag.Specializations">
+            <option value="">-- Select Specialization --</option>
+        </select>
+        <span asp-validation-for="SpecializationId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="LicenseNumber"></label>
+        <input asp-for="LicenseNumber" class="form-control" />
+        <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="YearsOfExperience"></label>
+        <input asp-for="YearsOfExperience" class="form-control" />
+        <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ConsultationFee"></label>
+        <input asp-for="ConsultationFee" class="form-control" />
+        <span asp-validation-for="ConsultationFee" class="text-danger"></span>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

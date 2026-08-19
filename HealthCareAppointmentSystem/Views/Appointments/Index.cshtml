@@ -1,0 +1,48 @@
+@model IEnumerable<Appointment>
+@{
+    ViewData["Title"] = "Appointments";
+}
+
+<div class="page-header">
+    <h1>Appointments</h1>
+    @if (User.IsInRole("Patient") || User.IsInRole("Admin"))
+    {
+        <a class="btn btn-primary" asp-action="Create">+ Book Appointment</a>
+    }
+</div>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Date &amp; Time</th>
+            <th>Doctor</th>
+            <th>Patient</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</td>
+                <td>Dr. @item.Doctor?.ApplicationUser?.FullName</td>
+                <td>@item.Patient?.ApplicationUser?.FullName</td>
+                <td><span class="status-badge status-@item.Status.ToString().ToLower()">@item.Status</span></td>
+                <td class="actions">
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Patient"))
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger">Delete</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Model.Any())
+{
+    <p class="empty-state">No appointments to show yet.</p>
+}

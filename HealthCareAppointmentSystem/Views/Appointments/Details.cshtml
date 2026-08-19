@@ -1,0 +1,33 @@
+@model Appointment
+@{
+    ViewData["Title"] = "Appointment Details";
+}
+
+<h1>Appointment Details</h1>
+
+<div class="detail-card">
+    <dl>
+        <dt>Doctor</dt>
+        <dd>Dr. @Model.Doctor?.ApplicationUser?.FullName</dd>
+
+        <dt>Patient</dt>
+        <dd>@Model.Patient?.ApplicationUser?.FullName</dd>
+
+        <dt>Date &amp; Time</dt>
+        <dd>@Model.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</dd>
+
+        <dt>Status</dt>
+        <dd><span class="status-badge status-@Model.Status.ToString().ToLower()">@Model.Status</span></dd>
+
+        <dt>Notes</dt>
+        <dd>@(string.IsNullOrWhiteSpace(Model.Notes) ? "-" : Model.Notes)</dd>
+
+        <dt>Booked On</dt>
+        <dd>@Model.CreatedAt.ToString("dd MMM yyyy, hh:mm tt")</dd>
+    </dl>
+
+    <div class="form-actions">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

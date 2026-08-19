@@ -1,0 +1,50 @@
+@model Patient
+@{
+    ViewData["Title"] = "Patient Details";
+}
+
+<h1>Patient Details</h1>
+
+<div class="detail-card">
+    <dl>
+        <dt>Name</dt>
+        <dd>@Model.ApplicationUser?.FullName</dd>
+
+        <dt>Phone</dt>
+        <dd>@(Model.PhoneNumber ?? "-")</dd>
+
+        <dt>Date of Birth</dt>
+        <dd>@(Model.DateOfBirth?.ToString("dd MMM yyyy") ?? "-")</dd>
+
+        <dt>Address</dt>
+        <dd>@(Model.Address ?? "-")</dd>
+    </dl>
+
+    <h3>Appointment History</h3>
+    @if (Model.Appointments.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr><th>Date</th><th>Doctor</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var appt in Model.Appointments.OrderByDescending(a => a.AppointmentDateTime))
+                {
+                    <tr>
+                        <td>@appt.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</td>
+                        <td>Dr. @appt.Doctor?.ApplicationUser?.FullName</td>
+                        <td>@appt.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="empty-state">No appointment history yet.</p>
+    }
+
+    <div class="form-actions">
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

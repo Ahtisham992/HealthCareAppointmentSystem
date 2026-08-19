@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - HealthCare Appointment System</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">HealthCare System</a>
+            <ul class="navbar-links">
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    <li><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                    <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li>
+                        <li><a asp-controller="Patients" asp-action="Index">Patients</a></li>
+                    }
+                    <li class="navbar-user">
+                        <a asp-controller="Profile" asp-action="Index" style="text-decoration: none; color: var(--primary); font-weight: 600; margin-right: 10px;">
+                            Hi, @User.Identity.Name
+                        </a>
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="inline-form">
+                            <button type="submit" class="link-button">Logout</button>
+                        </form>
+                    </li>
+                }
+                else
+                {
+                    <li><a asp-area="Identity" asp-page="/Account/Login">Login</a></li>
+                    <li><a asp-area="Identity" asp-page="/Account/Register">Register</a></li>
+                }
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success">@TempData["Message"]</div>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; @DateTime.Now.Year - HealthCare Appointment System. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

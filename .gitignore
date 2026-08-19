@@ -1,0 +1,22 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+
+## User-specific files
+*.userosscache
+*.sln.docstates
+
+## Secrets
+appsettings.Production.json
+*.pfx

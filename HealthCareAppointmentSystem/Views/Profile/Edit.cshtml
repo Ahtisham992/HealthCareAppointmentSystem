@@ -1,0 +1,87 @@
+@using HealthCareAppointmentSystem.ViewModels
+@model ProfileViewModel
+
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+<h1>Edit Profile</h1>
+
+<form asp-action="Edit" method="post" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+    <div class="form-group">
+        <label asp-for="FullName"></label>
+        <input asp-for="FullName" class="form-control" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
+    </div>
+
+    @if (Model.Role == "Patient")
+    {
+        <div class="form-group">
+            <label asp-for="DateOfBirth"></label>
+            <input asp-for="DateOfBirth" class="form-control" type="date" />
+            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="PhoneNumber"></label>
+            <input asp-for="PhoneNumber" class="form-control" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Address"></label>
+            <textarea asp-for="Address" class="form-control"></textarea>
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+    }
+    else if (Model.Role == "Doctor")
+    {
+        <div class="form-group">
+            <label asp-for="SpecializationId"></label>
+            <select asp-for="SpecializationId" class="form-control" asp-items="ViewBag.Specializations">
+                <option value="">-- Select Specialization --</option>
+            </select>
+            <span asp-validation-for="SpecializationId" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="LicenseNumber"></label>
+            <input asp-for="LicenseNumber" class="form-control" />
+            <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="YearsOfExperience"></label>
+            <input asp-for="YearsOfExperience" class="form-control" />
+            <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="ConsultationFee"></label>
+            <input asp-for="ConsultationFee" class="form-control" />
+            <span asp-validation-for="ConsultationFee" class="text-danger"></span>
+        </div>
+        <hr />
+        <div class="form-group">
+            <label asp-for="AvailableFrom"></label>
+            <input asp-for="AvailableFrom" class="form-control" type="time" />
+            <span asp-validation-for="AvailableFrom" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="AvailableTo"></label>
+            <input asp-for="AvailableTo" class="form-control" type="time" />
+            <span asp-validation-for="AvailableTo" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="SlotDurationMinutes"></label>
+            <input asp-for="SlotDurationMinutes" class="form-control" type="number" min="5" max="120" />
+            <span asp-validation-for="SlotDurationMinutes" class="text-danger"></span>
+        </div>
+    }
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

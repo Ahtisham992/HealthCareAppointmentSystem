@@ -1,0 +1,33 @@
+@model Doctor
+@{
+    ViewData["Title"] = "Doctor Details";
+}
+
+<h1>Doctor Details</h1>
+
+<div class="detail-card">
+    <dl>
+        <dt>Name</dt>
+        <dd>Dr. @Model.ApplicationUser?.FullName</dd>
+
+        <dt>Specialization</dt>
+        <dd>@Model.Specialization?.Name</dd>
+
+        <dt>License Number</dt>
+        <dd>@Model.LicenseNumber</dd>
+
+        <dt>Years of Experience</dt>
+        <dd>@Model.YearsOfExperience</dd>
+
+        <dt>Consultation Fee</dt>
+        <dd>Rs. @Model.ConsultationFee.ToString("N0")</dd>
+
+        <dt>Total Appointments</dt>
+        <dd>@Model.Appointments.Count</dd>
+    </dl>
+
+    <div class="form-actions">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

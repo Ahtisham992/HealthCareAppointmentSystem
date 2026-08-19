@@ -1,0 +1,137 @@
+@model AppointmentViewModel
+@{
+    ViewData["Title"] = "Book Appointment";
+}
+
+<h1>Book an Appointment</h1>
+
+<form asp-action="Create" method="post" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+    <div class="form-group">
+        <label asp-for="DoctorId"></label>
+        <select asp-for="DoctorId" class="form-control" asp-items="@(new SelectList(Model.AvailableDoctors, "Id", "ApplicationUser.FullName"))" id="doctorSelect">
+            <option value="">-- Select a Doctor --</option>
+        </select>
+        <span asp-validation-for="DoctorId" class="text-danger"></span>
+    </div>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="form-group">
+            <label asp-for="PatientId"></label>
+            <select asp-for="PatientId" class="form-control" asp-items="@(new SelectList(Model.AvailablePatients, "Id", "ApplicationUser.FullName"))">
+                <option value="">-- Select a Patient --</option>
+            </select>
+            <span asp-validation-for="PatientId" class="text-danger"></span>
+        </div>
+    }
+
+    <div class="form-group" id="dateGroup" style="display: none;">
+        <label>Select Date</label>
+        <input type="date" id="appointmentDate" class="form-control" min="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+    </div>
+
+    <div class="form-group" id="slotsGroup" style="display: none;">
+        <label>Select Time Slot</label>
+        <div id="slotsContainer" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+            <!-- Slots will be rendered here -->
+        </div>
+        <p id="noSlotsMessage" class="text-danger" style="display: none;">No available slots for the selected date.</p>
+    </div>
+
+    <input type="hidden" asp-for="AppointmentDateTime" id="finalDateTime" />
+    <span asp-validation-for="AppointmentDateTime" class="text-danger"></span>
+
+    <div class="form-group">
+        <label asp-for="Notes"></label>
+        <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Briefly describe the reason for your visit (optional)"></textarea>
+        <span asp-validation-for="Notes" class="text-danger"></span>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Book Appointment</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const doctorSelect = document.getElementById('doctorSelect');
+            const dateInput = document.getElementById('appointmentDate');
+            const dateGroup = document.getElementById('dateGroup');
+            const slotsGroup = document.getElementById('slotsGroup');
+            const slotsContainer = document.getElementById('slotsContainer');
+            const noSlotsMessage = document.getElementById('noSlotsMessage');
+            const finalDateTime = document.getElementById('finalDateTime');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // If a doctor is pre-selected (e.g. from Dashboard)
+            if (doctorSelect.value) {
+                dateGroup.style.display = 'block';
+            }
+
+            doctorSelect.addEventListener('change', function() {
+                if (this.value) {
+                    dateGroup.style.display = 'block';
+                    if (dateInput.value) {
+                        fetchSlots();
+                    }
+                } else {
+                    dateGroup.style.display = 'none';
+                    slotsGroup.style.display = 'none';
+                    submitBtn.disabled = true;
+                }
+            });
+
+            dateInput.addEventListener('change', function() {
+                if (this.value && doctorSelect.value) {
+                    fetchSlots();
+                }
+            });
+
+            function fetchSlots() {
+                const doctorId = doctorSelect.value;
+                const date = dateInput.value;
+                
+                fetch(`/Appointments/GetAvailableSlots?doctorId=${doctorId}&date=${date}`)
+                    .then(response => response.json())
+                    .then(slots => {
+                        slotsContainer.innerHTML = '';
+                        slotsGroup.style.display = 'block';
+                        finalDateTime.value = '';
+                        submitBtn.disabled = true;
+
+                        if (slots.length === 0) {
+                            noSlotsMessage.style.display = 'block';
+                        } else {
+                            noSlotsMessage.style.display = 'none';
+                            slots.forEach(slot => {
+                                const btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className = 'btn btn-secondary';
+                                btn.style.padding = '0.5rem 1rem';
+                                btn.textContent = slot;
+                                btn.onclick = function() {
+                                    // Remove active class from all
+                                    Array.from(slotsContainer.children).forEach(c => c.classList.remove('btn-primary'));
+                                    Array.from(slotsContainer.children).forEach(c => c.classList.add('btn-secondary'));
+                                    
+                                    // Add active class to clicked
+                                    this.classList.remove('btn-secondary');
+                                    this.classList.add('btn-primary');
+                                    
+                                    // Set final datetime value (ISO format for ASP.NET Core model binding)
+                                    finalDateTime.value = `${date}T${slot}:00`;
+                                    submitBtn.disabled = false;
+                                };
+                                slotsContainer.appendChild(btn);
+                            });
+                        }
+                    });
+            }
+        });
+    </script>
+}
