@@ -60,30 +60,32 @@
         <h3 style="margin:0;">Recent Activity</h3>
         <a asp-controller="AuditLogs" asp-action="Index" class="btn btn-secondary btn-sm">View All Logs</a>
     </div>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Time</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if(!Model.RecentLogs.Any()) {
-                <tr><td colspan="4" class="text-center text-muted">No recent activity.</td></tr>
-            }
-            @foreach (var log in Model.RecentLogs)
-            {
+    <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+        <table class="data-table" style="margin: 0;">
+            <thead style="position: sticky; top: 0; background-color: var(--bg-color); z-index: 1;">
                 <tr>
-                    <td style="white-space:nowrap; font-size:0.85rem;">@log.Timestamp.ToLocalTime().ToString("g")</td>
-                    <td><span class="status-badge" style="background:#f1f5f9; color:#475569;">@log.UserId</span></td>
-                    <td style="font-weight:600;">@log.Action</td>
-                    <td style="font-size:0.9rem; color:var(--text-muted);">@log.Details</td>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Details</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if(!Model.RecentLogs.Any()) {
+                    <tr><td colspan="4" class="text-center text-muted">No recent activity.</td></tr>
+                }
+                @foreach (var log in Model.RecentLogs)
+                {
+                    <tr>
+                        <td style="white-space:nowrap; font-size:0.85rem;">@log.Timestamp.ToLocalTime().ToString("g")</td>
+                        <td><span class="status-badge" style="background:#f1f5f9; color:#475569;">@log.UserId</span></td>
+                        <td style="font-weight:600;">@log.Action</td>
+                        <td style="font-size:0.9rem; color:var(--text-muted);">@log.Details</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 
 @section Scripts {
