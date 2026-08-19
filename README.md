@@ -1,56 +1,54 @@
 # HealthCare Appointment System
 
-A role-based healthcare appointment booking and management system built with **ASP.NET Core MVC (.NET 8)**, **Entity Framework Core**, and **ASP.NET Core Identity**.
+An enterprise-grade, role-based healthcare appointment booking and management system built with **ASP.NET Core MVC (.NET 8)**, **Entity Framework Core**, and **ASP.NET Core Identity**.
 
-Built as a portfolio project targeting the .NET/C#/ASP.NET stack commonly required by healthcare-tech and enterprise software companies in Pakistan.
+This project has been carefully architected and styled to serve as a comprehensive portfolio piece, showcasing backend .NET/C# proficiency alongside a premium, modern "SaaS-style" corporate frontend.
 
-## Tech Stack
+## 🚀 Key Features
+
+- **Three Distinct Roles:** 
+  - **Admin**: Complete system visibility, doctor/patient management, and access to a centralized dashboard featuring statistical charts and real-time audit logs.
+  - **Doctor**: Manages availability, handles patient appointments, processes cancellations, and tracks post-visit reviews.
+  - **Patient**: Books appointments, tracks history, requests cancellations, and leaves reviews for doctors.
+- **Two-Step Cancellation Workflow:** A robust state machine ensuring that cancellations initiated by either party (Patient or Doctor) must be confirmed by the other party to prevent scheduling conflicts.
+- **Audit Logging System:** All critical database actions (creating appointments, updating statuses, profile changes) are intercepted and logged for compliance monitoring on the Admin Dashboard.
+- **Review & Rating Subsystem:** Patients can rate (1-5 stars) and review doctors after an appointment is completed.
+- **Premium Corporate UI:** A completely custom-built, highly polished frontend using modern CSS grids, flexbox, and FontAwesome. Features a massive, detailed footer, legal pages, scrollable data tables, and an "AI Dashboard Mockup" hero section without the bloat of a JavaScript SPA framework.
+
+## 💻 Tech Stack
 - **Backend:** ASP.NET Core MVC (.NET 8), C#
-- **ORM:** Entity Framework Core (Code-First, SQL Server)
-- **Auth:** ASP.NET Core Identity (cookie-based, role-based authorization)
-- **Frontend:** Razor Views, plain CSS (no framework - deliberately, to keep focus on backend/architecture)
+- **Database & ORM:** Entity Framework Core (Code-First), SQL Server (Dockerized)
+- **Auth:** ASP.NET Core Identity (Cookie-based, Role-based authorization)
+- **Frontend:** Razor Views, custom vanilla CSS, FontAwesome
 
-## Features
-- Three roles: **Admin**, **Doctor**, **Patient**, each with different permissions
-- Patients can book, view, and cancel their own appointments
-- Doctors can view their schedule and update appointment status
-- Admins manage doctors, specializations, and have full visibility across the system
-- Seeded roles, a default Admin account, and sample specializations on first run
+## 📚 Documentation
+For an in-depth understanding of the system, please refer to the dedicated documentation files:
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — System design, layers, robust workflows, and key technical decisions.
+- [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) — Entity relationship diagram, table structures, and relationships.
+- [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md) — Full, step-by-step setup instructions explicitly tailored for Docker and modern IDEs (like Antigravity / VS Code).
 
-## Documentation
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design, layers, and key decisions
-- [`docs/DATABASE_SCHEMA.md`](docs/DATABASE_SCHEMA.md) — entity relationship diagram and table structure
-- [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md) — full setup instructions, including a note on Visual Studio vs. VS Code-based editors (Antigravity, Cursor, etc.)
+## ⚡ Quick Start
 
-## Quick Start
+Ensure you have .NET 8 and Docker installed.
 
 ```bash
+# 1. Start the ephemeral SQL Server container
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong!Passw0rd" -p 1433:1433 --name hc_db -d mcr.microsoft.com/mssql/server:2022-latest
+
+# 2. Enter the project directory
 cd HealthCareAppointmentSystem
+
+# 3. Restore dependencies
 dotnet restore
-dotnet tool install --global dotnet-ef   # first time only
-dotnet ef migrations add InitialCreate
+
+# 4. Install EF Core tools & apply schema
+dotnet tool install --global dotnet-ef
 dotnet ef database update
+
+# 5. Run the application
 dotnet run
 ```
 
-See [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md) for full details, including default login credentials.
+On first run, the database is automatically seeded with essential specializations, roles, and a default Admin account (`admin@healthcare.local` / `Admin@123`).
 
-## Project Structure
-
-```
-HealthCareAppointmentSystem/
-├── docs/                          # Architecture & setup documentation
-├── HealthCareAppointmentSystem.sln
-└── HealthCareAppointmentSystem/   # The actual ASP.NET Core project
-    ├── Controllers/               # MVC Controllers (Home, Appointments, Doctors, Patients)
-    ├── Models/                    # EF Core entities (ApplicationUser, Doctor, Patient, Appointment, Specialization)
-    ├── ViewModels/                # Form-shaping view models
-    ├── Views/                     # Razor views
-    ├── Data/                      # DbContext + seeding logic
-    ├── wwwroot/                   # Static files (CSS)
-    ├── Program.cs                 # App startup & DI configuration
-    └── appsettings.json           # Configuration (connection strings, etc.)
-```
-
-## Status
-This project has been written to correct, standard ASP.NET Core MVC patterns but has **not been compiled/run in this sandboxed generation environment** (no .NET runtime available there). Please build and run it locally per the setup guide before relying on it for a demo - see the guide's Troubleshooting section if you hit anything unexpected.
+See the [`docs/SETUP_GUIDE.md`](docs/SETUP_GUIDE.md) for full details, troubleshooting, and recommended editor configurations.
