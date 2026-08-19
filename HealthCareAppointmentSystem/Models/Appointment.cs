@@ -8,7 +8,8 @@ namespace HealthCareAppointmentSystem.Models
         Pending = 0,
         Confirmed = 1,
         Completed = 2,
-        Cancelled = 3
+        Cancelled = 3,
+        CancellationRequested = 4
     }
 
     public class Appointment
@@ -34,6 +35,8 @@ namespace HealthCareAppointmentSystem.Models
 
         [Required]
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
+
+        public bool IsRefunded { get; set; } = false;
 
         [StringLength(500)]
         public string? Notes { get; set; }

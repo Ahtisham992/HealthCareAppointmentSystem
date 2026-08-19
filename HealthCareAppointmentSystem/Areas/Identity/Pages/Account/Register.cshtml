@@ -1,32 +1,29 @@
 @page
 @model HealthCareAppointmentSystem.Areas.Identity.Pages.Account.RegisterModel
-@{
-    ViewData["Title"] = "Register";
-}
 
-<h1>@ViewData["Title"]</h1>
-
-<div class="row">
-    <div class="col-md-6">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-card">
-            <h2>Create a new account.</h2>
-            <hr />
+<div class="row justify-content-center">
+    <div class="col-md-6" style="margin: 0 auto;">
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-card text-center" style="max-width: 450px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+            <h2 style="color: var(--primary); font-weight: 800; letter-spacing: -0.5px;">Create Account</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Join us and manage your healthcare journey</p>
+            
             <div asp-validation-summary="ModelOnly" class="text-danger validation-summary" role="alert"></div>
 
-            <div class="form-group">
-                <label asp-for="Input.Email">Email</label>
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
+            <div class="form-group" style="text-align: left;">
+                <label asp-for="Input.Email" class="form-label">Email</label>
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Input.FullName">Full Name</label>
-                <input asp-for="Input.FullName" class="form-control" autocomplete="name" aria-required="true" />
+            <div class="form-group" style="text-align: left;">
+                <label asp-for="Input.FullName" class="form-label">Full Name</label>
+                <input asp-for="Input.FullName" class="form-control" autocomplete="name" aria-required="true" placeholder="John Doe" />
                 <span asp-validation-for="Input.FullName" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Input.Role"></label>
+            <div class="form-group" style="text-align: left;">
+                <label asp-for="Input.Role" class="form-label">I am a...</label>
                 <select asp-for="Input.Role" class="form-control" id="roleSelect" aria-required="true">
                     <option value="">-- Select Role --</option>
                     <option value="Patient">Patient</option>
@@ -36,66 +33,72 @@
             </div>
 
             <!-- Patient Specific Fields -->
-            <div id="patientFields" style="display:none; background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ddd;">
-                <h4 style="margin-top: 0;">Patient Profile</h4>
+            <div id="patientFields" style="display:none; background-color: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); text-align: left;">
+                <h4 style="margin-top: 0; font-size: 1.1rem; color: var(--primary);">Patient Profile</h4>
                 <div class="form-group">
-                    <label asp-for="Input.DateOfBirth"></label>
+                    <label asp-for="Input.DateOfBirth" class="form-label"></label>
                     <input asp-for="Input.DateOfBirth" class="form-control" type="date" />
                     <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="Input.PhoneNumber"></label>
-                    <input asp-for="Input.PhoneNumber" class="form-control" />
+                    <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                    <input asp-for="Input.PhoneNumber" class="form-control" placeholder="+1 234 567 890" />
                     <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <label asp-for="Input.Address"></label>
-                    <textarea asp-for="Input.Address" class="form-control"></textarea>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label asp-for="Input.Address" class="form-label"></label>
+                    <textarea asp-for="Input.Address" class="form-control" placeholder="123 Main St..."></textarea>
                     <span asp-validation-for="Input.Address" class="text-danger"></span>
                 </div>
             </div>
 
             <!-- Doctor Specific Fields -->
-            <div id="doctorFields" style="display:none; background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ddd;">
-                <h4 style="margin-top: 0;">Doctor Profile</h4>
+            <div id="doctorFields" style="display:none; background-color: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color); text-align: left;">
+                <h4 style="margin-top: 0; font-size: 1.1rem; color: var(--primary);">Doctor Profile</h4>
                 <div class="form-group">
-                    <label asp-for="Input.SpecializationId"></label>
+                    <label asp-for="Input.SpecializationId" class="form-label"></label>
                     <select asp-for="Input.SpecializationId" class="form-control" asp-items="Model.Specializations">
                         <option value="">-- Select Specialization --</option>
                     </select>
                     <span asp-validation-for="Input.SpecializationId" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="Input.LicenseNumber"></label>
-                    <input asp-for="Input.LicenseNumber" class="form-control" />
+                    <label asp-for="Input.LicenseNumber" class="form-label"></label>
+                    <input asp-for="Input.LicenseNumber" class="form-control" placeholder="MED-12345" />
                     <span asp-validation-for="Input.LicenseNumber" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label asp-for="Input.YearsOfExperience"></label>
-                    <input asp-for="Input.YearsOfExperience" class="form-control" type="number" />
+                    <label asp-for="Input.YearsOfExperience" class="form-label"></label>
+                    <input asp-for="Input.YearsOfExperience" class="form-control" type="number" placeholder="5" />
                     <span asp-validation-for="Input.YearsOfExperience" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <label asp-for="Input.ConsultationFee"></label>
-                    <input asp-for="Input.ConsultationFee" class="form-control" type="number" step="0.01" />
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label asp-for="Input.ConsultationFee" class="form-label"></label>
+                    <input asp-for="Input.ConsultationFee" class="form-control" type="number" step="0.01" placeholder="100.00" />
                     <span asp-validation-for="Input.ConsultationFee" class="text-danger"></span>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Input.Password">Password</label>
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" />
+            <div class="form-group" style="text-align: left;">
+                <label asp-for="Input.Password" class="form-label">Password</label>
+                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
             
-            <div class="form-group">
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" />
+            <div class="form-group" style="text-align: left;">
+                <label asp-for="Input.ConfirmPassword" class="form-label">Confirm Password</label>
+                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
 
-            <div class="form-actions">
-                <button id="registerSubmit" type="submit" class="btn btn-primary" style="width: 100%;">Register</button>
+            <div>
+                <button id="registerSubmit" type="submit" class="btn btn-primary w-100" style="padding: 0.9rem; font-size: 1.1rem; margin-top: 1rem;">Register</button>
+            </div>
+            
+            <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                <p style="margin-bottom: 0;">
+                    Already have an account? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" style="color: var(--secondary); text-decoration: none; font-weight: 600;">Log in here</a>
+                </p>
             </div>
         </form>
     </div>

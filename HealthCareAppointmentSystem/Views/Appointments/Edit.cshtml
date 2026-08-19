@@ -24,6 +24,16 @@
         <span asp-validation-for="Status" class="text-danger"></span>
     </div>
 
+    @if (Model.Status == AppointmentStatus.CancellationRequested || Model.Status == AppointmentStatus.Cancelled)
+    {
+        <div class="form-group" style="background-color: var(--bg-color); padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px;">
+            <label asp-for="IsRefunded" class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; color: var(--danger);">
+                <input class="form-check-input" asp-for="IsRefunded" />
+                Process Refund for Cancellation?
+            </label>
+        </div>
+    }
+
     <div class="form-group">
         <label asp-for="Notes"></label>
         <textarea asp-for="Notes" class="form-control" rows="3"></textarea>

@@ -56,7 +56,7 @@ namespace HealthCareAppointmentSystem.Controllers
             var today = DateTime.UtcNow.Date;
             var upcoming = await _context.Appointments
                 .Include(a => a.Patient).ThenInclude(p => p!.ApplicationUser)
-                .Where(a => a.DoctorId == doctor.Id && a.AppointmentDateTime >= today)
+                .Where(a => a.DoctorId == doctor.Id && a.AppointmentDateTime >= today && a.Status != AppointmentStatus.Cancelled)
                 .OrderBy(a => a.AppointmentDateTime)
                 .ToListAsync();
 

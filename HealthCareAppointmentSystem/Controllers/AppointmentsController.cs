@@ -136,7 +136,8 @@ namespace HealthCareAppointmentSystem.Controllers
         }
 
         // GET: /Appointments/Edit/5
-        // Doctors and Admins can update status. Patients can reschedule/cancel their own pending appointments.
+        // Doctors and Admins can update status and refund. Patients use RequestCancellation.
+        [Authorize(Roles = "Admin,Doctor")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id is null) return NotFound();
@@ -152,7 +153,8 @@ namespace HealthCareAppointmentSystem.Controllers
         // POST: /Appointments/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,DoctorId,PatientId,AppointmentDateTime,Status,Notes,CreatedAt")] Appointment appointment)
+        [Authorize(Roles = "Admin,Doctor")]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,DoctorId,PatientId,AppointmentDateTime,Status,IsRefunded,Notes,CreatedAt")] Appointment appointment)
         {
             if (id != appointment.Id) return NotFound();
 
@@ -231,6 +233,27 @@ namespace HealthCareAppointmentSystem.Controllers
             }
 
             return false;
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> RequestCancellation(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return NotFound();
+
+            if (!await UserCanModifyAppointment(appointment)) return Forbid();
+
+            // Only allow if pending or confirmed
+            if (appointment.Status == AppointmentStatus.Pending || appointment.Status == AppointmentStatus.Confirmed)
+            {
+                appointment.Status = AppointmentStatus.CancellationRequested;
+                _context.Update(appointment);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpGet]
