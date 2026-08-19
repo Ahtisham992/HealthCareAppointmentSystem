@@ -48,12 +48,17 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (!string.IsNullOrEmpty(searchString))
             {
+                var matchingStatuses = Enum.GetValues(typeof(AppointmentStatus))
+                    .Cast<AppointmentStatus>()
+                    .Where(s => s.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
                 query = query.Where(a => 
                     (a.Doctor!.ApplicationUser!.FullName.Contains(searchString)) ||
                     (a.Doctor!.ApplicationUser!.Email!.Contains(searchString)) ||
                     (a.Patient!.ApplicationUser!.FullName.Contains(searchString)) ||
                     (a.Patient!.ApplicationUser!.Email!.Contains(searchString)) ||
-                    a.Status.ToString().Contains(searchString));
+                    matchingStatuses.Contains(a.Status));
             }
 
             return View(await query.ToListAsync());
