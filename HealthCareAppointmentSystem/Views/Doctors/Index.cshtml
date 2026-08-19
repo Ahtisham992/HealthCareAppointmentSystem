@@ -18,6 +18,7 @@
 <table class="data-table">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Specialization</th>
             <th>License #</th>
@@ -31,6 +32,7 @@
         @foreach (var item in Model)
         {
             <tr>
+                <td><span style="color: var(--secondary); font-family: monospace;">#DOC-@item.Id.ToString("D4")</span></td>
                 <td>Dr. @item.ApplicationUser?.FullName</td>
                 <td>@item.Specialization?.Name</td>
                 <td>@item.LicenseNumber</td>

@@ -27,7 +27,8 @@ namespace HealthCareAppointmentSystem.Controllers
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(p => 
-                    p.ApplicationUser!.FullName.Contains(searchString) || 
+                    p.ApplicationUser!.FullName.Contains(searchString) ||
+                    p.ApplicationUser!.Email!.Contains(searchString) ||
                     (p.PhoneNumber != null && p.PhoneNumber.Contains(searchString)));
             }
 

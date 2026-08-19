@@ -21,6 +21,7 @@
 <table class="data-table">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Date &amp; Time</th>
             <th>Doctor</th>
             <th>Patient</th>
@@ -32,13 +33,36 @@
         @foreach (var item in Model)
         {
             <tr>
+                <td><span style="color: var(--secondary); font-family: monospace;">#APT-@item.Id.ToString("D4")</span></td>
                 <td>@item.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</td>
                 <td>Dr. @item.Doctor?.ApplicationUser?.FullName</td>
                 <td>@item.Patient?.ApplicationUser?.FullName</td>
-                <td><span class="status-badge status-@item.Status.ToString().ToLower()">@item.Status</span></td>
+                <td>
+                    @{
+                        var isPast = item.AppointmentDateTime.AddMinutes(item.Doctor?.SlotDurationMinutes ?? 20) <= DateTime.Now;
+                        var statusText = item.Status.ToString();
+                        if ((item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed) && isPast)
+                        {
+                            statusText = "Completed (Pending Review)";
+                        }
+                    }
+                    <span class="status-badge status-@(item.Status.ToString().ToLower())" style="@(statusText.Contains("Review") ? "background-color: var(--warning); color: #856404;" : "")">@statusText</span>
+                </td>
                 <td class="actions" style="display: flex; gap: 0.5rem; align-items: center;">
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-sm">Details</a>
                     
+                    @if (isPast && (item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed))
+                    {
+                        <form asp-action="MarkCompleted" asp-route-id="@item.Id" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-primary btn-sm">Mark Completed</button>
+                        </form>
+                    }
+
+                    @if (User.IsInRole("Patient") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Completed)
+                    {
+                        <a asp-controller="Reviews" asp-action="Create" asp-route-appointmentId="@item.Id" class="btn btn-primary btn-sm" style="background-color: var(--success); border-color: var(--success);">Leave Review</a>
+                    }
+
                     @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
                     {
                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Edit</a>
@@ -52,7 +76,9 @@
 
                     @if (User.IsInRole("Admin"))
                     {
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" style="background-color: var(--danger); border-color: var(--danger);">Delete</a>
+                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this appointment?');">
+                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: var(--danger); border-color: var(--danger);">Delete</button>
+                        </form>
                     }
                 </td>
             </tr>

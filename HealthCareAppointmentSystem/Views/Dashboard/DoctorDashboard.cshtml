@@ -1,4 +1,5 @@
 @using HealthCareAppointmentSystem.ViewModels
+@using HealthCareAppointmentSystem.Models
 @model DoctorDashboardViewModel
 
 @{
@@ -16,6 +17,26 @@
             <strong>Complete Your Profile:</strong> Please add your profile picture and education details to help patients learn more about you.
         </div>
         <a asp-controller="Profile" asp-action="Edit" class="btn btn-primary btn-sm">Complete Profile</a>
+    </div>
+}
+
+@if (Model.PendingConfirmationsCount > 0)
+{
+    <div style="background-color: #e8f4fd; color: #004085; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid #b8daff; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>Action Required:</strong> You have <strong>@Model.PendingConfirmationsCount</strong> new appointment request(s) waiting for your confirmation.
+        </div>
+        <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary btn-sm">View Requests</a>
+    </div>
+}
+
+@if (Model.PendingCompletionsCount > 0)
+{
+    <div style="background-color: #e8f4fd; color: #004085; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #b8daff; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>Recent Appointments:</strong> You have <strong>@Model.PendingCompletionsCount</strong> appointment(s) that have ended. Please mark them as completed.
+        </div>
+        <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary btn-sm">Mark Completed</a>
     </div>
 }
 
@@ -63,10 +84,19 @@
                         <td>@appt.Patient?.ApplicationUser?.FullName</td>
                         <td>@appt.AppointmentDateTime.ToString("f")</td>
                         <td>
-                            <span class="status-badge status-@(appt.Status.ToString().ToLower())">@appt.Status</span>
+                            @{
+                                var isPast = appt.AppointmentDateTime.AddMinutes(appt.Doctor?.SlotDurationMinutes ?? 20) <= DateTime.Now;
+                                var statusText = appt.Status.ToString();
+                                
+                                if ((appt.Status == AppointmentStatus.Pending || appt.Status == AppointmentStatus.Confirmed) && isPast)
+                                {
+                                    statusText = "Completed (Pending Review)";
+                                }
+                            }
+                            <span class="status-badge status-@(appt.Status.ToString().ToLower())" style="@(statusText.Contains("Review") ? "background-color: var(--warning); color: #856404;" : "")">@statusText</span>
                         </td>
                         <td>
-                            <a asp-controller="Appointments" asp-action="Edit" asp-route-id="@appt.Id">Manage</a>
+                            <a asp-controller="Appointments" asp-action="Edit" asp-route-id="@appt.Id" class="btn btn-primary btn-sm">Manage</a>
                         </td>
                     </tr>
                 }

@@ -24,20 +24,23 @@
 <div class="detail-card">
     <table class="data-table">
         <thead>
-            <tr>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Role(s)</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
         <tbody>
             @foreach (var account in Model)
-            {
-                <tr>
-                    <td>@account.FullName</td>
-                    <td>@account.Email</td>
+        {
+            <tr>
+                <td><span style="color: var(--secondary); font-family: monospace;">#USR-@account.Id.Substring(0, 8)</span></td>
+                <td>
+                    <div style="font-weight: 600; color: var(--text);">@account.FullName</div>
+                </td>    <td>@account.Email</td>
                     <td>
                         @if (string.IsNullOrEmpty(account.Roles))
                         {

@@ -15,6 +15,8 @@ namespace HealthCareAppointmentSystem.ViewModels
         public Doctor? DoctorProfile { get; set; }
         public int TodayAppointmentsCount { get; set; }
         public int UpcomingAppointmentsCount { get; set; }
+        public int PendingConfirmationsCount { get; set; }
+        public int PendingCompletionsCount { get; set; }
         public List<Appointment> UpcomingAppointments { get; set; } = new();
     }
 
@@ -22,6 +24,7 @@ namespace HealthCareAppointmentSystem.ViewModels
     {
         public string SearchTerm { get; set; } = string.Empty;
         public int? SpecializationId { get; set; }
+        public int PendingReviewsCount { get; set; }
         public List<Doctor> AvailableDoctors { get; set; } = new();
     }
 }

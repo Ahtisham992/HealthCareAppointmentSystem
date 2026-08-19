@@ -37,6 +37,7 @@ namespace HealthCareAppointmentSystem.Controllers
             {
                 query = query.Where(d => 
                     d.ApplicationUser!.FullName.Contains(searchString) || 
+                    d.ApplicationUser!.Email!.Contains(searchString) || 
                     d.Specialization!.Name.Contains(searchString) ||
                     d.LicenseNumber.Contains(searchString));
             }
@@ -57,6 +58,15 @@ namespace HealthCareAppointmentSystem.Controllers
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (doctor is null) return NotFound();
+
+            var reviews = await _context.Reviews
+                .Include(r => r.Patient).ThenInclude(p => p.ApplicationUser)
+                .Where(r => r.DoctorId == id)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+            
+            ViewBag.Reviews = reviews;
+
             return View(doctor);
         }
 

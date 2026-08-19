@@ -15,6 +15,8 @@ namespace HealthCareAppointmentSystem.Data
         public DbSet<Patient> Patients { get; set; } = null!;
         public DbSet<Specialization> Specializations { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
+        public DbSet<Review> Reviews { get; set; } = null!;
+        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -53,6 +55,25 @@ namespace HealthCareAppointmentSystem.Data
                 .HasOne(a => a.Patient)
                 .WithMany(p => p.Appointments)
                 .HasForeignKey(a => a.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Review configurations
+            builder.Entity<Review>()
+                .HasOne(r => r.Appointment)
+                .WithOne()
+                .HasForeignKey<Review>(r => r.AppointmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Doctor)
+                .WithMany()
+                .HasForeignKey(r => r.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Review>()
+                .HasOne(r => r.Patient)
+                .WithMany()
+                .HasForeignKey(r => r.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

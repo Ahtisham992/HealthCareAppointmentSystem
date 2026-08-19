@@ -50,7 +50,9 @@ namespace HealthCareAppointmentSystem.Controllers
             {
                 query = query.Where(a => 
                     (a.Doctor!.ApplicationUser!.FullName.Contains(searchString)) ||
+                    (a.Doctor!.ApplicationUser!.Email!.Contains(searchString)) ||
                     (a.Patient!.ApplicationUser!.FullName.Contains(searchString)) ||
+                    (a.Patient!.ApplicationUser!.Email!.Contains(searchString)) ||
                     a.Status.ToString().Contains(searchString));
             }
 
@@ -164,7 +166,7 @@ namespace HealthCareAppointmentSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin,Doctor")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,DoctorId,PatientId,AppointmentDateTime,Status,IsRefunded,Notes,CreatedAt")] Appointment appointment)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,DoctorId,PatientId,AppointmentDateTime,Status,IsRefunded,Notes,CreatedAt,CancellationReason")] Appointment appointment)
         {
             if (id != appointment.Id) return NotFound();
 
@@ -175,6 +177,19 @@ namespace HealthCareAppointmentSystem.Controllers
                 try
                 {
                     _context.Update(appointment);
+                    
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    if (currentUser != null) 
+                    {
+                        var auditLog = new AuditLog
+                        {
+                            UserId = currentUser.Id,
+                            Action = "Edited Appointment",
+                            Details = $"Appointment ID: {appointment.Id}, New Status: {appointment.Status}" + (appointment.Status == AppointmentStatus.Cancelled ? $", Reason: {appointment.CancellationReason}" : "")
+                        };
+                        _context.AuditLogs.Add(auditLog);
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -216,6 +231,52 @@ namespace HealthCareAppointmentSystem.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Doctor,Patient,Admin")]
+        public async Task<IActionResult> MarkCompleted(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return NotFound();
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return Challenge();
+
+            // Validate permissions
+            if (User.IsInRole("Doctor"))
+            {
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.ApplicationUserId == currentUser.Id);
+                if (appointment.DoctorId != doctor?.Id) return Forbid();
+            }
+            else if (User.IsInRole("Patient"))
+            {
+                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == currentUser.Id);
+                if (appointment.PatientId != patient?.Id) return Forbid();
+            }
+
+            if (appointment.Status == AppointmentStatus.Pending || appointment.Status == AppointmentStatus.Confirmed)
+            {
+                appointment.Status = AppointmentStatus.Completed;
+                
+                var auditLog = new AuditLog
+                {
+                    UserId = currentUser.Id,
+                    Action = "Marked Appointment Completed",
+                    Details = $"Appointment ID: {appointment.Id}"
+                };
+                _context.AuditLogs.Add(auditLog);
+
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool AppointmentExists(int id)
+        {
+            return _context.Appointments.Any(e => e.Id == id);
         }
 
         /// <summary>

@@ -1,0 +1,33 @@
+@model IEnumerable<HealthCareAppointmentSystem.Models.AuditLog>
+@{
+    ViewData["Title"] = "Audit Logs";
+    var users = ViewBag.Users as Dictionary<string, string> ?? new Dictionary<string, string>();
+}
+
+<div class="page-header">
+    <h1>System Audit Logs</h1>
+</div>
+
+<div class="detail-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model)
+            {
+                <tr>
+                    <td style="white-space: nowrap;">@log.Timestamp.ToString("dd MMM yyyy, HH:mm:ss")</td>
+                    <td>@(users.ContainsKey(log.UserId) ? users[log.UserId] : log.UserId)</td>
+                    <td><span style="font-weight: 600; color: var(--primary);">@log.Action</span></td>
+                    <td style="color: var(--secondary);">@log.Details</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

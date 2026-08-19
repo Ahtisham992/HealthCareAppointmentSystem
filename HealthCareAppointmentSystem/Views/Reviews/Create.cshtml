@@ -1,0 +1,44 @@
+@model HealthCareAppointmentSystem.Models.Review
+
+@{
+    ViewData["Title"] = "Leave a Review";
+}
+
+<div class="form-card">
+    <h2 style="margin-top: 0;">Review Dr. @ViewBag.DoctorName</h2>
+    <p class="text-muted">Your feedback helps us improve our services.</p>
+
+    <form asp-action="Create">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="AppointmentId" />
+        <input type="hidden" asp-for="DoctorId" />
+        <input type="hidden" asp-for="PatientId" />
+
+        <div class="form-group">
+            <label asp-for="Rating" class="control-label">Rating (1-5 Stars)</label>
+            <select asp-for="Rating" class="form-control" style="font-size: 1.2rem;">
+                <option value="5">⭐⭐⭐⭐⭐ - Excellent</option>
+                <option value="4">⭐⭐⭐⭐ - Good</option>
+                <option value="3">⭐⭐⭐ - Average</option>
+                <option value="2">⭐⭐ - Poor</option>
+                <option value="1">⭐ - Terrible</option>
+            </select>
+            <span asp-validation-for="Rating" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Comment" class="control-label">Comment (Optional)</label>
+            <textarea asp-for="Comment" class="form-control" rows="4" placeholder="Share details of your experience..."></textarea>
+            <span asp-validation-for="Comment" class="text-danger"></span>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Submit Review</button>
+            <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

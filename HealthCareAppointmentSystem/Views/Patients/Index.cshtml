@@ -22,6 +22,7 @@
 <table class="data-table">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Phone</th>
             <th>Date of Birth</th>
@@ -32,6 +33,7 @@
         @foreach (var item in Model)
         {
             <tr>
+                <td><span style="color: var(--secondary); font-family: monospace;">#PAT-@item.Id.ToString("D4")</span></td>
                 <td>@item.ApplicationUser?.FullName</td>
                 <td>@(item.PhoneNumber ?? "-")</td>
                 <td>@(item.DateOfBirth?.ToString("dd MMM yyyy") ?? "-")</td>

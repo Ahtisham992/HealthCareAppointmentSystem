@@ -10,6 +10,16 @@
     <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary">My Appointments</a>
 </div>
 
+@if (Model.PendingReviewsCount > 0)
+{
+    <div style="background-color: #e8f4fd; color: #004085; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #b8daff; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>Action Required:</strong> You have <strong>@Model.PendingReviewsCount</strong> completed appointment(s) waiting for your review.
+        </div>
+        <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary btn-sm" style="background-color: var(--success); border-color: var(--success);">Leave Reviews</a>
+    </div>
+}
+
 <form asp-action="PatientDashboard" method="get" class="form-card" style="max-width: 100%; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end;">
     <div class="form-group" style="margin-bottom: 0; flex: 1;">
         <label>Search by Name</label>
