@@ -9,7 +9,8 @@ namespace HealthCareAppointmentSystem.Models
         Confirmed = 1,
         Completed = 2,
         Cancelled = 3,
-        CancellationRequested = 4
+        PatientCancellationRequested = 4,
+        DoctorCancellationRequested = 5
     }
 
     public class Appointment

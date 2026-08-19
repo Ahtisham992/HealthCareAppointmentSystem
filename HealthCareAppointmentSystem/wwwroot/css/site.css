@@ -251,6 +251,7 @@ body {
 .status-confirmed { background: #dbeafe; color: #1e40af; }
 .status-completed { background: #d1fae5; color: #065f46; }
 .status-cancelled { background: #fee2e2; color: #991b1b; }
+.status-patientcancellationrequested, .status-doctorcancellationrequested { background: #ffedd5; color: #c2410c; }
 
 /* Footer */
 .footer {

@@ -5,78 +5,140 @@
     ViewData["Title"] = "Patient Dashboard";
 }
 
-<div class="page-header">
-    <h1>Find a Doctor</h1>
-    <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary">My Appointments</a>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1 style="margin: 0; color: var(--primary);">Welcome, @Model.PatientProfile?.ApplicationUser?.FullName</h1>
+    <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary">View All Appointments</a>
 </div>
 
-@if (Model.PendingReviewsCount > 0)
-{
-    <div style="background-color: #e8f4fd; color: #004085; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #b8daff; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <strong>Action Required:</strong> You have <strong>@Model.PendingReviewsCount</strong> completed appointment(s) waiting for your review.
-        </div>
-        <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary btn-sm" style="background-color: var(--success); border-color: var(--success);">Leave Reviews</a>
+<div class="feature-grid" style="margin-bottom: 2rem;">
+    <div class="feature-card text-center" style="padding: 2rem 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);"><i class="fa-regular fa-calendar-days"></i></div>
+        <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">@Model.TotalAppointmentsCount</div>
+        <div style="color: var(--secondary); font-weight: 600;">Total Appointments</div>
     </div>
-}
+    
+    <div class="feature-card text-center" style="padding: 2rem 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);"><i class="fa-solid fa-calendar-check"></i></div>
+        <div style="font-size: 2rem; font-weight: 700; color: var(--primary);">@Model.UpcomingAppointmentsCount</div>
+        <div style="color: var(--secondary); font-weight: 600;">Upcoming Appointments</div>
+    </div>
 
-<form asp-action="PatientDashboard" method="get" class="form-card" style="max-width: 100%; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end;">
-    <div class="form-group" style="margin-bottom: 0; flex: 1;">
-        <label>Search by Name</label>
-        <input name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="e.g. Smith" />
-    </div>
-    <div class="form-group" style="margin-bottom: 0; flex: 1;">
-        <label>Specialization</label>
-        <select name="specializationId" class="form-control" asp-items="ViewBag.Specializations">
-            <option value="">-- All Specializations --</option>
-        </select>
-    </div>
-    <div class="form-actions" style="margin-top: 0; margin-bottom: 0;">
-        <button type="submit" class="btn btn-primary">Search</button>
-        <a asp-action="PatientDashboard" class="btn btn-secondary">Clear</a>
-    </div>
-</form>
-
-<div class="feature-grid">
-    @if (Model.AvailableDoctors.Any())
-    {
-        @foreach (var doctor in Model.AvailableDoctors)
+    <div class="feature-card text-center" style="padding: 2rem 1rem; @(Model.PendingReviewsCount > 0 ? "border: 2px solid var(--warning); background-color: #fffbeb;" : "")">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: @(Model.PendingReviewsCount > 0 ? "#b45309" : "var(--primary)");"><i class="fa-solid fa-star"></i></div>
+        <div style="font-size: 2rem; font-weight: 700; color: @(Model.PendingReviewsCount > 0 ? "#b45309" : "var(--primary)");">@Model.PendingReviewsCount</div>
+        <div style="color: var(--secondary); font-weight: 600;">Pending Reviews</div>
+        @if (Model.PendingReviewsCount > 0)
         {
-            <div class="feature-card" style="display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        @if (!string.IsNullOrEmpty(doctor.ProfilePictureUrl))
-                        {
-                            <img src="@doctor.ProfilePictureUrl" alt="Profile" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" />
-                        }
-                        else
-                        {
-                            <div style="width: 60px; height: 60px; border-radius: 50%; background-color: var(--bg-color); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                                👨‍⚕️
-                            </div>
-                        }
-                        <div>
-                            <h3 style="margin-bottom: 0;">Dr. @doctor.ApplicationUser?.FullName</h3>
-                            <p style="color: var(--secondary); font-weight: 600; margin-bottom: 0;">@doctor.Specialization?.Name</p>
-                        </div>
-                    </div>
-                    <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
-                        <div>⭐ @doctor.YearsOfExperience Years Experience</div>
-                        <div>💰 Rs. @doctor.ConsultationFee.ToString("N0") Consultation Fee</div>
-                        <div>🕒 @doctor.AvailableFrom.ToString(@"hh\:mm") - @doctor.AvailableTo.ToString(@"hh\:mm")</div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <a asp-controller="Doctors" asp-action="Details" asp-route-id="@doctor.Id" class="btn btn-secondary w-100" style="padding: 0.5rem;">View Profile</a>
-                    <a asp-controller="Appointments" asp-action="Create" asp-route-doctorId="@doctor.Id" class="btn btn-primary w-100" style="padding: 0.5rem;">Book</a>
-                </div>
+            <div style="margin-top: 1rem;">
+                <a asp-controller="Appointments" asp-action="Index" class="btn btn-primary btn-sm" style="background-color: var(--warning); border-color: var(--warning); color: #fff;">Leave Review</a>
             </div>
         }
-    }
-    else
+    </div>
+</div>
+
+<h3 style="margin-bottom: 1rem; color: var(--secondary);">Your Upcoming Appointments</h3>
+<div class="feature-card" style="padding: 0; overflow: hidden; margin-bottom: 3rem;">
+    <table class="data-table" style="margin-bottom: 0;">
+        <thead>
+            <tr>
+                <th>Doctor</th>
+                <th>Specialization</th>
+                <th>Date & Time</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var apt in Model.UpcomingAppointments)
+            {
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 600;">Dr. @apt.Doctor?.ApplicationUser?.FullName</span>
+                        </div>
+                    </td>
+                    <td>@apt.Doctor?.Specialization?.Name</td>
+                    <td style="white-space: nowrap;">@apt.AppointmentDateTime.ToString("dddd, dd MMMM yyyy hh:mm tt")</td>
+                    <td>
+                        <span class="status-badge status-@(apt.Status.ToString().ToLower())">@apt.Status.ToString()</span>
+                    </td>
+                    <td>
+                        <a asp-controller="Appointments" asp-action="Details" asp-route-id="@apt.Id" class="btn btn-primary btn-sm">Manage</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    @if (!Model.UpcomingAppointments.Any())
     {
-        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
-            <p class="text-muted" style="font-size: 1.2rem;">No doctors found matching your criteria.</p>
+        <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+            <p>You have no upcoming appointments.</p>
+            <a asp-action="PatientDashboard" class="btn btn-secondary btn-sm">Find a Doctor below</a>
         </div>
     }
+</div>
+
+<div style="border-top: 1px solid var(--border-color); padding-top: 3rem; margin-bottom: 2rem;">
+    <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Find a Doctor</h2>
+    
+    <form asp-action="PatientDashboard" method="get" class="form-card" style="max-width: 100%; margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label>Search by Name</label>
+            <input name="searchTerm" value="@Model.SearchTerm" class="form-control" placeholder="e.g. Smith" />
+        </div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+            <label>Specialization</label>
+            <select name="specializationId" class="form-control" asp-items="ViewBag.Specializations">
+                <option value="">-- All Specializations --</option>
+            </select>
+        </div>
+        <div class="form-actions" style="margin-top: 0; margin-bottom: 0;">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a asp-action="PatientDashboard" class="btn btn-secondary">Clear</a>
+        </div>
+    </form>
+
+    <div class="feature-grid">
+        @if (Model.AvailableDoctors.Any())
+        {
+            @foreach (var doctor in Model.AvailableDoctors)
+            {
+                <div class="feature-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            @if (!string.IsNullOrEmpty(doctor.ProfilePictureUrl))
+                            {
+                                <img src="@doctor.ProfilePictureUrl" alt="Profile" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" />
+                            }
+                            else
+                            {
+                                <div style="width: 60px; height: 60px; border-radius: 50%; background-color: var(--bg-color); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--secondary);">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                </div>
+                            }
+                            <div>
+                                <h3 style="margin-bottom: 0;">Dr. @doctor.ApplicationUser?.FullName</h3>
+                                <p style="color: var(--secondary); font-weight: 600; margin-bottom: 0;">@doctor.Specialization?.Name</p>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+                            <div><i class="fa-solid fa-calendar-days" style="color: var(--primary);"></i> @doctor.YearsOfExperience Years Experience</div>
+                            <div><i class="fa-solid fa-money-bill-wave" style="color: var(--success);"></i> Rs. @doctor.ConsultationFee.ToString("N0") Consultation Fee</div>
+                            <div><i class="fa-regular fa-clock" style="color: var(--primary);"></i> @doctor.AvailableFrom.ToString(@"hh\:mm") - @doctor.AvailableTo.ToString(@"hh\:mm")</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a asp-controller="Doctors" asp-action="Details" asp-route-id="@doctor.Id" class="btn btn-secondary w-100" style="padding: 0.5rem; text-align: center; text-decoration: none;">View Profile</a>
+                        <a asp-controller="Appointments" asp-action="Create" asp-route-doctorId="@doctor.Id" class="btn btn-primary w-100" style="padding: 0.5rem; text-align: center; text-decoration: none;">Book</a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <p class="text-muted" style="font-size: 1.2rem;">No doctors found matching your criteria.</p>
+            </div>
+        }
+    </div>
 </div>

@@ -14,14 +14,14 @@
         <input type="hidden" asp-for="DoctorId" />
         <input type="hidden" asp-for="PatientId" />
 
-        <div class="form-group">
-            <label asp-for="Rating" class="control-label">Rating (1-5 Stars)</label>
-            <select asp-for="Rating" class="form-control" style="font-size: 1.2rem;">
-                <option value="5">⭐⭐⭐⭐⭐ - Excellent</option>
-                <option value="4">⭐⭐⭐⭐ - Good</option>
-                <option value="3">⭐⭐⭐ - Average</option>
-                <option value="2">⭐⭐ - Poor</option>
-                <option value="1">⭐ - Terrible</option>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label asp-for="Rating" class="control-label" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Rating</label>
+            <select asp-for="Rating" class="form-control" style="padding: 0.75rem; border-radius: 6px;">
+                <option value="5">5 Stars - Excellent</option>
+                <option value="4">4 Stars - Good</option>
+                <option value="3">3 Stars - Average</option>
+                <option value="2">2 Stars - Poor</option>
+                <option value="1">1 Star - Terrible</option>
             </select>
             <span asp-validation-for="Rating" class="text-danger"></span>
         </div>

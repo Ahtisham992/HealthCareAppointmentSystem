@@ -20,7 +20,14 @@
 
     <div class="form-group">
         <label asp-for="Status" class="control-label"></label>
-        <select asp-for="Status" class="form-control" id="statusDropdown" asp-items="Html.GetEnumSelectList<AppointmentStatus>()"></select>
+        @if (ViewBag.StatusList != null)
+        {
+            <select asp-for="Status" class="form-control" id="statusDropdown" asp-items="ViewBag.StatusList"></select>
+        }
+        else
+        {
+            <select asp-for="Status" class="form-control" id="statusDropdown" asp-items="Html.GetEnumSelectList<AppointmentStatus>()"></select>
+        }
         <span asp-validation-for="Status" class="text-danger"></span>
     </div>
 
@@ -30,7 +37,7 @@
         <span asp-validation-for="CancellationReason" class="text-danger"></span>
     </div>
 
-    @if (Model.Status == AppointmentStatus.CancellationRequested || Model.Status == AppointmentStatus.Cancelled)
+    @if (Model.Status == AppointmentStatus.PatientCancellationRequested || Model.Status == AppointmentStatus.DoctorCancellationRequested || Model.Status == AppointmentStatus.Cancelled)
     {
         <div class="form-group" style="background-color: var(--bg-color); padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px;">
             <label asp-for="IsRefunded" class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin: 0; color: var(--danger);">

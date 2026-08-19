@@ -8,6 +8,9 @@ namespace HealthCareAppointmentSystem.ViewModels
         public int TotalPatients { get; set; }
         public int PendingApprovals { get; set; }
         public int TotalAppointments { get; set; }
+        public Dictionary<string, int> AppointmentsByStatus { get; set; } = new();
+        public Dictionary<string, int> DoctorsBySpecialization { get; set; } = new();
+        public List<AuditLog> RecentLogs { get; set; } = new();
     }
 
     public class DoctorDashboardViewModel
@@ -26,5 +29,10 @@ namespace HealthCareAppointmentSystem.ViewModels
         public int? SpecializationId { get; set; }
         public int PendingReviewsCount { get; set; }
         public List<Doctor> AvailableDoctors { get; set; } = new();
+        
+        public Patient? PatientProfile { get; set; }
+        public int UpcomingAppointmentsCount { get; set; }
+        public int TotalAppointmentsCount { get; set; }
+        public List<Appointment> UpcomingAppointments { get; set; } = new();
     }
 }

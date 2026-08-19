@@ -42,19 +42,19 @@
 
 <div class="feature-grid" style="margin-bottom: 2rem;">
     <div class="feature-card text-center">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">📅</div>
+        <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary);"><i class="fa-regular fa-calendar-days"></i></div>
         <h2 style="margin: 0; color: var(--primary);">@Model.TodayAppointmentsCount</h2>
         <p>Appointments Today</p>
     </div>
     
     <div class="feature-card text-center">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔮</div>
+        <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary);"><i class="fa-solid fa-calendar-check"></i></div>
         <h2 style="margin: 0; color: var(--primary);">@Model.UpcomingAppointmentsCount</h2>
         <p>Total Upcoming</p>
     </div>
     
     <div class="feature-card text-center">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">⏰</div>
+        <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--primary);"><i class="fa-regular fa-clock"></i></div>
         <h4 style="margin: 0; color: var(--text);">@Model.DoctorProfile?.AvailableFrom.ToString(@"hh\:mm") - @Model.DoctorProfile?.AvailableTo.ToString(@"hh\:mm")</h4>
         <p>Your Working Hours</p>
     </div>

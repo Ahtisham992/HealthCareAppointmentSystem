@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HealthCare Appointment System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
@@ -20,6 +21,7 @@
                         <li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li>
                         <li><a asp-controller="Patients" asp-action="Index">Patients</a></li>
                         <li><a asp-controller="Accounts" asp-action="Index">Accounts</a></li>
+                        <li><a asp-controller="AuditLogs" asp-action="Index">Audit Logs</a></li>
                     }
                     <li class="navbar-user">
                         <a asp-controller="Profile" asp-action="Index" style="text-decoration: none; color: var(--primary); font-weight: 600; margin-right: 10px;">

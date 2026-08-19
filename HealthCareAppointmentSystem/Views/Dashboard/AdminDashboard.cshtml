@@ -5,38 +5,123 @@
     ViewData["Title"] = "Admin Dashboard";
 }
 
-<div class="page-header">
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h1>Admin Dashboard</h1>
+    <div>
+        <a asp-controller="Doctors" asp-action="Index" class="btn btn-primary btn-sm">Manage Doctors</a>
+        <a asp-controller="Patients" asp-action="Index" class="btn btn-secondary btn-sm">Manage Patients</a>
+        <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary btn-sm">All Appointments</a>
+    </div>
 </div>
 
 <div class="feature-grid" style="margin-bottom: 2rem;">
-    <div class="feature-card text-center">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">👨‍⚕️</div>
+    <div class="feature-card text-center" style="padding: 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);"><i class="fa-solid fa-user-doctor"></i></div>
         <h2 style="margin: 0; color: var(--primary);">@Model.TotalDoctors</h2>
-        <p>Total Doctors</p>
+        <p style="margin:0;">Total Doctors</p>
     </div>
     
-    <div class="feature-card text-center">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">👥</div>
+    <div class="feature-card text-center" style="padding: 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);"><i class="fa-solid fa-users"></i></div>
         <h2 style="margin: 0; color: var(--primary);">@Model.TotalPatients</h2>
-        <p>Total Patients</p>
+        <p style="margin:0;">Total Patients</p>
     </div>
     
-    <div class="feature-card text-center">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">⏳</div>
+    <div class="feature-card text-center" style="padding: 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--danger);"><i class="fa-solid fa-hourglass-half"></i></div>
         <h2 style="margin: 0; color: var(--danger);">@Model.PendingApprovals</h2>
-        <p>Pending Approvals</p>
+        <p style="margin:0;">Pending Approvals</p>
     </div>
     
-    <div class="feature-card text-center">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">📅</div>
+    <div class="feature-card text-center" style="padding: 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--success);"><i class="fa-regular fa-calendar-days"></i></div>
         <h2 style="margin: 0; color: var(--success);">@Model.TotalAppointments</h2>
-        <p>Total Appointments</p>
+        <p style="margin:0;">Total Appointments</p>
     </div>
 </div>
 
-<div style="display: flex; gap: 1rem;">
-    <a asp-controller="Doctors" asp-action="Index" class="btn btn-primary">Manage Doctors</a>
-    <a asp-controller="Patients" asp-action="Index" class="btn btn-secondary">Manage Patients</a>
-    <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary">All Appointments</a>
+<div class="feature-grid" style="margin-bottom: 2rem; grid-template-columns: 1fr 1fr;">
+    <div class="feature-card" style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">Appointments by Status</h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="appointmentsChart"></canvas>
+        </div>
+    </div>
+    <div class="feature-card" style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">Doctors by Specialization</h3>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="specializationChart"></canvas>
+        </div>
+    </div>
 </div>
+
+<div class="feature-card" style="padding: 1.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+        <h3 style="margin:0;">Recent Activity</h3>
+        <a asp-controller="AuditLogs" asp-action="Index" class="btn btn-secondary btn-sm">View All Logs</a>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(!Model.RecentLogs.Any()) {
+                <tr><td colspan="4" class="text-center text-muted">No recent activity.</td></tr>
+            }
+            @foreach (var log in Model.RecentLogs)
+            {
+                <tr>
+                    <td style="white-space:nowrap; font-size:0.85rem;">@log.Timestamp.ToLocalTime().ToString("g")</td>
+                    <td><span class="status-badge" style="background:#f1f5f9; color:#475569;">@log.UserId</span></td>
+                    <td style="font-weight:600;">@log.Action</td>
+                    <td style="font-size:0.9rem; color:var(--text-muted);">@log.Details</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ctxAppointments = document.getElementById('appointmentsChart').getContext('2d');
+            var appointmentsLabels = @Html.Raw(Json.Serialize(Model.AppointmentsByStatus.Keys));
+            var appointmentsData = @Html.Raw(Json.Serialize(Model.AppointmentsByStatus.Values));
+            
+            new Chart(ctxAppointments, {
+                type: 'doughnut',
+                data: {
+                    labels: appointmentsLabels,
+                    datasets: [{
+                        data: appointmentsData,
+                        backgroundColor: ['#3b82f6', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6', '#64748b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            var ctxSpecializations = document.getElementById('specializationChart').getContext('2d');
+            var specializationsLabels = @Html.Raw(Json.Serialize(Model.DoctorsBySpecialization.Keys));
+            var specializationsData = @Html.Raw(Json.Serialize(Model.DoctorsBySpecialization.Values));
+            
+            new Chart(ctxSpecializations, {
+                type: 'bar',
+                data: {
+                    labels: specializationsLabels,
+                    datasets: [{
+                        label: 'Doctors',
+                        data: specializationsData,
+                        backgroundColor: '#3b82f6'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        });
+    </script>
+}

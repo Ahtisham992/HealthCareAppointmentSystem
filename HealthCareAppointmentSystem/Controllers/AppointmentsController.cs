@@ -4,6 +4,7 @@ using HealthCareAppointmentSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace HealthCareAppointmentSystem.Controllers
@@ -59,6 +60,22 @@ namespace HealthCareAppointmentSystem.Controllers
                     (a.Patient!.ApplicationUser!.FullName.Contains(searchString)) ||
                     (a.Patient!.ApplicationUser!.Email!.Contains(searchString)) ||
                     matchingStatuses.Contains(a.Status));
+            }
+
+            if (User.IsInRole("Patient") && currentUser != null)
+            {
+                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == currentUser.Id);
+                if (patient != null)
+                {
+                    ViewBag.ReviewedAppointmentIds = await _context.Reviews
+                        .Where(r => r.PatientId == patient.Id)
+                        .Select(r => r.AppointmentId)
+                        .ToListAsync();
+                }
+            }
+            else
+            {
+                ViewBag.ReviewedAppointmentIds = new List<int>();
             }
 
             return View(await query.ToListAsync());
@@ -164,6 +181,26 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (!await UserCanModifyAppointment(appointment)) return Forbid();
 
+            var statuses = Enum.GetValues(typeof(AppointmentStatus)).Cast<AppointmentStatus>().ToList();
+            if (!User.IsInRole("Admin"))
+            {
+                // Doctors shouldn't directly set these statuses; they use action buttons.
+                statuses.Remove(AppointmentStatus.Cancelled);
+                statuses.Remove(AppointmentStatus.PatientCancellationRequested);
+                statuses.Remove(AppointmentStatus.DoctorCancellationRequested);
+                // Ensure current status is included just in case
+                if (!statuses.Contains(appointment.Status)) {
+                    statuses.Add(appointment.Status);
+                }
+            }
+
+            var statusItems = statuses.Select(s => new SelectListItem
+            {
+                Value = s.ToString(),
+                Text = s.ToString()
+            });
+
+            ViewBag.StatusList = new SelectList(statusItems, "Value", "Text", appointment.Status.ToString());
             return View(appointment);
         }
 
@@ -313,7 +350,7 @@ namespace HealthCareAppointmentSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Patient")]
+        [Authorize(Roles = "Patient,Doctor")]
         public async Task<IActionResult> RequestCancellation(int id)
         {
             var appointment = await _context.Appointments.FindAsync(id);
@@ -324,8 +361,64 @@ namespace HealthCareAppointmentSystem.Controllers
             // Only allow if pending or confirmed
             if (appointment.Status == AppointmentStatus.Pending || appointment.Status == AppointmentStatus.Confirmed)
             {
-                appointment.Status = AppointmentStatus.CancellationRequested;
+                if (User.IsInRole("Patient"))
+                {
+                    appointment.Status = AppointmentStatus.PatientCancellationRequested;
+                }
+                else if (User.IsInRole("Doctor"))
+                {
+                    appointment.Status = AppointmentStatus.DoctorCancellationRequested;
+                }
+                
                 _context.Update(appointment);
+                
+                var currentUser = await _userManager.GetUserAsync(User);
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    Action = "Requested Cancellation",
+                    UserId = currentUser?.Id ?? "System",
+                    Details = $"Cancellation requested by {currentUser?.FullName} ({string.Join(",", await _userManager.GetRolesAsync(currentUser!))}) for Appointment #{appointment.Id}"
+                });
+                
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Patient,Doctor")]
+        public async Task<IActionResult> ConfirmCancellation(int id)
+        {
+            var appointment = await _context.Appointments.FindAsync(id);
+            if (appointment == null) return NotFound();
+
+            if (!await UserCanModifyAppointment(appointment)) return Forbid();
+
+            bool canConfirm = false;
+            if (User.IsInRole("Doctor") && appointment.Status == AppointmentStatus.PatientCancellationRequested)
+            {
+                canConfirm = true;
+            }
+            else if (User.IsInRole("Patient") && appointment.Status == AppointmentStatus.DoctorCancellationRequested)
+            {
+                canConfirm = true;
+            }
+
+            if (canConfirm)
+            {
+                appointment.Status = AppointmentStatus.Cancelled;
+                _context.Update(appointment);
+                
+                var currentUser = await _userManager.GetUserAsync(User);
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    Action = "Confirmed Cancellation",
+                    UserId = currentUser?.Id ?? "System",
+                    Details = $"Cancellation confirmed by {currentUser?.FullName} ({string.Join(",", await _userManager.GetRolesAsync(currentUser!))}) for Appointment #{appointment.Id}"
+                });
+                
                 await _context.SaveChangesAsync();
             }
 

@@ -33,12 +33,33 @@ namespace HealthCareAppointmentSystem.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminDashboard()
         {
+            var doctors = await _context.Doctors.Include(d => d.Specialization).ToListAsync();
+            var appointments = await _context.Appointments.ToListAsync();
+
+            // Stats for charts
+            var appointmentsByStatus = appointments
+                .GroupBy(a => a.Status.ToString())
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var doctorsBySpecialization = doctors
+                .Where(d => d.Specialization != null)
+                .GroupBy(d => d.Specialization!.Name)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var recentLogs = await _context.AuditLogs
+                .OrderByDescending(l => l.Timestamp)
+                .Take(10)
+                .ToListAsync();
+
             var vm = new AdminDashboardViewModel
             {
-                TotalDoctors = await _context.Doctors.CountAsync(),
+                TotalDoctors = doctors.Count,
                 TotalPatients = await _context.Patients.CountAsync(),
-                PendingApprovals = await _context.Doctors.CountAsync(d => !d.IsApproved),
-                TotalAppointments = await _context.Appointments.CountAsync()
+                PendingApprovals = doctors.Count(d => !d.IsApproved),
+                TotalAppointments = appointments.Count,
+                AppointmentsByStatus = appointmentsByStatus,
+                DoctorsBySpecialization = doctorsBySpecialization,
+                RecentLogs = recentLogs
             };
             return View(vm);
         }
@@ -61,7 +82,7 @@ namespace HealthCareAppointmentSystem.Controllers
 
             var now = DateTime.Now;
             var todayAppointments = appointments.Count(a => a.AppointmentDateTime.Date == today.Date);
-            var upcomingAppointments = appointments.Where(a => a.AppointmentDateTime >= today && a.Status != AppointmentStatus.Cancelled).ToList();
+            var upcomingAppointments = appointments.Where(a => a.AppointmentDateTime >= today && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed)).ToList();
             
             var pendingConfirmations = appointments.Count(a => a.Status == AppointmentStatus.Pending && a.AppointmentDateTime > now);
             var pendingCompletions = appointments.Count(a => (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed) && a.AppointmentDateTime.AddMinutes(doctor.SlotDurationMinutes > 0 ? doctor.SlotDurationMinutes : 20) <= now);
@@ -104,16 +125,35 @@ namespace HealthCareAppointmentSystem.Controllers
             }
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var patient = currentUser != null ? await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == currentUser.Id) : null;
+            var patient = currentUser != null ? await _context.Patients.Include(p => p.ApplicationUser).FirstOrDefaultAsync(p => p.ApplicationUserId == currentUser.Id) : null;
+            
             int pendingReviews = 0;
+            int totalAppointments = 0;
+            var upcomingAppointments = new List<Appointment>();
+            
             if (patient != null)
             {
                 var now = DateTime.Now;
-                pendingReviews = await _context.Appointments
-                    .Where(a => a.PatientId == patient.Id && a.Status == AppointmentStatus.Completed)
+                var today = now.Date;
+                var allAppointments = await _context.Appointments
+                    .Include(a => a.Doctor).ThenInclude(d => d!.ApplicationUser)
+                    .Include(a => a.Doctor).ThenInclude(d => d!.Specialization)
+                    .Where(a => a.PatientId == patient.Id)
+                    .ToListAsync();
+                    
+                totalAppointments = allAppointments.Count;
+                
+                upcomingAppointments = allAppointments
+                    .Where(a => a.AppointmentDateTime >= today && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed))
+                    .OrderBy(a => a.AppointmentDateTime)
+                    .Take(5)
+                    .ToList();
+
+                pendingReviews = allAppointments
+                    .Where(a => a.Status == AppointmentStatus.Completed)
                     .GroupJoin(_context.Reviews, a => a.Id, r => r.AppointmentId, (a, r) => new { a, r })
                     .SelectMany(x => x.r.DefaultIfEmpty(), (x, r) => new { x.a, r })
-                    .CountAsync(x => x.r == null);
+                    .Count(x => x.r == null);
             }
 
             var vm = new PatientDashboardViewModel
@@ -121,7 +161,11 @@ namespace HealthCareAppointmentSystem.Controllers
                 SearchTerm = searchTerm ?? string.Empty,
                 SpecializationId = specializationId,
                 AvailableDoctors = await query.ToListAsync(),
-                PendingReviewsCount = pendingReviews
+                PendingReviewsCount = pendingReviews,
+                PatientProfile = patient,
+                TotalAppointmentsCount = totalAppointments,
+                UpcomingAppointmentsCount = upcomingAppointments.Count,
+                UpcomingAppointments = upcomingAppointments
             };
 
             ViewBag.Specializations = new SelectList(await _context.Specializations.ToListAsync(), "Id", "Name", specializationId);
