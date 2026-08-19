@@ -5,16 +5,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
+using HealthCareAppointmentSystem.ViewModels;
+using Microsoft.AspNetCore.Identity;
+
 namespace HealthCareAppointmentSystem.Controllers
 {
     [Authorize]
     public class DoctorsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public DoctorsController(ApplicationDbContext context)
+        public DoctorsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: /Doctors
@@ -44,13 +49,10 @@ namespace HealthCareAppointmentSystem.Controllers
         }
 
         // GET: /Doctors/Create
-        // Note: in this scope, Create assumes an ApplicationUser account already exists
-        // (created via the normal Register page and then assigned the "Doctor" role by an Admin).
-        // A production version would combine account creation + profile creation in one step.
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
-            await PopulateDropdowns();
+            ViewBag.Specializations = new SelectList(await _context.Specializations.ToListAsync(), "Id", "Name");
             return View();
         }
 
@@ -58,16 +60,49 @@ namespace HealthCareAppointmentSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([Bind("ApplicationUserId,SpecializationId,LicenseNumber,YearsOfExperience,ConsultationFee")] Doctor doctor)
+        public async Task<IActionResult> Create(DoctorCreateViewModel model)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(doctor);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FullName = model.FullName,
+                    EmailConfirmed = true // Auto confirm since admin is creating it
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Doctor");
+
+                    var doctor = new Doctor
+                    {
+                        ApplicationUserId = user.Id,
+                        SpecializationId = model.SpecializationId,
+                        LicenseNumber = model.LicenseNumber,
+                        YearsOfExperience = model.YearsOfExperience,
+                        ConsultationFee = model.ConsultationFee,
+                        IsApproved = true // Admin creates it, so it can be auto-approved or set to true
+                    };
+
+                    _context.Add(doctor);
+                    await _context.SaveChangesAsync();
+                    
+                    TempData["Message"] = $"Doctor account created successfully. They can now log in with Email: {model.Email} and the password you provided.";
+                    return RedirectToAction(nameof(Index));
+                }
+                
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
             }
-            await PopulateDropdowns();
-            return View(doctor);
+            
+            ViewBag.Specializations = new SelectList(await _context.Specializations.ToListAsync(), "Id", "Name");
+            return View(model);
         }
 
         // GET: /Doctors/Edit/5
@@ -157,16 +192,6 @@ namespace HealthCareAppointmentSystem.Controllers
         private async Task PopulateDropdowns()
         {
             ViewBag.Specializations = new SelectList(await _context.Specializations.ToListAsync(), "Id", "Name");
-
-            // Only users currently in the "Doctor" role without an existing Doctor profile
-            var doctorUserIds = await _context.Doctors.Select(d => d.ApplicationUserId).ToListAsync();
-            var allUsers = await _context.Users.ToListAsync();
-            var availableUsers = allUsers.Where(u => !doctorUserIds.Contains(u.Id)).Select(u => new
-            {
-                u.Id,
-                DisplayName = string.IsNullOrWhiteSpace(u.FullName) ? u.Email : $"{u.FullName} ({u.Email})"
-            });
-            ViewBag.Users = new SelectList(availableUsers, "Id", "DisplayName");
         }
     }
 }

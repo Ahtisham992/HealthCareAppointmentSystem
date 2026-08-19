@@ -1,22 +1,35 @@
-@model Doctor
+@using HealthCareAppointmentSystem.ViewModels
+@model DoctorCreateViewModel
 @{
     ViewData["Title"] = "Add Doctor";
 }
 
 <h1>Add Doctor Profile</h1>
-<p class="hint-text">Note: the user account must already be registered (via the normal Register page) and assigned the "Doctor" role before creating their profile here.</p>
+<p class="hint-text">Create a new user account for the doctor, and their profile details simultaneously.</p>
 
 <form asp-action="Create" method="post" class="form-card">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
+    <h3 style="margin-top: 1rem; margin-bottom: 1rem; color: var(--primary); font-size: 1.2rem;">Account Credentials</h3>
     <div class="form-group">
-        <label asp-for="ApplicationUserId">User Account</label>
-        <select asp-for="ApplicationUserId" class="form-control" asp-items="ViewBag.Users">
-            <option value="">-- Select User Account --</option>
-        </select>
-        <span asp-validation-for="ApplicationUserId" class="text-danger"></span>
+        <label asp-for="FullName"></label>
+        <input asp-for="FullName" class="form-control" placeholder="Dr. John Doe" />
+        <span asp-validation-for="FullName" class="text-danger"></span>
     </div>
 
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" type="email" placeholder="doctor@example.com" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Password"></label>
+        <input asp-for="Password" class="form-control" type="password" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--primary); font-size: 1.2rem;">Professional Profile</h3>
     <div class="form-group">
         <label asp-for="SpecializationId">Specialization</label>
         <select asp-for="SpecializationId" class="form-control" asp-items="ViewBag.Specializations">
@@ -33,18 +46,18 @@
 
     <div class="form-group">
         <label asp-for="YearsOfExperience"></label>
-        <input asp-for="YearsOfExperience" class="form-control" />
+        <input asp-for="YearsOfExperience" class="form-control" type="number" />
         <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
     </div>
 
     <div class="form-group">
         <label asp-for="ConsultationFee"></label>
-        <input asp-for="ConsultationFee" class="form-control" />
+        <input asp-for="ConsultationFee" class="form-control" type="number" />
         <span asp-validation-for="ConsultationFee" class="text-danger"></span>
     </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="submit" class="btn btn-primary">Create Account & Profile</button>
         <a asp-action="Index" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
