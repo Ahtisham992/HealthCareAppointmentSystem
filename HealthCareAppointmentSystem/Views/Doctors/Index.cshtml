@@ -17,7 +17,7 @@
             <th>Experience</th>
             <th>Fee</th>
             <th>Status</th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -39,16 +39,16 @@
                         <span class="status-badge status-pending">Pending</span>
                     }
                 </td>
-                <td class="actions">
+                <td class="actions" style="display: flex; gap: 0.5rem; align-items: center;">
                     @if (!item.IsApproved)
                     {
                         <form asp-action="Approve" asp-route-id="@item.Id" method="post" style="display:inline;">
-                            <button type="submit" class="link-button" style="color: green;">Approve</button>
+                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
                         </form>
                     }
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger">Delete</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-sm">Details</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger" style="text-decoration: none; font-weight: 500;">Delete</a>
                 </td>
             </tr>
         }

@@ -11,7 +11,7 @@
             <th>Name</th>
             <th>Phone</th>
             <th>Date of Birth</th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -21,8 +21,8 @@
                 <td>@item.ApplicationUser?.FullName</td>
                 <td>@(item.PhoneNumber ?? "-")</td>
                 <td>@(item.DateOfBirth?.ToString("dd MMM yyyy") ?? "-")</td>
-                <td class="actions">
-                    <a asp-action="Details" asp-route-id="@item.Id">Details</a>
+                <td class="actions" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-sm">Details</a>
                 </td>
             </tr>
         }

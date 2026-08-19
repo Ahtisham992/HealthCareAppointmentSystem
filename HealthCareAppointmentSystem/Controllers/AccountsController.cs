@@ -68,14 +68,21 @@ namespace HealthCareAppointmentSystem.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
-                var result = await _userManager.DeleteAsync(user);
-                if (!result.Succeeded)
+                try
                 {
-                    TempData["Error"] = $"Cannot delete user {user.Email}. They may have associated records (like appointments). Please ban them instead.";
+                    var result = await _userManager.DeleteAsync(user);
+                    if (!result.Succeeded)
+                    {
+                        TempData["Error"] = $"Cannot delete user {user.Email}. They may have associated records (like appointments). Please ban them instead.";
+                    }
+                    else
+                    {
+                        TempData["Message"] = $"User {user.Email} deleted successfully.";
+                    }
                 }
-                else
+                catch (DbUpdateException)
                 {
-                    TempData["Message"] = $"User {user.Email} deleted successfully.";
+                    TempData["Error"] = $"Cannot delete user {user.Email} because they have associated records (e.g. appointments or profile). Please ban them instead.";
                 }
             }
             return RedirectToAction(nameof(Index));

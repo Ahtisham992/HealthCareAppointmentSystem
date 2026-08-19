@@ -18,7 +18,7 @@
             <th>Doctor</th>
             <th>Patient</th>
             <th>Status</th>
-            <th></th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -45,7 +45,7 @@
 
                     @if (User.IsInRole("Admin") || User.IsInRole("Patient"))
                     {
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger" style="margin-left: 0.5rem;">Delete</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger" style="margin-left: 0.5rem; text-decoration: none; font-weight: 500;">Delete</a>
                     }
                 </td>
             </tr>
