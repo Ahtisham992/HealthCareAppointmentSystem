@@ -68,6 +68,11 @@ namespace HealthCareAppointmentSystem.Controllers
                 UpcomingAppointments = upcoming.Take(5).ToList()
             };
 
+            if (string.IsNullOrWhiteSpace(doctor.Education) || string.IsNullOrWhiteSpace(doctor.ProfilePictureUrl))
+            {
+                ViewBag.NeedsProfileCompletion = true;
+            }
+
             return View(vm);
         }
 

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HealthCareAppointmentSystem.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class DoctorsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,6 +18,7 @@ namespace HealthCareAppointmentSystem.Controllers
         }
 
         // GET: /Doctors
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             var doctors = await _context.Doctors
@@ -46,6 +47,7 @@ namespace HealthCareAppointmentSystem.Controllers
         // Note: in this scope, Create assumes an ApplicationUser account already exists
         // (created via the normal Register page and then assigned the "Doctor" role by an Admin).
         // A production version would combine account creation + profile creation in one step.
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create()
         {
             await PopulateDropdowns();
@@ -55,6 +57,7 @@ namespace HealthCareAppointmentSystem.Controllers
         // POST: /Doctors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("ApplicationUserId,SpecializationId,LicenseNumber,YearsOfExperience,ConsultationFee")] Doctor doctor)
         {
             if (ModelState.IsValid)
@@ -68,6 +71,7 @@ namespace HealthCareAppointmentSystem.Controllers
         }
 
         // GET: /Doctors/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id is null) return NotFound();
@@ -82,6 +86,7 @@ namespace HealthCareAppointmentSystem.Controllers
         // POST: /Doctors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,ApplicationUserId,SpecializationId,LicenseNumber,YearsOfExperience,ConsultationFee")] Doctor doctor)
         {
             if (id != doctor.Id) return NotFound();
@@ -105,6 +110,7 @@ namespace HealthCareAppointmentSystem.Controllers
         }
 
         // GET: /Doctors/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id is null) return NotFound();
@@ -121,6 +127,7 @@ namespace HealthCareAppointmentSystem.Controllers
         // POST: /Doctors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var doctor = await _context.Doctors.FindAsync(id);
@@ -135,6 +142,7 @@ namespace HealthCareAppointmentSystem.Controllers
         // POST: /Doctors/Approve/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Approve(int id)
         {
             var doctor = await _context.Doctors.FindAsync(id);

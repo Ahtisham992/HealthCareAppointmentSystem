@@ -14,11 +14,13 @@ namespace HealthCareAppointmentSystem.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IWebHostEnvironment _env;
 
-        public ProfileController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ProfileController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment env)
         {
             _context = context;
             _userManager = userManager;
+            _env = env;
         }
 
         public async Task<IActionResult> Index()
@@ -58,6 +60,8 @@ namespace HealthCareAppointmentSystem.Controllers
                     vm.AvailableFrom = doctor.AvailableFrom;
                     vm.AvailableTo = doctor.AvailableTo;
                     vm.SlotDurationMinutes = doctor.SlotDurationMinutes;
+                    vm.ProfilePictureUrl = doctor.ProfilePictureUrl;
+                    vm.Education = doctor.Education;
                 }
             }
             else
@@ -103,6 +107,8 @@ namespace HealthCareAppointmentSystem.Controllers
                     vm.AvailableFrom = doctor.AvailableFrom;
                     vm.AvailableTo = doctor.AvailableTo;
                     vm.SlotDurationMinutes = doctor.SlotDurationMinutes;
+                    vm.ProfilePictureUrl = doctor.ProfilePictureUrl;
+                    vm.Education = doctor.Education;
                 }
                 ViewBag.Specializations = new SelectList(await _context.Specializations.ToListAsync(), "Id", "Name");
             }
@@ -155,6 +161,22 @@ namespace HealthCareAppointmentSystem.Controllers
                     if (vm.AvailableFrom.HasValue) doctor.AvailableFrom = vm.AvailableFrom.Value;
                     if (vm.AvailableTo.HasValue) doctor.AvailableTo = vm.AvailableTo.Value;
                     if (vm.SlotDurationMinutes.HasValue) doctor.SlotDurationMinutes = vm.SlotDurationMinutes.Value;
+                    
+                    doctor.Education = vm.Education;
+
+                    if (vm.ProfileImage != null)
+                    {
+                        var uploadsFolder = Path.Combine(_env.WebRootPath, "images", "profiles");
+                        Directory.CreateDirectory(uploadsFolder);
+                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + vm.ProfileImage.FileName;
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await vm.ProfileImage.CopyToAsync(fileStream);
+                        }
+                        doctor.ProfilePictureUrl = "/images/profiles/" + uniqueFileName;
+                    }
+
                     _context.Update(doctor);
                     await _context.SaveChangesAsync();
                 }

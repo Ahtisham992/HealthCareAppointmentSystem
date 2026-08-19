@@ -43,6 +43,10 @@ namespace HealthCareAppointmentSystem.Models
         [Display(Name = "Slot Duration (Mins)")]
         public int SlotDurationMinutes { get; set; } = 20;
 
+        public string? ProfilePictureUrl { get; set; }
+
+        public string? Education { get; set; }
+
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }

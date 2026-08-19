@@ -66,10 +66,11 @@ namespace HealthCareAppointmentSystem.Controllers
         // GET: /Appointments/Create
         // Patients book for themselves. Admins can book on behalf of any patient.
         [Authorize(Roles = "Patient,Admin")]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? doctorId)
         {
             var vm = new AppointmentViewModel
             {
+                DoctorId = doctorId ?? 0,
                 AvailableDoctors = await _context.Doctors.Include(d => d.ApplicationUser).Include(d => d.Specialization).Where(d => d.IsApproved).ToListAsync(),
                 AvailablePatients = User.IsInRole("Admin")
                     ? await _context.Patients.Include(p => p.ApplicationUser).ToListAsync()
@@ -178,7 +179,7 @@ namespace HealthCareAppointmentSystem.Controllers
         }
 
         // GET: /Appointments/Delete/5
-        [Authorize(Roles = "Admin,Patient")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id is null) return NotFound();
@@ -196,7 +197,7 @@ namespace HealthCareAppointmentSystem.Controllers
         // POST: /Appointments/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Patient")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var appointment = await _context.Appointments.FindAsync(id);

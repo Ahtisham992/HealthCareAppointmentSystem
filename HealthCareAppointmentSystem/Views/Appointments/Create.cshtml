@@ -10,8 +10,12 @@
 
     <div class="form-group">
         <label asp-for="DoctorId"></label>
-        <select asp-for="DoctorId" class="form-control" asp-items="@(new SelectList(Model.AvailableDoctors, "Id", "ApplicationUser.FullName"))" id="doctorSelect">
+        <select asp-for="DoctorId" class="form-control" id="doctorSelect">
             <option value="">-- Select a Doctor --</option>
+            @foreach(var doc in Model.AvailableDoctors)
+            {
+                <option value="@doc.Id">Dr. @doc.ApplicationUser?.FullName - @doc.Specialization?.Name</option>
+            }
         </select>
         <span asp-validation-for="DoctorId" class="text-danger"></span>
     </div>

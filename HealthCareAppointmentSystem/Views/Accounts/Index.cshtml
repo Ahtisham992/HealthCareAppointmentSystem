@@ -1,0 +1,41 @@
+@using HealthCareAppointmentSystem.ViewModels
+@model IEnumerable<AccountViewModel>
+
+@{
+    ViewData["Title"] = "Accounts Management";
+}
+
+<div class="page-header">
+    <h1>All Accounts</h1>
+</div>
+
+<div class="detail-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Role(s)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var account in Model)
+            {
+                <tr>
+                    <td>@account.FullName</td>
+                    <td>@account.Email</td>
+                    <td>
+                        @if (string.IsNullOrEmpty(account.Roles))
+                        {
+                            <span class="status-badge status-pending">No Role</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-completed">@account.Roles</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

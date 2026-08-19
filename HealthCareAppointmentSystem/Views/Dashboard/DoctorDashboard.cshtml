@@ -9,6 +9,16 @@
     <h1>Welcome, Dr. @Model.DoctorProfile?.ApplicationUser?.FullName</h1>
 </div>
 
+@if (ViewBag.NeedsProfileCompletion == true)
+{
+    <div style="background-color: var(--warning); color: #856404; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid #ffeeba; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>Complete Your Profile:</strong> Please add your profile picture and education details to help patients learn more about you.
+        </div>
+        <a asp-controller="Profile" asp-action="Edit" class="btn btn-primary btn-sm">Complete Profile</a>
+    </div>
+}
+
 <div class="feature-grid" style="margin-bottom: 2rem;">
     <div class="feature-card text-center">
         <div style="font-size: 2.5rem; margin-bottom: 1rem;">📅</div>

@@ -7,7 +7,7 @@
 
 <h1>Edit Profile</h1>
 
-<form asp-action="Edit" method="post" class="form-card">
+<form asp-action="Edit" method="post" class="form-card" enctype="multipart/form-data">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
     <div class="form-group">
@@ -73,6 +73,21 @@
             <label asp-for="SlotDurationMinutes"></label>
             <input asp-for="SlotDurationMinutes" class="form-control" type="number" min="5" max="120" />
             <span asp-validation-for="SlotDurationMinutes" class="text-danger"></span>
+        </div>
+        <hr />
+        <div class="form-group">
+            <label asp-for="Education"></label>
+            <textarea asp-for="Education" class="form-control" rows="3" placeholder="E.g., MBBS from Harvard Medical School, MD in Cardiology..."></textarea>
+            <span asp-validation-for="Education" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="ProfileImage"></label>
+            <input asp-for="ProfileImage" type="file" class="form-control" accept="image/*" />
+            <span asp-validation-for="ProfileImage" class="text-danger"></span>
+            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+            {
+                <p class="text-muted mt-2" style="font-size: 0.85rem;">You already have a profile picture uploaded. Uploading a new one will replace it.</p>
+            }
         </div>
     }
 

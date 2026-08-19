@@ -36,20 +36,37 @@
         else if (Model.Role == "Doctor")
         {
             <hr />
-            <dt>Status</dt>
-            <dd>
-                @if (Model.IsApproved)
-                {
-                    <span class="status-badge status-completed">Approved</span>
-                }
-                else
-                {
-                    <span class="status-badge status-pending">Pending Approval</span>
-                }
-            </dd>
+            <div style="display: flex; gap: 2rem; align-items: flex-start; margin-bottom: 2rem;">
+                <div style="flex-shrink: 0; text-align: center;">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                    {
+                        <img src="@Model.ProfilePictureUrl" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); box-shadow: var(--shadow-sm);" />
+                    }
+                    else
+                    {
+                        <div style="width: 150px; height: 150px; border-radius: 50%; background-color: var(--bg-color); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--text-muted);">
+                            👨‍⚕️
+                        </div>
+                    }
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin-top: 0; color: var(--primary);">Dr. @Model.FullName</h3>
+                    <p style="font-size: 1.1rem; color: var(--secondary); font-weight: 600;">@(Model.SpecializationName ?? "Specialization Not Set")</p>
+                    <p style="margin-bottom: 0.5rem;">
+                        @if (Model.IsApproved)
+                        {
+                            <span class="status-badge status-completed">Verified & Approved</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-pending">Pending Approval</span>
+                        }
+                    </p>
+                </div>
+            </div>
 
-            <dt>Specialization</dt>
-            <dd>@(Model.SpecializationName ?? "-")</dd>
+            <dt>Education & Qualifications</dt>
+            <dd style="white-space: pre-wrap;">@(Model.Education ?? "Not provided yet")</dd>
             
             <dt>License Number</dt>
             <dd>@(Model.LicenseNumber ?? "-")</dd>

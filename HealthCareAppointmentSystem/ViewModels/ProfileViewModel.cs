@@ -50,5 +50,13 @@ namespace HealthCareAppointmentSystem.ViewModels
 
         [Display(Name = "Slot Duration (Mins)")]
         public int? SlotDurationMinutes { get; set; }
+
+        public string? ProfilePictureUrl { get; set; }
+
+        [Display(Name = "Profile Image")]
+        public IFormFile? ProfileImage { get; set; }
+
+        [Display(Name = "Education & Qualifications")]
+        public string? Education { get; set; }
     }
 }
