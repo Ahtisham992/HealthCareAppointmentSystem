@@ -9,6 +9,13 @@
     <h1>All Accounts</h1>
 </div>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger" style="background-color: var(--danger); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        @TempData["Error"]
+    </div>
+}
+
 <div class="detail-card">
     <table class="data-table">
         <thead>
@@ -16,6 +23,8 @@
                 <th>Full Name</th>
                 <th>Email</th>
                 <th>Role(s)</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -33,6 +42,26 @@
                         {
                             <span class="status-badge status-completed">@account.Roles</span>
                         }
+                    </td>
+                    <td>
+                        @if (account.IsBanned)
+                        {
+                            <span class="status-badge status-cancelled">Banned</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-completed">Active</span>
+                        }
+                    </td>
+                    <td style="display: flex; gap: 0.5rem;">
+                        <form asp-action="ToggleBan" asp-route-id="@account.Id" method="post" onsubmit="return confirm('Are you sure you want to toggle the ban status for this user?');">
+                            <button type="submit" class="btn @(account.IsBanned ? "btn-secondary" : "btn-warning") btn-sm">
+                                @(account.IsBanned ? "Unban" : "Ban")
+                            </button>
+                        </form>
+                        <form asp-action="Delete" asp-route-id="@account.Id" method="post" onsubmit="return confirm('Are you sure you want to permanently delete this user? This cannot be undone.');">
+                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: var(--danger); border-color: var(--danger);">Delete</button>
+                        </form>
                     </td>
                 </tr>
             }

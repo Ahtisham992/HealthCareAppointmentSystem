@@ -6,5 +6,6 @@ namespace HealthCareAppointmentSystem.ViewModels
         public string Email { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
         public string Roles { get; set; } = string.Empty;
+        public bool IsBanned { get; set; }
     }
 }
