@@ -17,20 +17,31 @@ namespace HealthCareAppointmentSystem.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
+            ViewData["CurrentFilter"] = searchString;
             var users = await _userManager.Users.ToListAsync();
             var model = new List<AccountViewModel>();
 
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
+                var rolesStr = string.Join(", ", roles);
+
+                if (!string.IsNullOrEmpty(searchString))
+                {
+                    bool match = (user.FullName != null && user.FullName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
+                                 (user.Email != null && user.Email.Contains(searchString, StringComparison.OrdinalIgnoreCase)) ||
+                                 rolesStr.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+                    if (!match) continue;
+                }
+
                 model.Add(new AccountViewModel
                 {
                     Id = user.Id,
                     Email = user.Email ?? string.Empty,
                     FullName = user.FullName,
-                    Roles = string.Join(", ", roles),
+                    Roles = rolesStr,
                     IsBanned = await _userManager.IsLockedOutAsync(user)
                 });
             }

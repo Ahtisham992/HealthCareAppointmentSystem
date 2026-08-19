@@ -24,12 +24,24 @@ namespace HealthCareAppointmentSystem.Controllers
 
         // GET: /Doctors
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            var doctors = await _context.Doctors
+            ViewData["CurrentFilter"] = searchString;
+
+            var query = _context.Doctors
                 .Include(d => d.ApplicationUser)
                 .Include(d => d.Specialization)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(d => 
+                    d.ApplicationUser!.FullName.Contains(searchString) || 
+                    d.Specialization!.Name.Contains(searchString) ||
+                    d.LicenseNumber.Contains(searchString));
+            }
+
+            var doctors = await query.ToListAsync();
             return View(doctors);
         }
 

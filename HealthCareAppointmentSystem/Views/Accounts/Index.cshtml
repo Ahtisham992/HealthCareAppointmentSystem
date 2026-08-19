@@ -5,8 +5,13 @@
     ViewData["Title"] = "Accounts Management";
 }
 
-<div class="page-header">
-    <h1>All Accounts</h1>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <h1 style="margin: 0;">All Accounts</h1>
+    <form asp-action="Index" method="get" class="search-form" style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Search accounts..." style="max-width: 250px; margin-bottom: 0;" />
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        <a asp-action="Index" class="btn btn-secondary btn-sm">Clear</a>
+    </form>
 </div>
 
 @if (TempData["Error"] != null)

@@ -3,9 +3,16 @@
     ViewData["Title"] = "Doctors";
 }
 
-<div class="page-header">
-    <h1>Doctors</h1>
-    <a class="btn btn-primary" asp-action="Create">+ Add Doctor</a>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <h1 style="margin: 0;">Doctors</h1>
+        <a class="btn btn-primary" asp-action="Create">+ Add Doctor</a>
+    </div>
+    <form asp-action="Index" method="get" class="search-form" style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Search doctors..." style="max-width: 250px; margin-bottom: 0;" />
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+        <a asp-action="Index" class="btn btn-secondary btn-sm">Clear</a>
+    </form>
 </div>
 
 <table class="data-table">
@@ -48,7 +55,9 @@
                     }
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-sm">Details</a>
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Edit</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="text-danger" style="text-decoration: none; font-weight: 500;">Delete</a>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to permanently delete this doctor profile?');">
+                        <button type="submit" class="btn btn-danger btn-sm" style="background-color: var(--danger); border-color: var(--danger);">Delete</button>
+                    </form>
                 </td>
             </tr>
         }

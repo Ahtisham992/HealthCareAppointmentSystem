@@ -22,8 +22,9 @@ namespace HealthCareAppointmentSystem.Controllers
 
         // GET: /Appointments
         // Admin sees all appointments. Doctor sees only their own. Patient sees only their own.
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
+            ViewData["CurrentFilter"] = searchString;
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser is null) return Challenge();
 
@@ -44,6 +45,14 @@ namespace HealthCareAppointmentSystem.Controllers
                 query = query.Where(a => a.PatientId == (patient != null ? patient.Id : -1));
             }
             // Admin: no filter, sees everything.
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(a => 
+                    (a.Doctor!.ApplicationUser!.FullName.Contains(searchString)) ||
+                    (a.Patient!.ApplicationUser!.FullName.Contains(searchString)) ||
+                    a.Status.ToString().Contains(searchString));
+            }
 
             return View(await query.ToListAsync());
         }

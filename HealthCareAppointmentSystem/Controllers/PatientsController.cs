@@ -16,11 +16,22 @@ namespace HealthCareAppointmentSystem.Controllers
         }
 
         // GET: /Patients
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            var patients = await _context.Patients
+            ViewData["CurrentFilter"] = searchString;
+
+            var query = _context.Patients
                 .Include(p => p.ApplicationUser)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(p => 
+                    p.ApplicationUser!.FullName.Contains(searchString) || 
+                    (p.PhoneNumber != null && p.PhoneNumber.Contains(searchString)));
+            }
+
+            var patients = await query.ToListAsync();
             return View(patients);
         }
 
@@ -38,6 +49,27 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (patient is null) return NotFound();
             return View(patient);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var patient = await _context.Patients.FindAsync(id);
+            if (patient != null)
+            {
+                try
+                {
+                    _context.Patients.Remove(patient);
+                    await _context.SaveChangesAsync();
+                    TempData["Message"] = "Patient profile deleted successfully.";
+                }
+                catch (DbUpdateException)
+                {
+                    TempData["Error"] = "Cannot delete this patient because they have associated records (e.g. appointments).";
+                }
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // Note: Patient profile creation happens through the normal Register flow
