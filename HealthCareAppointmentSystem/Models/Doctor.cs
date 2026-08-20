@@ -48,5 +48,6 @@ namespace HealthCareAppointmentSystem.Models
         public string? Education { get; set; }
 
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+        public ICollection<PlatformBill> PlatformBills { get; set; } = new List<PlatformBill>();
     }
 }

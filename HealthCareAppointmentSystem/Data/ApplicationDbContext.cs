@@ -17,6 +17,7 @@ namespace HealthCareAppointmentSystem.Data
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+        public DbSet<PlatformBill> PlatformBills { get; set; } = null!;
         public DbSet<Invoice> Invoices { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)

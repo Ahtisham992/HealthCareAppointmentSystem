@@ -1,0 +1,139 @@
+@model HealthCareAppointmentSystem.ViewModels.AdminEarningsIndexViewModel
+@{
+    ViewData["Title"] = "Platform Earnings & Billing";
+    var months = new[] {
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
+    };
+}
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+        <h1 style="margin: 0;">Platform Earnings</h1>
+        <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">View doctor earnings and generate platform bills for the month.</p>
+    </div>
+    <div style="background: var(--success); color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Total Platform Commission</h4>
+        <h2 style="margin: 0.5rem 0 0 0;">Rs. @Model.TotalPlatformEarnings.ToString("N0")</h2>
+    </div>
+</div>
+
+<div class="form-card" style="max-width: 100%; margin-bottom: 2rem;">
+    <form method="get" asp-action="AdminIndex" style="display: flex; gap: 1rem; align-items: flex-end;">
+        <div class="form-group" style="margin: 0; flex: 1;">
+            <label for="month">Select Month</label>
+            <select name="month" id="month" class="form-control">
+                @for (int i = 1; i <= 12; i++)
+                {
+                    if (i == Model.Month)
+                    {
+                        <option value="@i" selected>@months[i - 1]</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@months[i - 1]</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group" style="margin: 0; flex: 1;">
+            <label for="year">Select Year</label>
+            <select name="year" id="year" class="form-control">
+                @for (int i = DateTime.Now.Year - 2; i <= DateTime.Now.Year + 1; i++)
+                {
+                    if (i == Model.Year)
+                    {
+                        <option value="@i" selected>@i</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@i</option>
+                    }
+                }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">Filter</button>
+    </form>
+</div>
+
+<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border);">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Doctor</th>
+                <th>Total Earned</th>
+                <th>Total Refunded</th>
+                <th>Net Income</th>
+                <th>Platform Fee (10%)</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Doctors.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" class="text-center" style="padding: 3rem;">No earning records found for this month.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Doctors)
+                {
+                    <tr>
+                        <td style="font-weight: 600;">@item.DoctorName</td>
+                        <td style="color: var(--success);">Rs. @item.TotalEarned.ToString("N0")</td>
+                        <td style="color: var(--danger);">Rs. @item.TotalRefunded.ToString("N0")</td>
+                        <td style="font-weight: bold;">Rs. @item.NetEarned.ToString("N0")</td>
+                        <td style="color: var(--primary); font-weight: bold;">Rs. @item.Commission.ToString("N0")</td>
+                        <td>
+                            @if (item.IsBillGenerated)
+                            {
+                                @if (item.BillStatus == HealthCareAppointmentSystem.Models.BillStatus.Paid)
+                                {
+                                    <span class="status-badge status-completed">PAID</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-pending">PENDING</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="status-badge" style="background: #f1f5f9; color: #64748b;">UNBILLED</span>
+                            }
+                        </td>
+                        <td style="display: flex; gap: 0.5rem; align-items: center;">
+                            @if (!item.IsBillGenerated)
+                            {
+                                @if (item.NetEarned > 0)
+                                {
+                                    <form asp-action="GenerateBill" method="post" style="margin: 0;">
+                                        <input type="hidden" name="doctorId" value="@item.DoctorId" />
+                                        <input type="hidden" name="month" value="@Model.Month" />
+                                        <input type="hidden" name="year" value="@Model.Year" />
+                                        <input type="hidden" name="totalEarnings" value="@item.NetEarned" />
+                                        <input type="hidden" name="commissionAmount" value="@item.Commission" />
+                                        <button type="submit" class="btn-action btn-action-primary">GENERATE BILL</button>
+                                    </form>
+                                }
+                            }
+                            else
+                            {
+                                <a asp-action="ViewBill" asp-route-id="@item.BillId" class="btn-action btn-action-secondary">VIEW BILL</a>
+                                
+                                @if (item.BillStatus == HealthCareAppointmentSystem.Models.BillStatus.Pending)
+                                {
+                                    <form asp-action="MarkBillPaid" method="post" style="margin: 0;" onsubmit="return confirm('Confirm platform fee has been paid?');">
+                                        <input type="hidden" name="id" value="@item.BillId" />
+                                        <button type="submit" class="btn-action btn-action-success">MARK PAID</button>
+                                    </form>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

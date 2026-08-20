@@ -1,0 +1,146 @@
+@model HealthCareAppointmentSystem.ViewModels.DoctorEarningsViewModel
+@{
+    ViewData["Title"] = "My Earnings Logs";
+    var months = new[] {
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
+    };
+    var bills = ViewBag.Bills as List<HealthCareAppointmentSystem.Models.PlatformBill>;
+}
+
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="margin: 0;">My Earnings</h1>
+    <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">View your income and deduction logs for the selected month.</p>
+</div>
+
+<div class="form-card" style="max-width: 100%; margin-bottom: 2rem;">
+    <form method="get" asp-action="MyEarnings" style="display: flex; gap: 1rem; align-items: flex-end;">
+        <div class="form-group" style="margin: 0; flex: 1;">
+            <label for="month">Select Month</label>
+            <select name="month" id="month" class="form-control">
+                @for (int i = 1; i <= 12; i++)
+                {
+                    if (i == Model.Month)
+                    {
+                        <option value="@i" selected>@months[i - 1]</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@months[i - 1]</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="form-group" style="margin: 0; flex: 1;">
+            <label for="year">Select Year</label>
+            <select name="year" id="year" class="form-control">
+                @for (int i = DateTime.Now.Year - 2; i <= DateTime.Now.Year + 1; i++)
+                {
+                    if (i == Model.Year)
+                    {
+                        <option value="@i" selected>@i</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@i</option>
+                    }
+                }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">Filter</button>
+    </form>
+</div>
+
+<div class="feature-grid" style="margin-bottom: 2rem;">
+    <div class="feature-card" style="padding: 1.5rem;">
+        <h4 style="margin: 0 0 0.5rem 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Total Received</h4>
+        <h2 style="margin: 0; color: var(--success);">Rs. @Model.TotalEarnedThisMonth.ToString("N0")</h2>
+    </div>
+    <div class="feature-card" style="padding: 1.5rem;">
+        <h4 style="margin: 0 0 0.5rem 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Total Refunded</h4>
+        <h2 style="margin: 0; color: var(--danger);">Rs. @Model.TotalRefundedThisMonth.ToString("N0")</h2>
+    </div>
+    <div class="feature-card" style="padding: 1.5rem; background: var(--primary);">
+        <h4 style="margin: 0 0 0.5rem 0; color: rgba(255,255,255,0.8); font-size: 0.9rem; text-transform: uppercase;">Net Income</h4>
+        <h2 style="margin: 0; color: white;">Rs. @Model.NetEarnedThisMonth.ToString("N0")</h2>
+    </div>
+</div>
+
+<h3 style="margin-bottom: 1rem;">Transaction Logs</h3>
+<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border); margin-bottom: 3rem;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Date & Time</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th style="text-align: right;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Logs.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="text-center" style="padding: 3rem; color: var(--text-muted);">No transactions found for this month.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var log in Model.Logs)
+                {
+                    <tr>
+                        <td>@log.Date.ToString("dd MMM yyyy, hh:mm tt")</td>
+                        <td><span class="status-badge @log.BadgeClass">@log.Type</span></td>
+                        <td>@log.Description</td>
+                        <td style="text-align: right; font-weight: bold; color: @(log.Type == "Payment" ? "var(--success)" : "var(--danger)");">
+                            @(log.Type == "Payment" ? "+" : "-")Rs. @log.Amount.ToString("N0")
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (bills != null && bills.Count > 0)
+{
+    <h3 style="margin-bottom: 1rem;">Platform Billing History</h3>
+    <div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border);">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Billing Month</th>
+                    <th>Generated On</th>
+                    <th>Net Earnings</th>
+                    <th>Platform Fee (10%)</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var bill in bills)
+                {
+                    <tr>
+                        <td style="font-weight: 600;">@months[bill.Month - 1] @bill.Year</td>
+                        <td>@bill.GeneratedAt.ToString("dd MMM yyyy")</td>
+                        <td>Rs. @bill.TotalEarnings.ToString("N0")</td>
+                        <td style="color: var(--danger); font-weight: bold;">Rs. @bill.CommissionAmount.ToString("N0")</td>
+                        <td>
+                            @if (bill.Status == HealthCareAppointmentSystem.Models.BillStatus.Paid)
+                            {
+                                <span class="status-badge status-completed">PAID ON @bill.PaidAt?.ToString("dd MMM yyyy")</span>
+                            }
+                            else
+                            {
+                                <span class="status-badge status-pending">PENDING PAYMENT</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="ViewBill" asp-route-id="@bill.Id" class="btn-action btn-action-secondary">VIEW SLIP</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
