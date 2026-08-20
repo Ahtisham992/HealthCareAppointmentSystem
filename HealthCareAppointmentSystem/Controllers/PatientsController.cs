@@ -2,6 +2,9 @@ using HealthCareAppointmentSystem.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HealthCareAppointmentSystem.ViewModels;
+using HealthCareAppointmentSystem.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace HealthCareAppointmentSystem.Controllers
 {
@@ -9,10 +12,12 @@ namespace HealthCareAppointmentSystem.Controllers
     public class PatientsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PatientsController(ApplicationDbContext context)
+        public PatientsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: /Patients
@@ -73,10 +78,58 @@ namespace HealthCareAppointmentSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Note: Patient profile creation happens through the normal Register flow
-        // (a new user selects "Patient" during registration, which triggers profile
-        // creation - see Areas/Identity if you extend registration). Admin here is
-        // limited to viewing patients and their appointment history, which mirrors how
+        // GET: /Patients/Create
+        [Authorize(Roles = "Admin")]
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: /Patients/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Create(PatientCreateViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new ApplicationUser
+                {
+                    UserName = model.Email,
+                    Email = model.Email,
+                    FullName = model.FullName,
+                    EmailConfirmed = true
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Patient");
+
+                    var patient = new Patient
+                    {
+                        ApplicationUserId = user.Id,
+                        DateOfBirth = model.DateOfBirth,
+                        PhoneNumber = model.PhoneNumber,
+                        Address = model.Address
+                    };
+
+                    _context.Add(patient);
+                    await _context.SaveChangesAsync();
+                    
+                    TempData["Message"] = $"Patient account created successfully. They can log in with Email: {model.Email}.";
+                    return RedirectToAction(nameof(Index));
+                }
+                
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            
+            return View(model);
+        }
         // most real systems separate "who can create an account" from "who can manage records."
     }
 }

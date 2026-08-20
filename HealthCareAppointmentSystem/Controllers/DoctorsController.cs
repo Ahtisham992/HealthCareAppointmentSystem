@@ -54,7 +54,7 @@ namespace HealthCareAppointmentSystem.Controllers
             var doctor = await _context.Doctors
                 .Include(d => d.ApplicationUser)
                 .Include(d => d.Specialization)
-                .Include(d => d.Appointments)
+                .Include(d => d.Appointments).ThenInclude(a => a.Invoice)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (doctor is null) return NotFound();
@@ -64,8 +64,12 @@ namespace HealthCareAppointmentSystem.Controllers
                 .Where(r => r.DoctorId == id)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
-            
+            var totalEarnings = doctor.Appointments
+                .Where(a => a.Invoice != null && (a.Invoice.Status == PaymentStatus.Paid || a.Invoice.Status == PaymentStatus.Refunded))
+                .Sum(a => a.Invoice!.Amount - (a.Invoice.RefundAmount ?? 0));
+                
             ViewBag.Reviews = reviews;
+            ViewBag.TotalEarnings = totalEarnings;
 
             return View(doctor);
         }

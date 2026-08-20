@@ -3,6 +3,13 @@
     ViewData["Title"] = "Appointments";
 }
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="background-color: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; border: 1px solid #fca5a5;">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <div style="display: flex; align-items: center; gap: 1rem;">
         <h1 style="margin: 0;">Appointments</h1>
@@ -11,14 +18,10 @@
             <a class="btn btn-primary" asp-action="Create">+ Book Appointment</a>
         }
     </div>
-    <form asp-action="Index" method="get" class="search-form" style="display: flex; gap: 0.5rem; align-items: center;">
-        <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Search..." style="max-width: 250px; margin-bottom: 0;" />
-        <button type="submit" class="btn btn-primary btn-sm">Search</button>
-        <a asp-action="Index" class="btn btn-secondary btn-sm">Clear</a>
-    </form>
+
 </div>
 
-<table class="data-table">
+<table id="appointmentsTable" class="data-table display" style="width:100%; margin-top:1rem;">
     <thead>
         <tr>
             <th>ID</th>
@@ -50,7 +53,26 @@
                         {
                             statusText = "Cancel Requested (Doctor)";
                         }
-                        else if ((item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed) && isPast)
+                        else if (item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.PatientRefundVerificationPending)
+                        {
+                            statusText = "Refund Verification Pending";
+                        }
+                        else if (item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending)
+                        {
+                            if (item.Invoice != null)
+                            {
+                                if (item.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Pending)
+                                {
+                                    statusText = "Payment Due";
+                                }
+                                else if (item.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification)
+                                {
+                                    statusText = "Payment Awaiting Verification";
+                                }
+                            }
+                        }
+
+                        if ((item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed) && isPast)
                         {
                             statusText = "Completed (Pending Review)";
                         }
@@ -93,28 +115,26 @@
                         
                         @if ((User.IsInRole("Patient") || User.IsInRole("Doctor")) && (item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed))
                         {
-                            <form asp-action="RequestCancellation" asp-route-id="@item.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to request cancellation for this appointment?');">
-                                <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);">Request Cancel</button>
-                            </form>
+                            <a asp-action="RequestCancellation" asp-route-id="@item.Id" class="btn btn-secondary btn-sm" style="color: var(--danger);">Request Cancel</a>
                         }
 
                         @if (User.IsInRole("Doctor") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.PatientCancellationRequested)
                         {
-                            <form asp-action="ConfirmCancellation" asp-route-id="@item.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to confirm this cancellation request?');">
-                                <button type="submit" class="btn btn-danger btn-sm" style="background-color: var(--danger);">Confirm Cancel</button>
-                            </form>
+                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Confirm Cancel</a>
                         }
                         else if (User.IsInRole("Patient") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.DoctorCancellationRequested)
                         {
-                            <form asp-action="ConfirmCancellation" asp-route-id="@item.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to confirm this cancellation request?');">
-                                <button type="submit" class="btn btn-danger btn-sm" style="background-color: var(--danger);">Confirm Cancel</button>
-                            </form>
+                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Confirm Cancel</a>
+                        }
+                        else if (User.IsInRole("Patient") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.PatientRefundVerificationPending)
+                        {
+                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Verify Refund</a>
                         }
 
                         @if (User.IsInRole("Admin"))
                         {
                             <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to delete this appointment?');">
-                                <button type="submit" class="btn btn-danger btn-sm" style="background-color: var(--danger); border-color: var(--danger);">Delete</button>
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                             </form>
                         }
                     </div>
@@ -127,4 +147,19 @@
 @if (!Model.Any())
 {
     <p class="empty-state">No appointments to show yet.</p>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#appointmentsTable').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "responsive": true,
+                "language": {
+                    "search": "Filter:"
+                }
+            });
+        });
+    </script>
 }

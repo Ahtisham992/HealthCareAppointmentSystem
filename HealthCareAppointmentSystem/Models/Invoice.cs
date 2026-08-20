@@ -34,6 +34,15 @@ namespace HealthCareAppointmentSystem.Models
         [StringLength(100)]
         public string? TransactionReference { get; set; } // Entered by patient
 
+        [StringLength(255)]
+        public string? PaymentScreenshotUrl { get; set; }
+
+        [StringLength(255)]
+        public string? RefundScreenshotUrl { get; set; }
+
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? RefundAmount { get; set; }
+
         public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? PaidAt { get; set; }

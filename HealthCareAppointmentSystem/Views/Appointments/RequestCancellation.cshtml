@@ -1,0 +1,63 @@
+@model HealthCareAppointmentSystem.Models.Appointment
+
+@{
+    ViewData["Title"] = "Request Cancellation";
+}
+
+<div class="page-header">
+    <h1>Request Cancellation</h1>
+</div>
+
+<div class="auth-container" style="max-width: 600px; margin: 2rem auto;">
+    <div class="auth-card">
+        <h3>Are you sure you want to cancel this appointment?</h3>
+        
+        <div style="background-color: var(--background); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+            <p><strong>Appointment ID:</strong> #APT-@Model.Id.ToString("D4")</p>
+            <p><strong>Date & Time:</strong> @Model.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</p>
+            @if (Model.Invoice != null)
+            {
+                <p><strong>Payment Status:</strong> @Model.Invoice.Status</p>
+            }
+        </div>
+
+        <form asp-action="RequestCancellation" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+            
+            <div asp-validation-summary="ModelOnly" class="text-danger" style="color: var(--danger); margin-bottom: 1rem;"></div>
+
+            @if ((User.IsInRole("Doctor") || User.IsInRole("Admin")) && Model.Invoice != null && Model.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Paid)
+            {
+                <div class="alert alert-warning" style="background-color: #fef08a; color: #854d0e; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                    <strong>Refund Required:</strong> Since you are cancelling a paid appointment, you must provide a 100% refund (<strong>@Model.Invoice.Amount.ToString("C")</strong>) to the patient.
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label">Upload Refund Screenshot (100% Refund) <span style="color:var(--danger)">*</span></label>
+                    <input type="file" name="refundScreenshot" class="form-control" accept="image/*" required />
+                    <small class="form-text text-muted" style="color: var(--text-light); font-size: 0.85rem;">Please upload proof of the refund transaction.</small>
+                </div>
+            }
+            else if (User.IsInRole("Patient"))
+            {
+                if (Model.Invoice != null && (Model.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Paid || Model.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification))
+                {
+                    <p style="color: var(--text-light); margin-bottom: 1rem;">Your cancellation request will be sent to the doctor for confirmation. Because you have submitted a payment, you will receive a 70% refund (if the payment is verified).</p>
+                }
+                else
+                {
+                    <div class="form-group mb-3">
+                        <label class="control-label">Cancellation Reason (Optional)</label>
+                        <textarea name="cancellationReason" class="form-control" rows="3" placeholder="Please briefly explain why you need to cancel this appointment."></textarea>
+                    </div>
+                    <p style="color: var(--text-light); margin-bottom: 1rem;">Since you haven't submitted payment for this appointment yet, it will be cancelled immediately without requiring doctor confirmation.</p>
+                }
+            }
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-danger" style="background-color: var(--danger);">@(User.IsInRole("Patient") && (Model.Invoice == null || Model.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Pending || Model.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Failed) ? "Cancel Appointment Immediately" : "Submit Cancellation Request")</button>
+                <a asp-action="Index" class="btn btn-secondary">Go Back</a>
+            </div>
+        </form>
+    </div>
+</div>

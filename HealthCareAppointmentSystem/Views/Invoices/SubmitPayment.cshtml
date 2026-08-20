@@ -18,9 +18,10 @@
         </ul>
     </div>
 
-    <form asp-action="SubmitPayment" method="post">
-        <input type="hidden" asp-for="Id" />
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <form asp-action="SubmitPayment" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="@Model.Id" />
+        
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="color: var(--danger); margin-bottom: 1rem;"></div>
 
         <div class="mb-3">
             <label class="form-label" style="font-weight: 600;">Payment Method</label>
@@ -33,9 +34,14 @@
         </div>
 
         <div class="mb-4">
-            <label class="form-label" style="font-weight: 600;">Transaction Reference Number</label>
-            <input type="text" name="transactionReference" class="form-control" placeholder="e.g. 1234567890" required />
-            <div class="form-text">The 10-14 digit reference ID provided by your bank app after a successful transfer.</div>
+            <label class="control-label">Transaction Reference / ID <span style="color:var(--danger)">*</span></label>
+            <input type="text" name="transactionReference" class="form-control" placeholder="e.g., TXN-123456789" required />
+        </div>
+
+        <div class="form-group mb-4">
+            <label class="control-label">Upload Payment Screenshot <span style="color:var(--danger)">*</span></label>
+            <input type="file" name="screenshot" class="form-control" accept="image/*" required />
+            <small class="form-text text-muted" style="color: var(--text-light); font-size: 0.85rem;">Please upload an image of your payment receipt.</small>
         </div>
 
         <div class="d-flex justify-content-between">

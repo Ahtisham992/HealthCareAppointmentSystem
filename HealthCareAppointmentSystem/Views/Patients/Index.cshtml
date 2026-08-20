@@ -4,12 +4,10 @@
 }
 
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-    <h1 style="margin: 0;">Patients</h1>
-    <form asp-action="Index" method="get" class="search-form" style="display: flex; gap: 0.5rem; align-items: center;">
-        <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Search patients..." style="max-width: 250px; margin-bottom: 0;" />
-        <button type="submit" class="btn btn-primary btn-sm">Search</button>
-        <a asp-action="Index" class="btn btn-secondary btn-sm">Clear</a>
-    </form>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <h1 style="margin: 0;">Patients</h1>
+        <a class="btn btn-primary" asp-action="Create">+ Add Patient</a>
+    </div>
 </div>
 
 @if (TempData["Error"] != null)
@@ -19,7 +17,7 @@
     </div>
 }
 
-<table class="data-table">
+<table id="patientsTable" class="data-table display" style="width:100%; margin-top:1rem;">
     <thead>
         <tr>
             <th>ID</th>
@@ -40,7 +38,7 @@
                 <td class="actions" style="display: flex; gap: 0.5rem; align-items: center;">
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-sm">Details</a>
                     <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to permanently delete this patient profile?');">
-                        <button type="submit" class="btn btn-danger btn-sm" style="background-color: var(--danger); border-color: var(--danger);">Delete</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 </td>
             </tr>
@@ -51,4 +49,19 @@
 @if (!Model.Any())
 {
     <p class="empty-state">No patients registered yet.</p>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#patientsTable').DataTable({
+                "pageLength": 10,
+                "ordering": true,
+                "responsive": true,
+                "language": {
+                    "search": "Filter:"
+                }
+            });
+        });
+    </script>
 }

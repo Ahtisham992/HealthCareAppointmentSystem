@@ -20,6 +20,7 @@ namespace HealthCareAppointmentSystem.ViewModels
         public int UpcomingAppointmentsCount { get; set; }
         public int PendingConfirmationsCount { get; set; }
         public int PendingCompletionsCount { get; set; }
+        public decimal TotalEarnings { get; set; }
         public List<Appointment> UpcomingAppointments { get; set; } = new();
     }
 

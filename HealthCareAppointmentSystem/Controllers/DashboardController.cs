@@ -77,6 +77,7 @@ namespace HealthCareAppointmentSystem.Controllers
             var today = DateTime.UtcNow.Date;
             var appointments = await _context.Appointments
                 .Include(a => a.Patient).ThenInclude(p => p!.ApplicationUser)
+                .Include(a => a.Invoice)
                 .Where(a => a.DoctorId == doctor.Id)
                 .ToListAsync();
 
@@ -87,6 +88,10 @@ namespace HealthCareAppointmentSystem.Controllers
             var pendingConfirmations = appointments.Count(a => a.Status == AppointmentStatus.Pending && a.AppointmentDateTime > now);
             var pendingCompletions = appointments.Count(a => (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed) && a.AppointmentDateTime.AddMinutes(doctor.SlotDurationMinutes > 0 ? doctor.SlotDurationMinutes : 20) <= now);
 
+            var totalEarnings = appointments
+                .Where(a => a.Invoice != null && (a.Invoice.Status == PaymentStatus.Paid || a.Invoice.Status == PaymentStatus.Refunded))
+                .Sum(a => a.Invoice!.Amount - (a.Invoice.RefundAmount ?? 0));
+
             var vm = new DoctorDashboardViewModel
             {
                 DoctorProfile = doctor,
@@ -94,6 +99,7 @@ namespace HealthCareAppointmentSystem.Controllers
                 UpcomingAppointmentsCount = upcomingAppointments.Count,
                 PendingConfirmationsCount = pendingConfirmations,
                 PendingCompletionsCount = pendingCompletions,
+                TotalEarnings = totalEarnings,
                 UpcomingAppointments = upcomingAppointments.OrderBy(a => a.AppointmentDateTime).Take(10).ToList()
             };
 

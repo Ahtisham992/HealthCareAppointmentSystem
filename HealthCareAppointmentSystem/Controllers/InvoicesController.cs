@@ -62,7 +62,7 @@ namespace HealthCareAppointmentSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> SubmitPayment(int id, string paymentMethod, string transactionReference)
+        public async Task<IActionResult> SubmitPayment(int id, string paymentMethod, string transactionReference, IFormFile? screenshot)
         {
             var invoice = await _context.Invoices
                 .Include(i => i.Appointment)
@@ -77,6 +77,23 @@ namespace HealthCareAppointmentSystem.Controllers
                 return View(invoice);
             }
 
+            if (screenshot == null || screenshot.Length == 0)
+            {
+                ModelState.AddModelError("", "Payment screenshot is required.");
+                return View(invoice);
+            }
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "screenshots");
+            Directory.CreateDirectory(uploadsFolder);
+            var uniqueFileName = Guid.NewGuid().ToString() + "_" + screenshot.FileName;
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await screenshot.CopyToAsync(stream);
+            }
+
+            invoice.PaymentScreenshotUrl = "/uploads/screenshots/" + uniqueFileName;
             invoice.PaymentMethod = paymentMethod;
             invoice.TransactionReference = transactionReference;
             invoice.Status = PaymentStatus.AwaitingVerification;
@@ -108,6 +125,11 @@ namespace HealthCareAppointmentSystem.Controllers
 
             invoice.Status = PaymentStatus.Paid;
             invoice.PaidAt = DateTime.UtcNow;
+
+            if (invoice.Appointment != null && invoice.Appointment.Status == AppointmentStatus.Pending)
+            {
+                invoice.Appointment.Status = AppointmentStatus.Confirmed;
+            }
 
             var currentUser = await _userManager.GetUserAsync(User);
             _context.AuditLogs.Add(new AuditLog

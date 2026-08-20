@@ -1,5 +1,6 @@
 using HealthCareAppointmentSystem.Data;
 using HealthCareAppointmentSystem.Models;
+using HealthCareAppointmentSystem.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +38,9 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // required for Identity's default UI
+
+// Register background service for auto-canceling unpaid appointments
+builder.Services.AddHostedService<PaymentTimeoutService>();
 
 var app = builder.Build();
 
