@@ -58,7 +58,7 @@
                     </td>
                     <td style="display: flex; gap: 0.5rem;">
                         <form asp-action="ToggleBan" asp-route-id="@account.Id" method="post" onsubmit="return confirm('Are you sure you want to toggle the ban status for this user?');">
-                            <button type="submit" class="btn btn-secondary btn-icon" title="@(account.IsBanned ? "Unban" : "Ban")">
+                            <button type="submit" class="action-icon" title="@(account.IsBanned ? "Unban" : "Ban")">
                                 @if(account.IsBanned)
                                 {
                                     <i class="fa-solid fa-user-check"></i>
@@ -70,7 +70,7 @@
                             </button>
                         </form>
                         <form asp-action="Delete" asp-route-id="@account.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to permanently delete this user? This cannot be undone.');">
-                            <button type="submit" class="btn btn-danger btn-icon" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                            <button type="submit" class="action-icon text-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
                         </form>
                     </td>
                 </tr>
