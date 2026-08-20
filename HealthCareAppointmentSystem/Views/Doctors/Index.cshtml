@@ -6,7 +6,7 @@
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
     <div style="display: flex; align-items: center; gap: 1rem;">
         <h1 style="margin: 0;">Doctors</h1>
-        <a class="btn btn-primary" asp-action="Create">+ Add Doctor</a>
+        <a class="btn btn-primary" asp-action="Create"><i class="fa-solid fa-plus" style="margin-right: 5px;"></i>Add Doctor</a>
     </div>
 </div>
 
@@ -47,13 +47,13 @@
                     @if (!item.IsApproved)
                     {
                         <form asp-action="Approve" asp-route-id="@item.Id" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                            <button type="submit" class="btn btn-success btn-icon" title="Approve"><i class="fa-solid fa-thumbs-up"></i></button>
                         </form>
                     }
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-sm">Details</a>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-sm">Edit</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-icon" title="Details"><i class="fa-regular fa-eye"></i></a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-primary btn-icon" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
                     <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to permanently delete this doctor profile?');">
-                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        <button type="submit" class="btn btn-danger btn-icon" title="Delete"><i class="fa-solid fa-trash"></i></button>
                     </form>
                 </td>
             </tr>
