@@ -81,17 +81,17 @@
                 </td>
                 <td class="actions">
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="action-icon" title="Details"><i class="fa-regular fa-eye"></i></a>
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-action btn-action-secondary">DETAILS</a>
                         
                         @if (item.Invoice != null)
                         {
-                            <a asp-controller="Invoices" asp-action="Details" asp-route-id="@item.Invoice.Id" class="action-icon text-primary" title="View Slip"><i class="fa-solid fa-file-invoice-dollar"></i></a>
+                            <a asp-controller="Invoices" asp-action="Details" asp-route-id="@item.Invoice.Id" class="btn-action btn-action-secondary">SLIP</a>
                         }
                         
                         @if (isPast && (item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed))
                         {
                             <form asp-action="MarkCompleted" asp-route-id="@item.Id" method="post" style="display:inline; margin:0;">
-                                <button type="submit" class="action-icon text-primary" title="Mark Completed"><i class="fa-solid fa-check"></i></button>
+                                <button type="submit" class="btn-action btn-action-success">COMPLETE</button>
                             </form>
                         }
 
@@ -100,41 +100,41 @@
                             var reviewedIds = ViewBag.ReviewedAppointmentIds as List<int> ?? new List<int>();
                             if (reviewedIds.Contains(item.Id))
                             {
-                                <button class="action-icon" disabled style="color: #cbd5e1; cursor: not-allowed;" title="Submitted Review"><i class="fa-solid fa-star-half-stroke"></i></button>
+                                <button class="btn-action btn-action-secondary" disabled style="opacity: 0.6; cursor: not-allowed;">REVIEWED</button>
                             }
                             else
                             {
-                                <a asp-controller="Reviews" asp-action="Create" asp-route-appointmentId="@item.Id" class="action-icon text-success" title="Leave Review"><i class="fa-solid fa-star"></i></a>
+                                <a asp-controller="Reviews" asp-action="Create" asp-route-appointmentId="@item.Id" class="btn-action btn-action-primary">REVIEW</a>
                             }
                         }
 
                         @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
                         {
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="action-icon text-primary" title="Edit"><i class="fa-solid fa-pen-to-square"></i></a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-primary">EDIT</a>
                         }
                         
                         @if ((User.IsInRole("Patient") || User.IsInRole("Doctor")) && (item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed))
                         {
-                            <a asp-action="RequestCancellation" asp-route-id="@item.Id" class="action-icon text-danger" title="Request Cancel"><i class="fa-solid fa-ban"></i></a>
+                            <a asp-action="RequestCancellation" asp-route-id="@item.Id" class="btn-action btn-action-danger">CANCEL</a>
                         }
 
                         @if (User.IsInRole("Doctor") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.PatientCancellationRequested)
                         {
-                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="action-icon text-danger" title="Confirm Cancel"><i class="fa-solid fa-check-double"></i></a>
+                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="btn-action btn-action-danger">CONFIRM</a>
                         }
                         else if (User.IsInRole("Patient") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.DoctorCancellationRequested)
                         {
-                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="action-icon text-danger" title="Confirm Cancel"><i class="fa-solid fa-check-double"></i></a>
+                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="btn-action btn-action-danger">CONFIRM</a>
                         }
                         else if (User.IsInRole("Patient") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.PatientRefundVerificationPending)
                         {
-                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="action-icon text-warning" title="Verify Refund"><i class="fa-solid fa-money-bill-transfer"></i></a>
+                            <a asp-action="ConfirmCancellation" asp-route-id="@item.Id" class="btn-action btn-action-warning">VERIFY</a>
                         }
 
                         @if (User.IsInRole("Admin"))
                         {
                             <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to delete this appointment?');">
-                                <button type="submit" class="action-icon text-danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                                <button type="submit" class="btn-action btn-action-danger">DELETE</button>
                             </form>
                         }
                     </div>
