@@ -74,7 +74,3 @@ On the very first run, the `DbInitializer` automatically provisions the database
   - Usually occurs during concurrent editing or stale data. Refresh the page or check the Audit Logs.
 - **"Port already in use"**
   - If `dotnet run` complains about a used port, check your `Properties/launchSettings.json` and change the `applicationUrl` port, or kill the process using the current port.
-
-
-
-1 more thing i want you to build invoice like slip as patient do appointment. he get payment slip like to submit bank transfer or 1 link payment o something like that.  after that doctor approve payment done or something like that. then before on slip it write payment due or something like then and after that paid or something print on slip. you have to think professionally and plan how to implement this thing. professionally or some other better recommedation alternate to this

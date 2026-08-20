@@ -33,6 +33,7 @@ namespace HealthCareAppointmentSystem.Controllers
                 .Include(a => a.Doctor).ThenInclude(d => d!.ApplicationUser)
                 .Include(a => a.Doctor).ThenInclude(d => d!.Specialization)
                 .Include(a => a.Patient).ThenInclude(p => p!.ApplicationUser)
+                .Include(a => a.Invoice)
                 .OrderByDescending(a => a.AppointmentDateTime);
 
             if (User.IsInRole("Doctor"))
@@ -89,6 +90,7 @@ namespace HealthCareAppointmentSystem.Controllers
             var appointment = await _context.Appointments
                 .Include(a => a.Doctor).ThenInclude(d => d!.ApplicationUser)
                 .Include(a => a.Patient).ThenInclude(p => p!.ApplicationUser)
+                .Include(a => a.Invoice)
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (appointment is null) return NotFound();
@@ -146,6 +148,9 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (ModelState.IsValid)
             {
+                var doctor = await _context.Doctors.FindAsync(vm.DoctorId);
+                var consultationFee = doctor?.ConsultationFee ?? 0m;
+
                 var appointment = new Appointment
                 {
                     DoctorId = vm.DoctorId,
@@ -158,6 +163,18 @@ namespace HealthCareAppointmentSystem.Controllers
 
                 _context.Add(appointment);
                 await _context.SaveChangesAsync();
+
+                var invoice = new Invoice
+                {
+                    AppointmentId = appointment.Id,
+                    Amount = consultationFee,
+                    Status = PaymentStatus.Pending,
+                    IssuedAt = DateTime.UtcNow
+                };
+                
+                _context.Invoices.Add(invoice);
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
 

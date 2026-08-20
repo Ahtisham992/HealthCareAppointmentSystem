@@ -1,0 +1,46 @@
+@model HealthCareAppointmentSystem.Models.Invoice
+
+@{
+    ViewData["Title"] = "Submit Payment Details";
+}
+
+<div style="max-width: 600px; margin: 2rem auto; background: white; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid var(--border);">
+    <h2 style="margin-top: 0; color: var(--primary);"><i class="fa-solid fa-file-invoice-dollar"></i> Submit Payment</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Please transfer <strong>PKR @Model.Amount.ToString("N2")</strong> to our bank account or via 1Link and submit the reference number below.</p>
+
+    <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <h4 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1rem;">Payment Instructions:</h4>
+        <ul style="margin: 0; padding-left: 1.2rem; color: var(--text); font-size: 0.95rem;">
+            <li><strong>Bank:</strong> Habib Bank Limited (HBL)</li>
+            <li><strong>Account Title:</strong> HealthCare Plus</li>
+            <li><strong>Account No:</strong> 0000 1111 2222 3333</li>
+            <li><strong>1Link / IBAN:</strong> PK12HABB0000111122223333</li>
+        </ul>
+    </div>
+
+    <form asp-action="SubmitPayment" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label class="form-label" style="font-weight: 600;">Payment Method</label>
+            <select name="paymentMethod" class="form-select" required>
+                <option value="">-- Select Method --</option>
+                <option value="Bank Transfer">Bank Transfer (IBFT)</option>
+                <option value="1Link">1Link / EasyPaisa / JazzCash</option>
+                <option value="Over the Counter">Over the Counter (Cash Deposit)</option>
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label" style="font-weight: 600;">Transaction Reference Number</label>
+            <input type="text" name="transactionReference" class="form-control" placeholder="e.g. 1234567890" required />
+            <div class="form-text">The 10-14 digit reference ID provided by your bank app after a successful transfer.</div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Submit for Verification</button>
+        </div>
+    </form>
+</div>

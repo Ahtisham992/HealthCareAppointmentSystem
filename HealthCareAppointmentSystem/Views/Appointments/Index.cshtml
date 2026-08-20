@@ -61,6 +61,11 @@
                     <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                         <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-secondary btn-sm">Details</a>
                         
+                        @if (item.Invoice != null)
+                        {
+                            <a asp-controller="Invoices" asp-action="Details" asp-route-id="@item.Invoice.Id" class="btn btn-primary btn-sm" style="background-color: var(--primary); border-color: var(--primary);">View Slip</a>
+                        }
+                        
                         @if (isPast && (item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Pending || item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Confirmed))
                         {
                             <form asp-action="MarkCompleted" asp-route-id="@item.Id" method="post" style="display:inline; margin:0;">

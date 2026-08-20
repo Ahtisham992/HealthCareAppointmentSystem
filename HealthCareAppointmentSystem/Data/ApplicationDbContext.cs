@@ -17,6 +17,7 @@ namespace HealthCareAppointmentSystem.Data
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+        public DbSet<Invoice> Invoices { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -75,6 +76,13 @@ namespace HealthCareAppointmentSystem.Data
                 .WithMany()
                 .HasForeignKey(r => r.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Invoice -> Appointment (1:1)
+            builder.Entity<Invoice>()
+                .HasOne(i => i.Appointment)
+                .WithOne(a => a.Invoice)
+                .HasForeignKey<Invoice>(i => i.AppointmentId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

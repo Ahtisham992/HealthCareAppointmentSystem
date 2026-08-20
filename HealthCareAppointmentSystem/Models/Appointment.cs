@@ -45,6 +45,8 @@ namespace HealthCareAppointmentSystem.Models
         [StringLength(500)]
         public string? CancellationReason { get; set; }
 
+        public Invoice? Invoice { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
