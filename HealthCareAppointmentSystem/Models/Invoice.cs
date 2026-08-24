@@ -51,5 +51,7 @@ namespace HealthCareAppointmentSystem.Models
 
         [ForeignKey(nameof(CollectedByReceptionistId))]
         public Receptionist? CollectedByReceptionist { get; set; }
+
+        public bool IsHandedOverToDoctor { get; set; } = false;
     }
 }

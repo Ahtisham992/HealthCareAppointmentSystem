@@ -247,4 +247,13 @@
             </button>
         </form>
     }
+
+    @if (User.IsInRole("Receptionist") && (Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Pending || Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification))
+    {
+        <form asp-action="VerifyPayment" asp-route-id="@Model.Id" method="post" style="display: inline-block;">
+            <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="return confirm('Confirm you have received Rs. @Model.Amount.ToString("N0") cash?');">
+                <i class="fa-solid fa-money-bill-wave"></i> Collect Cash & Mark Paid
+            </button>
+        </form>
+    }
 </div>

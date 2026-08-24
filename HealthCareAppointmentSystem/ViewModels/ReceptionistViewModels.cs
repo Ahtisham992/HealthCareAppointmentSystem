@@ -30,5 +30,21 @@ namespace HealthCareAppointmentSystem.ViewModels
         public string? NewPatientEmail { get; set; }
         public string? NewPatientPhone { get; set; }
         public DateTime? NewPatientDOB { get; set; }
+
+        [DataType(DataType.Password)]
+        public string? NewPatientPassword { get; set; }
+    }
+
+    public class MyDrawerViewModel
+    {
+        public decimal TotalDrawerBalance { get; set; }
+        public List<DoctorCashGroup> DoctorGroups { get; set; } = new();
+    }
+
+    public class DoctorCashGroup
+    {
+        public int DoctorId { get; set; }
+        public string DoctorName { get; set; } = string.Empty;
+        public decimal TotalCollected { get; set; }
     }
 }

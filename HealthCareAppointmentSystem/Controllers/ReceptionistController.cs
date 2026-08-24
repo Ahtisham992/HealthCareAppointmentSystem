@@ -63,7 +63,9 @@ namespace HealthCareAppointmentSystem.Controllers
         [HttpGet]
         public IActionResult BookAppointment()
         {
-            ViewBag.Doctors = new SelectList(_context.Set<Doctor>().Include(d => d.ApplicationUser).ToList(), "Id", "ApplicationUser.FullName");
+            var doctors = _context.Set<Doctor>().Include(d => d.ApplicationUser).Include(d => d.Specialization).ToList();
+            var docList = doctors.Select(d => new { Id = d.Id, Name = $"Dr. {d.ApplicationUser?.FullName} - {d.Specialization?.Name}" }).ToList();
+            ViewBag.Doctors = new SelectList(docList, "Id", "Name");
             return View(new BookAppointmentViewModel());
         }
 
@@ -73,7 +75,9 @@ namespace HealthCareAppointmentSystem.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Doctors = new SelectList(_context.Set<Doctor>().Include(d => d.ApplicationUser).ToList(), "Id", "ApplicationUser.FullName");
+                var doctors = _context.Set<Doctor>().Include(d => d.ApplicationUser).Include(d => d.Specialization).ToList();
+                var docList = doctors.Select(d => new { Id = d.Id, Name = $"Dr. {d.ApplicationUser?.FullName} - {d.Specialization?.Name}" }).ToList();
+                ViewBag.Doctors = new SelectList(docList, "Id", "Name");
                 return View(model);
             }
 
@@ -82,10 +86,12 @@ namespace HealthCareAppointmentSystem.Controllers
             if (patient == null)
             {
                 // Register patient on the fly
-                if (string.IsNullOrEmpty(model.NewPatientEmail) || string.IsNullOrEmpty(model.NewPatientFullName))
+                if (string.IsNullOrEmpty(model.NewPatientEmail) || string.IsNullOrEmpty(model.NewPatientFullName) || string.IsNullOrEmpty(model.NewPatientPassword))
                 {
-                    ModelState.AddModelError("", "CNIC not found. Please provide Full Name, Email, DOB, Gender and Phone to register the patient.");
-                    ViewBag.Doctors = new SelectList(_context.Set<Doctor>().Include(d => d.ApplicationUser).ToList(), "Id", "ApplicationUser.FullName");
+                    ModelState.AddModelError("", "CNIC not found. Please provide Full Name, Email, DOB, Phone, and Password to register the patient.");
+                    var doctors = _context.Set<Doctor>().Include(d => d.ApplicationUser).Include(d => d.Specialization).ToList();
+                    var docList = doctors.Select(d => new { Id = d.Id, Name = $"Dr. {d.ApplicationUser?.FullName} - {d.Specialization?.Name}" }).ToList();
+                    ViewBag.Doctors = new SelectList(docList, "Id", "Name");
                     return View(model);
                 }
 
@@ -98,12 +104,14 @@ namespace HealthCareAppointmentSystem.Controllers
                     EmailConfirmed = true
                 };
 
-                // Generate a random password for them
-                var result = await _userManager.CreateAsync(user, "Patient@123");
+                // Use the provided password
+                var result = await _userManager.CreateAsync(user, model.NewPatientPassword);
                 if (!result.Succeeded)
                 {
                     ModelState.AddModelError("", "Failed to create patient account. Email may already be in use.");
-                    ViewBag.Doctors = new SelectList(_context.Set<Doctor>().Include(d => d.ApplicationUser).ToList(), "Id", "ApplicationUser.FullName");
+                    var doctors = _context.Set<Doctor>().Include(d => d.ApplicationUser).Include(d => d.Specialization).ToList();
+                    var docList = doctors.Select(d => new { Id = d.Id, Name = $"Dr. {d.ApplicationUser?.FullName} - {d.Specialization?.Name}" }).ToList();
+                    ViewBag.Doctors = new SelectList(docList, "Id", "Name");
                     return View(model);
                 }
 
@@ -148,8 +156,9 @@ namespace HealthCareAppointmentSystem.Controllers
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Appointment booked successfully for {patient.ApplicationUser?.FullName}.";
-            return RedirectToAction(nameof(Dashboard));
+            TempData["Success"] = $"Appointment booked successfully for {patient.ApplicationUser?.FullName}. Please collect the payment to confirm the appointment.";
+            // Redirect to Invoice details (Assuming InvoicesController exists)
+            return RedirectToAction("Details", "Invoices", new { id = invoice.Id });
         }
 
         [HttpPost]
@@ -190,7 +199,69 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (receptionist == null) return NotFound();
 
-            return View(receptionist);
+            var pendingInvoices = await _context.Invoices
+                .Include(i => i.Appointment)
+                .ThenInclude(a => a.Doctor)
+                .ThenInclude(d => d.ApplicationUser)
+                .Where(i => i.CollectedByReceptionistId == receptionist.Id 
+                         && i.Status == PaymentStatus.Paid 
+                         && !i.IsHandedOverToDoctor)
+                .ToListAsync();
+
+            var groups = pendingInvoices.GroupBy(i => i.Appointment.Doctor)
+                .Select(g => new DoctorCashGroup
+                {
+                    DoctorId = g.Key.Id,
+                    DoctorName = "Dr. " + g.Key.ApplicationUser.FullName,
+                    TotalCollected = g.Sum(i => i.Amount)
+                }).ToList();
+
+            var vm = new MyDrawerViewModel
+            {
+                TotalDrawerBalance = receptionist.CashDrawerBalance,
+                DoctorGroups = groups
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> HandoverCashToDoctor(int doctorId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var receptionist = await _context.Receptionists.FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+            
+            if (receptionist == null) return NotFound();
+
+            var pendingInvoices = await _context.Invoices
+                .Include(i => i.Appointment)
+                .Where(i => i.CollectedByReceptionistId == receptionist.Id 
+                         && i.Status == PaymentStatus.Paid 
+                         && !i.IsHandedOverToDoctor
+                         && i.Appointment.DoctorId == doctorId)
+                .ToListAsync();
+
+            if (!pendingInvoices.Any())
+            {
+                TempData["Error"] = "No pending cash to hand over to this doctor.";
+                return RedirectToAction(nameof(MyDrawer));
+            }
+
+            decimal totalAmount = pendingInvoices.Sum(i => i.Amount);
+            
+            foreach(var invoice in pendingInvoices)
+            {
+                invoice.IsHandedOverToDoctor = true;
+            }
+
+            receptionist.CashDrawerBalance -= totalAmount;
+            if (receptionist.CashDrawerBalance < 0) receptionist.CashDrawerBalance = 0; // sanity check
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"Successfully handed over Rs. {totalAmount:N0} to the doctor.";
+
+            return RedirectToAction(nameof(MyDrawer));
         }
 
         [HttpPost]
@@ -233,6 +304,26 @@ namespace HealthCareAppointmentSystem.Controllers
             }
 
             return RedirectToAction(nameof(MyDrawer));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPatientByCNIC(string cnic)
+        {
+            var patient = await _context.Set<Patient>()
+                .Include(p => p.ApplicationUser)
+                .FirstOrDefaultAsync(p => p.CNIC == cnic);
+
+            if (patient != null && patient.ApplicationUser != null)
+            {
+                return Json(new { 
+                    found = true, 
+                    fullName = patient.ApplicationUser.FullName, 
+                    email = patient.ApplicationUser.Email,
+                    phone = patient.PhoneNumber ?? "",
+                    dob = patient.DateOfBirth?.ToString("yyyy-MM-dd") ?? ""
+                });
+            }
+            return Json(new { found = false });
         }
     }
 }

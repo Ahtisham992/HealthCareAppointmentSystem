@@ -113,7 +113,7 @@ namespace HealthCareAppointmentSystem.Controllers
         // POST: /Invoices/VerifyPayment/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Doctor")]
+        [Authorize(Roles = "Admin,Doctor,Receptionist")]
         public async Task<IActionResult> VerifyPayment(int id)
         {
             var invoice = await _context.Invoices
@@ -132,6 +132,17 @@ namespace HealthCareAppointmentSystem.Controllers
             }
 
             var currentUser = await _userManager.GetUserAsync(User);
+            
+            if (User.IsInRole("Receptionist") && currentUser != null)
+            {
+                var receptionist = await _context.Receptionists.FirstOrDefaultAsync(r => r.ApplicationUserId == currentUser.Id);
+                if (receptionist != null)
+                {
+                    invoice.CollectedByReceptionistId = receptionist.Id;
+                    receptionist.CashDrawerBalance += invoice.Amount;
+                }
+            }
+
             _context.AuditLogs.Add(new AuditLog
             {
                 Action = "Verified Payment",
@@ -162,6 +173,11 @@ namespace HealthCareAppointmentSystem.Controllers
             {
                 var patient = await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == currentUser.Id);
                 return patient != null && patient.Id == invoice.Appointment!.PatientId;
+            }
+
+            if (User.IsInRole("Receptionist"))
+            {
+                return true; // Receptionists handle payments, so they need access to view all invoices.
             }
 
             return false;

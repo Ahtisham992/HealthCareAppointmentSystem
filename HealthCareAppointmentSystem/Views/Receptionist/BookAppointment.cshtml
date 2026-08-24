@@ -8,13 +8,29 @@
     <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">Enter CNIC to book for an existing patient or register a new one.</p>
 </div>
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<style>
+    .patient-found-card {
+        background-color: rgba(46, 204, 113, 0.1);
+        border: 1px solid var(--success);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        display: none;
+    }
+</style>
+
 <div class="form-card" style="max-width: 600px; margin: 0;">
     <form method="post" asp-action="BookAppointment">
         <div asp-validation-summary="ModelOnly" class="text-danger" style="color: var(--danger); margin-bottom: 1rem;"></div>
 
         <div class="form-group">
             <label asp-for="CNIC">Patient CNIC (XXXXX-XXXXXXX-X)</label>
-            <input asp-for="CNIC" class="form-control" placeholder="e.g. 12345-1234567-1" id="cnicInput" />
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input asp-for="CNIC" class="form-control" placeholder="e.g. 12345-1234567-1" id="cnicInput" style="flex: 1;" />
+                <span id="cnicStatus" class="status-badge" style="display:none; white-space:nowrap;"></span>
+            </div>
             <span asp-validation-for="CNIC" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
                 If the CNIC is not found, you will need to fill out the new patient details below.
@@ -23,46 +39,68 @@
 
         <div class="form-group">
             <label asp-for="DoctorId">Select Doctor</label>
-            <select asp-for="DoctorId" asp-items="ViewBag.Doctors" class="form-control">
+            <select asp-for="DoctorId" asp-items="ViewBag.Doctors" class="form-control select2" id="doctorSelect">
                 <option value="">Choose a Doctor...</option>
             </select>
             <span asp-validation-for="DoctorId" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
         </div>
 
-        <div class="form-group">
-            <label asp-for="AppointmentDateTime">Date & Time</label>
-            <input asp-for="AppointmentDateTime" class="form-control" type="datetime-local" />
-            <span asp-validation-for="AppointmentDateTime" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
+        <div class="form-group" id="dateGroup" style="display: none;">
+            <label>Select Date</label>
+            <input type="date" id="appointmentDate" class="form-control" min="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
         </div>
+
+        <div class="form-group" id="slotsGroup" style="display: none;">
+            <label>Select Time Slot</label>
+            <div id="slotsContainer" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+            </div>
+            <p id="noSlotsMessage" class="text-danger" style="display: none; font-size:0.85rem;">No available slots for the selected date.</p>
+        </div>
+
+        <input type="hidden" asp-for="AppointmentDateTime" id="finalDateTime" />
+        <span asp-validation-for="AppointmentDateTime" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
 
         <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);" />
 
-        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">New Patient Registration (Fill only if CNIC is new)</h3>
-
-        <div class="form-group">
-            <label asp-for="NewPatientFullName">Full Name</label>
-            <input asp-for="NewPatientFullName" class="form-control" placeholder="Patient's Full Name" />
+        <!-- Patient Found Card -->
+        <div id="patientFoundCard" class="patient-found-card">
+            <h3 style="margin-top: 0; color: var(--success);"><i class="fas fa-check-circle"></i> Patient Profile Found</h3>
+            <p><strong>Name:</strong> <span id="foundName"></span></p>
+            <p><strong>Email:</strong> <span id="foundEmail"></span></p>
+            <p style="margin-bottom:0;"><strong>Phone:</strong> <span id="foundPhone"></span></p>
         </div>
 
-        <div class="form-group">
-            <label asp-for="NewPatientEmail">Email</label>
-            <input asp-for="NewPatientEmail" class="form-control" type="email" placeholder="patient@example.com" />
-        </div>
+        <div id="newPatientFields">
+            <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">New Patient Registration (Fill only if CNIC is new)</h3>
 
-        <div class="form-group">
-            <label asp-for="NewPatientPhone">Phone</label>
-            <input asp-for="NewPatientPhone" class="form-control" placeholder="03XXXXXXXXX" />
-        </div>
+            <div class="form-group">
+                <label asp-for="NewPatientFullName">Full Name</label>
+                <input asp-for="NewPatientFullName" class="form-control" placeholder="Patient's Full Name" />
+            </div>
 
-        <div class="form-group" style="display: flex; gap: 1rem;">
-            <div style="flex: 1;">
+            <div class="form-group">
+                <label asp-for="NewPatientEmail">Email</label>
+                <input asp-for="NewPatientEmail" class="form-control" type="email" placeholder="patient@example.com" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NewPatientPhone">Phone</label>
+                <input asp-for="NewPatientPhone" class="form-control" placeholder="03XXXXXXXXX" />
+            </div>
+
+            <div class="form-group">
                 <label asp-for="NewPatientDOB">Date of Birth</label>
                 <input asp-for="NewPatientDOB" class="form-control" type="date" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NewPatientPassword">Login Password</label>
+                <input asp-for="NewPatientPassword" class="form-control" type="password" placeholder="Assign a password for patient portal login" />
             </div>
         </div>
 
         <div class="form-actions" style="margin-top: 2rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm Booking</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="flex: 1;" disabled>Confirm Booking</button>
             <a asp-action="Dashboard" class="btn btn-secondary" style="flex: 1;">Cancel</a>
         </div>
     </form>
@@ -70,11 +108,129 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        // Simple client-side mask for CNIC could be added here
-        document.getElementById('cnicInput').addEventListener('input', function (e) {
+        $(document).ready(function() {
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                placeholder: "Search for a Doctor..."
+            });
+        });
+
+        // Simple client-side mask for CNIC
+        const cnicInput = document.getElementById('cnicInput');
+        cnicInput.addEventListener('input', function (e) {
             var x = e.target.value.replace(/\D/g, '').match(/(\d{0,5})(\d{0,7})(\d{0,1})/);
             e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '');
         });
+
+        // Check CNIC existence
+        cnicInput.addEventListener('blur', function() {
+            var cnic = this.value;
+            if(cnic.length >= 13) {
+                fetch('/Receptionist/GetPatientByCNIC?cnic=' + cnic)
+                .then(res => res.json())
+                .then(data => {
+                    const status = document.getElementById('cnicStatus');
+                    const newPatientFields = document.getElementById('newPatientFields');
+                    const patientFoundCard = document.getElementById('patientFoundCard');
+                    
+                    if(data.found) {
+                        status.style.display = 'block';
+                        status.className = 'status-badge status-completed';
+                        status.textContent = 'Found: ' + data.fullName;
+                        
+                        document.getElementById('foundName').textContent = data.fullName;
+                        document.getElementById('foundEmail').textContent = data.email;
+                        document.getElementById('foundPhone').textContent = data.phone;
+                        
+                        patientFoundCard.style.display = 'block';
+                        newPatientFields.style.display = 'none';
+                        
+                        // Clear out new patient fields just in case
+                        document.getElementById('NewPatientFullName').value = '';
+                        document.getElementById('NewPatientEmail').value = '';
+                        document.getElementById('NewPatientPhone').value = '';
+                        document.getElementById('NewPatientDOB').value = '';
+                        document.getElementById('NewPatientPassword').value = '';
+                    } else {
+                        status.style.display = 'block';
+                        status.className = 'status-badge status-pending';
+                        status.textContent = 'New Patient';
+
+                        patientFoundCard.style.display = 'none';
+                        newPatientFields.style.display = 'block';
+                    }
+                });
+            }
+        });
+
+        // Dynamic Slots logic
+        const doctorSelect = document.getElementById('doctorSelect');
+        const dateInput = document.getElementById('appointmentDate');
+        const dateGroup = document.getElementById('dateGroup');
+        const slotsGroup = document.getElementById('slotsGroup');
+        const slotsContainer = document.getElementById('slotsContainer');
+        const noSlotsMessage = document.getElementById('noSlotsMessage');
+        const finalDateTime = document.getElementById('finalDateTime');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Note: because we are using jQuery select2, we should listen to select2:select event
+        $('#doctorSelect').on('select2:select', function (e) {
+            if (this.value) {
+                dateGroup.style.display = 'block';
+                if (dateInput.value) {
+                    fetchSlots();
+                }
+            } else {
+                dateGroup.style.display = 'none';
+                slotsGroup.style.display = 'none';
+                submitBtn.disabled = true;
+            }
+        });
+
+        dateInput.addEventListener('change', function() {
+            if (this.value && doctorSelect.value) {
+                fetchSlots();
+            }
+        });
+
+        function fetchSlots() {
+            const doctorId = doctorSelect.value;
+            const date = dateInput.value;
+            
+            fetch(`/Appointments/GetAvailableSlots?doctorId=${doctorId}&date=${date}`)
+                .then(response => response.json())
+                .then(slots => {
+                    slotsContainer.innerHTML = '';
+                    slotsGroup.style.display = 'block';
+                    finalDateTime.value = '';
+                    submitBtn.disabled = true;
+
+                    if (slots.length === 0) {
+                        noSlotsMessage.style.display = 'block';
+                    } else {
+                        noSlotsMessage.style.display = 'none';
+                        slots.forEach(slot => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-secondary';
+                            btn.style.padding = '0.5rem 1rem';
+                            btn.textContent = slot;
+                            btn.onclick = function() {
+                                Array.from(slotsContainer.children).forEach(c => c.classList.remove('btn-primary'));
+                                Array.from(slotsContainer.children).forEach(c => c.classList.add('btn-secondary'));
+                                
+                                this.classList.remove('btn-secondary');
+                                this.classList.add('btn-primary');
+                                
+                                finalDateTime.value = `${date}T${slot}:00`;
+                                submitBtn.disabled = false;
+                            };
+                            slotsContainer.appendChild(btn);
+                        });
+                    }
+                });
+        }
     </script>
 }
