@@ -19,7 +19,7 @@ namespace HealthCareAppointmentSystem.Data
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
             // 1. Seed roles
-            string[] roles = { "Admin", "Doctor", "Patient" };
+            string[] roles = { "Admin", "Doctor", "Patient", "Receptionist" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))

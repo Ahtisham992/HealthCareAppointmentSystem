@@ -3,11 +3,12 @@
     ViewData["Title"] = "Doctors";
 }
 
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-        <h1 style="margin: 0;">Doctors</h1>
-        <a class="btn btn-primary" asp-action="Create"><i class="fa-solid fa-plus" style="margin-right: 5px;"></i>Add Doctor</a>
-    </div>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <h1 style="margin: 0;">Doctors</h1>
+    <a asp-action="Create" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Add Doctor
+    </a>
 </div>
 
 <table id="doctorsTable" class="data-table display" style="width:100%; margin-top:1rem;">

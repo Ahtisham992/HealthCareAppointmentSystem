@@ -17,6 +17,10 @@
                 {
                     <li><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
                     <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+                    @if (User.IsInRole("Receptionist"))
+                    {
+                        <li><a asp-controller="Receptionist" asp-action="MyDrawer">Cash Drawer</a></li>
+                    }
                     @if (User.IsInRole("Admin"))
                     {
                         <li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li>

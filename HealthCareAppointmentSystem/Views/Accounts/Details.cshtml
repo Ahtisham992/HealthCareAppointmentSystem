@@ -1,0 +1,54 @@
+@model HealthCareAppointmentSystem.ViewModels.AccountViewModel
+
+@{
+    ViewData["Title"] = "Account Details";
+}
+
+<div class="page-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 style="margin: 0;">Account Details</h1>
+        <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">Overview of the system user account.</p>
+    </div>
+    <div style="display: flex; gap: 1rem;">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-secondary">Edit Account</a>
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+
+<div class="detail-card" style="max-width: 600px;">
+    <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1.5rem; color: var(--primary);">Basic Information</h3>
+    <dl class="row" style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+        <dt style="font-weight: 600; color: var(--text-muted);">Account ID</dt>
+        <dd style="font-family: monospace; color: var(--secondary);">#USR-@Model.Id.Substring(0, 8)</dd>
+
+        <dt style="font-weight: 600; color: var(--text-muted);">Full Name</dt>
+        <dd style="font-weight: 600;">@Model.FullName</dd>
+
+        <dt style="font-weight: 600; color: var(--text-muted);">Email Address</dt>
+        <dd>@Model.Email</dd>
+
+        <dt style="font-weight: 600; color: var(--text-muted);">Assigned Roles</dt>
+        <dd>
+            @if (string.IsNullOrEmpty(Model.Roles))
+            {
+                <span class="status-badge status-pending">No Role</span>
+            }
+            else
+            {
+                <span class="status-badge status-completed">@Model.Roles</span>
+            }
+        </dd>
+
+        <dt style="font-weight: 600; color: var(--text-muted);">Account Status</dt>
+        <dd>
+            @if (Model.IsBanned)
+            {
+                <span class="status-badge status-cancelled">Banned</span>
+            }
+            else
+            {
+                <span class="status-badge status-completed">Active</span>
+            }
+        </dd>
+    </dl>
+</div>

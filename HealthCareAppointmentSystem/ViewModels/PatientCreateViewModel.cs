@@ -28,5 +28,34 @@ namespace HealthCareAppointmentSystem.ViewModels
         public string? PhoneNumber { get; set; }
 
         public string? Address { get; set; }
+
+        [Required]
+        [RegularExpression(@"^[0-9]{5}-[0-9]{7}-[0-9]{1}$", ErrorMessage = "CNIC format must be XXXXX-XXXXXXX-X")]
+        [Display(Name = "CNIC Number")]
+        public string CNIC { get; set; } = string.Empty;
+    }
+
+    public class PatientEditViewModel
+    {
+        public int Id { get; set; }
+
+        [Required]
+        [Display(Name = "Full Name")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required]
+        [RegularExpression(@"^[0-9]{5}-[0-9]{7}-[0-9]{1}$", ErrorMessage = "CNIC format must be XXXXX-XXXXXXX-X")]
+        [Display(Name = "CNIC Number")]
+        public string CNIC { get; set; } = string.Empty;
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
+        public DateTime? DateOfBirth { get; set; }
+
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string? PhoneNumber { get; set; }
+
+        public string? Address { get; set; }
     }
 }

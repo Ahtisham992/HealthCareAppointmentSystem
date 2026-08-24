@@ -34,7 +34,8 @@ namespace HealthCareAppointmentSystem.Controllers
                 query = query.Where(p => 
                     p.ApplicationUser!.FullName.Contains(searchString) ||
                     p.ApplicationUser!.Email!.Contains(searchString) ||
-                    (p.PhoneNumber != null && p.PhoneNumber.Contains(searchString)));
+                    (p.PhoneNumber != null && p.PhoneNumber.Contains(searchString)) ||
+                    p.CNIC.Contains(searchString));
             }
 
             var patients = await query.ToListAsync();
@@ -112,7 +113,8 @@ namespace HealthCareAppointmentSystem.Controllers
                         ApplicationUserId = user.Id,
                         DateOfBirth = model.DateOfBirth,
                         PhoneNumber = model.PhoneNumber,
-                        Address = model.Address
+                        Address = model.Address,
+                        CNIC = model.CNIC
                     };
 
                     _context.Add(patient);
@@ -128,6 +130,65 @@ namespace HealthCareAppointmentSystem.Controllers
                 }
             }
             
+            return View(model);
+        }
+
+        // GET: /Patients/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var patient = await _context.Patients
+                .Include(p => p.ApplicationUser)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (patient == null) return NotFound();
+
+            var vm = new PatientEditViewModel
+            {
+                Id = patient.Id,
+                FullName = patient.ApplicationUser?.FullName ?? "",
+                CNIC = patient.CNIC,
+                DateOfBirth = patient.DateOfBirth,
+                PhoneNumber = patient.PhoneNumber,
+                Address = patient.Address
+            };
+
+            return View(vm);
+        }
+
+        // POST: /Patients/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, PatientEditViewModel model)
+        {
+            if (id != model.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                var patient = await _context.Patients
+                    .Include(p => p.ApplicationUser)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (patient == null) return NotFound();
+
+                patient.CNIC = model.CNIC;
+                patient.DateOfBirth = model.DateOfBirth;
+                patient.PhoneNumber = model.PhoneNumber;
+                patient.Address = model.Address;
+
+                if (patient.ApplicationUser != null)
+                {
+                    patient.ApplicationUser.FullName = model.FullName;
+                    _context.Update(patient.ApplicationUser);
+                }
+
+                _context.Update(patient);
+                await _context.SaveChangesAsync();
+                
+                TempData["Message"] = "Patient updated successfully.";
+                return RedirectToAction(nameof(Index));
+            }
             return View(model);
         }
         // most real systems separate "who can create an account" from "who can manage records."

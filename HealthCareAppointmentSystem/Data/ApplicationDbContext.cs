@@ -19,10 +19,30 @@ namespace HealthCareAppointmentSystem.Data
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public DbSet<PlatformBill> PlatformBills { get; set; } = null!;
         public DbSet<Invoice> Invoices { get; set; } = null!;
+        public DbSet<Receptionist> Receptionists { get; set; } = null!;
+        public DbSet<CashHandover> CashHandovers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); // required first for Identity's own tables
+
+            builder.Entity<CashHandover>()
+                .HasOne(ch => ch.AdminUser)
+                .WithMany()
+                .HasForeignKey(ch => ch.AdminUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<CashHandover>()
+                .HasOne(ch => ch.Receptionist)
+                .WithMany(r => r.CashHandovers)
+                .HasForeignKey(ch => ch.ReceptionistId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Invoice>()
+                .HasOne(i => i.CollectedByReceptionist)
+                .WithMany(r => r.CollectedInvoices)
+                .HasForeignKey(i => i.CollectedByReceptionistId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Doctor -> ApplicationUser (1:1)
             builder.Entity<Doctor>()

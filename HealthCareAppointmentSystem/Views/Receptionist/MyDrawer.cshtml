@@ -1,0 +1,58 @@
+@model HealthCareAppointmentSystem.Models.Receptionist
+@{
+    ViewData["Title"] = "My Cash Drawer";
+}
+
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="margin: 0;">My Cash Drawer</h1>
+    <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">Manage collected cash and handovers to Admin.</p>
+</div>
+
+<div class="dashboard-stats" style="margin-bottom: 2rem;">
+    <div class="stat-card" style="background: var(--surface); padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
+        <h3 style="margin-top: 0; color: var(--text-muted); font-size: 1.1rem; text-transform: uppercase;">Current Drawer Balance</h3>
+        <p style="font-size: 3rem; margin: 1rem 0; font-weight: bold; color: var(--primary);">Rs. @Model.CashDrawerBalance.ToString("N0")</p>
+        
+        <form asp-action="HandoverCash" method="post">
+            <button type="submit" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem;" @(Model.CashDrawerBalance <= 0 ? "disabled" : "")>
+                Handover Cash to Admin
+            </button>
+        </form>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem;">
+            Clicking this will reset your drawer balance to 0 and log a handover record.
+        </p>
+    </div>
+</div>
+
+<h2>Handover History</h2>
+<div class="table-responsive" style="background: var(--surface); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden;">
+    <table class="table" style="width: 100%; border-collapse: collapse;">
+        <thead style="background: var(--bg-color);">
+            <tr>
+                <th style="padding: 1rem; text-align: left;">Date & Time</th>
+                <th style="padding: 1rem; text-align: left;">Amount</th>
+                <th style="padding: 1rem; text-align: left;">Handed To (Admin)</th>
+                <th style="padding: 1rem; text-align: center;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var handover in Model.CashHandovers.OrderByDescending(h => h.HandoverDate))
+            {
+                <tr style="border-top: 1px solid var(--border-color);">
+                    <td style="padding: 1rem;">@handover.HandoverDate.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")</td>
+                    <td style="padding: 1rem; font-weight: bold; color: var(--primary);">Rs. @handover.Amount.ToString("N0")</td>
+                    <td style="padding: 1rem;">@handover.AdminUser?.FullName</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="background: rgba(40, 167, 69, 0.1); color: var(--success); padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">Completed</span>
+                    </td>
+                </tr>
+            }
+            @if (!Model.CashHandovers.Any())
+            {
+                <tr>
+                    <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">No handover history found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

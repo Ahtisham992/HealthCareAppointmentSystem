@@ -1,0 +1,80 @@
+@model HealthCareAppointmentSystem.ViewModels.BookAppointmentViewModel
+@{
+    ViewData["Title"] = "Book Appointment";
+}
+
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="margin: 0;">Book Appointment</h1>
+    <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">Enter CNIC to book for an existing patient or register a new one.</p>
+</div>
+
+<div class="form-card" style="max-width: 600px; margin: 0;">
+    <form method="post" asp-action="BookAppointment">
+        <div asp-validation-summary="ModelOnly" class="text-danger" style="color: var(--danger); margin-bottom: 1rem;"></div>
+
+        <div class="form-group">
+            <label asp-for="CNIC">Patient CNIC (XXXXX-XXXXXXX-X)</label>
+            <input asp-for="CNIC" class="form-control" placeholder="e.g. 12345-1234567-1" id="cnicInput" />
+            <span asp-validation-for="CNIC" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+                If the CNIC is not found, you will need to fill out the new patient details below.
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="DoctorId">Select Doctor</label>
+            <select asp-for="DoctorId" asp-items="ViewBag.Doctors" class="form-control">
+                <option value="">Choose a Doctor...</option>
+            </select>
+            <span asp-validation-for="DoctorId" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="AppointmentDateTime">Date & Time</label>
+            <input asp-for="AppointmentDateTime" class="form-control" type="datetime-local" />
+            <span asp-validation-for="AppointmentDateTime" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
+        </div>
+
+        <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--border-color);" />
+
+        <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem;">New Patient Registration (Fill only if CNIC is new)</h3>
+
+        <div class="form-group">
+            <label asp-for="NewPatientFullName">Full Name</label>
+            <input asp-for="NewPatientFullName" class="form-control" placeholder="Patient's Full Name" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="NewPatientEmail">Email</label>
+            <input asp-for="NewPatientEmail" class="form-control" type="email" placeholder="patient@example.com" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="NewPatientPhone">Phone</label>
+            <input asp-for="NewPatientPhone" class="form-control" placeholder="03XXXXXXXXX" />
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 1rem;">
+            <div style="flex: 1;">
+                <label asp-for="NewPatientDOB">Date of Birth</label>
+                <input asp-for="NewPatientDOB" class="form-control" type="date" />
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm Booking</button>
+            <a asp-action="Dashboard" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Simple client-side mask for CNIC could be added here
+        document.getElementById('cnicInput').addEventListener('input', function (e) {
+            var x = e.target.value.replace(/\D/g, '').match(/(\d{0,5})(\d{0,7})(\d{0,1})/);
+            e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    </script>
+}

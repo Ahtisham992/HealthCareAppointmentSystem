@@ -7,17 +7,23 @@
 
 <div class="detail-card">
     <dl>
-        <dt>Name</dt>
-        <dd>@Model.ApplicationUser?.FullName</dd>
+        <dt style="font-weight: 600; color: var(--text-muted);">Name</dt>
+        <dd>@Model?.ApplicationUser?.FullName</dd>
 
-        <dt>Phone</dt>
-        <dd>@(Model.PhoneNumber ?? "-")</dd>
+        <dt style="font-weight: 600; color: var(--text-muted);">Email Address</dt>
+        <dd>@Model?.ApplicationUser?.Email</dd>
 
-        <dt>Date of Birth</dt>
-        <dd>@(Model.DateOfBirth?.ToString("dd MMM yyyy") ?? "-")</dd>
+        <dt style="font-weight: 600; color: var(--text-muted);">CNIC</dt>
+        <dd>@Model?.CNIC</dd>
 
-        <dt>Address</dt>
-        <dd>@(Model.Address ?? "-")</dd>
+        <dt style="font-weight: 600; color: var(--text-muted);">Phone Number</dt>
+        <dd>@(Model?.PhoneNumber ?? "-")</dd>
+
+        <dt style="font-weight: 600; color: var(--text-muted);">Date of Birth</dt>
+        <dd>@(Model?.DateOfBirth?.ToString("dd MMM yyyy") ?? "-")</dd>
+
+        <dt style="font-weight: 600; color: var(--text-muted);">Address</dt>
+        <dd>@(Model?.Address ?? "-")</dd>
     </dl>
 
     <h3>Appointment History</h3>
@@ -45,6 +51,7 @@
     }
 
     <div class="form-actions">
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-secondary">Edit Patient</a>
         <a asp-action="Index" class="btn btn-secondary">Back to List</a>
     </div>
 </div>

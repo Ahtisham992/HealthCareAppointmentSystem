@@ -46,5 +46,10 @@ namespace HealthCareAppointmentSystem.Models
         public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime? PaidAt { get; set; }
+
+        public int? CollectedByReceptionistId { get; set; }
+
+        [ForeignKey(nameof(CollectedByReceptionistId))]
+        public Receptionist? CollectedByReceptionist { get; set; }
     }
 }

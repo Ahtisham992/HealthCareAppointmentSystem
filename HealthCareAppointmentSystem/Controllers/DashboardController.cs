@@ -26,6 +26,7 @@ namespace HealthCareAppointmentSystem.Controllers
             if (User.IsInRole("Admin")) return RedirectToAction(nameof(AdminDashboard));
             if (User.IsInRole("Doctor")) return RedirectToAction(nameof(DoctorDashboard));
             if (User.IsInRole("Patient")) return RedirectToAction(nameof(PatientDashboard));
+            if (User.IsInRole("Receptionist")) return RedirectToAction("Dashboard", "Receptionist");
 
             return RedirectToAction("Index", "Home");
         }

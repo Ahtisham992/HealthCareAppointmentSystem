@@ -19,4 +19,6 @@ obj/
 
 ## Secrets
 appsettings.Production.json
+appsettings.json
+appsettings.Development.json
 *.pfx

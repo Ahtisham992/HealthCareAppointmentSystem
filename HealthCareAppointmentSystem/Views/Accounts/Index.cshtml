@@ -5,8 +5,12 @@
     ViewData["Title"] = "Accounts Management";
 }
 
-<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
     <h1 style="margin: 0;">All Accounts</h1>
+    <a asp-action="Create" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Create Account
+    </a>
 </div>
 
 @if (TempData["Error"] != null)
@@ -57,12 +61,14 @@
                         }
                     </td>
                     <td style="display: flex; gap: 0.5rem;">
-                        <form asp-action="ToggleBan" asp-route-id="@account.Id" method="post" onsubmit="return confirm('Are you sure you want to toggle the ban status for this user?');">
+                        <a asp-action="Edit" asp-route-id="@account.Id" class="btn-action btn-action-primary">EDIT</a>
+                        <a asp-action="Details" asp-route-id="@account.Id" class="btn-action btn-action-secondary">DETAILS</a>
+                        <form asp-action="ToggleBan" asp-route-id="@account.Id" method="post" onsubmit="return confirm('Are you sure you want to toggle the ban status for this user?');" style="margin:0;">
                             <button type="submit" class="btn-action btn-action-warning">
                                 @(account.IsBanned ? "UNBAN" : "BAN")
                             </button>
                         </form>
-                        <form asp-action="Delete" asp-route-id="@account.Id" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to permanently delete this user? This cannot be undone.');">
+                        <form asp-action="Delete" asp-route-id="@account.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to permanently delete this user? This cannot be undone.');">
                             <button type="submit" class="btn-action btn-action-danger">DELETE</button>
                         </form>
                     </td>

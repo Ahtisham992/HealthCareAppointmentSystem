@@ -17,6 +17,56 @@ namespace HealthCareAppointmentSystem.Controllers
             _userManager = userManager;
         }
 
+        // GET: Accounts/Create
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View(new AccountCreateViewModel());
+        }
+
+        // POST: Accounts/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(AccountCreateViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            var user = new ApplicationUser
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FullName = model.FullName,
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user, model.Role);
+
+                if (model.Role == "Receptionist")
+                {
+                    var context = HttpContext.RequestServices.GetRequiredService<HealthCareAppointmentSystem.Data.ApplicationDbContext>();
+                    context.Receptionists.Add(new Receptionist { ApplicationUserId = user.Id });
+                    await context.SaveChangesAsync();
+                }
+
+                TempData["Message"] = $"Account for {user.Email} created successfully with role '{model.Role}'.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View(model);
+        }
+
         public async Task<IActionResult> Index(string searchString)
         {
             ViewData["CurrentFilter"] = searchString;
@@ -97,6 +147,92 @@ namespace HealthCareAppointmentSystem.Controllers
                 }
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Accounts/Details/5
+        public async Task<IActionResult> Details(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var roles = await _userManager.GetRolesAsync(user);
+            
+            var vm = new AccountViewModel
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                FullName = user.FullName ?? string.Empty,
+                Roles = string.Join(", ", roles),
+                IsBanned = await _userManager.IsLockedOutAsync(user)
+            };
+
+            return View(vm);
+        }
+
+        // GET: Accounts/Edit/5
+        public async Task<IActionResult> Edit(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var vm = new AccountEditViewModel
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                FullName = user.FullName ?? string.Empty
+            };
+
+            return View(vm);
+        }
+
+        // POST: Accounts/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(string id, AccountEditViewModel model)
+        {
+            if (id != model.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null) return NotFound();
+
+                user.Email = model.Email;
+                user.UserName = model.Email;
+                user.FullName = model.FullName;
+
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                {
+                    if (!string.IsNullOrEmpty(model.NewPassword))
+                    {
+                        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                        var passResult = await _userManager.ResetPasswordAsync(user, token, model.NewPassword);
+                        if (!passResult.Succeeded)
+                        {
+                            foreach (var error in passResult.Errors)
+                            {
+                                ModelState.AddModelError(string.Empty, error.Description);
+                            }
+                            return View(model);
+                        }
+                    }
+
+                    TempData["Message"] = "Account updated successfully.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+            return View(model);
         }
     }
 }
