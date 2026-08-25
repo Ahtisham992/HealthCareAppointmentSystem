@@ -1,3 +1,9 @@
+@using Microsoft.AspNetCore.Identity
+@using HealthCareAppointmentSystem.Models
+@using HealthCareAppointmentSystem.Data
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext DbContext
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,6 +56,45 @@
             </ul>
         </nav>
     </header>
+
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        var user = await UserManager.GetUserAsync(User);
+        if (user != null)
+        {
+            bool isProfileIncomplete = false;
+            if (User.IsInRole("Patient"))
+            {
+                var patient = await DbContext.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == user.Id);
+                if (patient != null && (patient.DateOfBirth == null || string.IsNullOrWhiteSpace(patient.PhoneNumber)))
+                {
+                    isProfileIncomplete = true;
+                }
+            }
+            else if (User.IsInRole("Doctor"))
+            {
+                var doctor = await DbContext.Doctors.FirstOrDefaultAsync(d => d.ApplicationUserId == user.Id);
+                if (doctor != null && (doctor.LicenseNumber == "PENDING-UPDATE-REQUIRED" || doctor.ConsultationFee == 0))
+                {
+                    isProfileIncomplete = true;
+                }
+            }
+
+            var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+            var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+            bool isOnProfileEdit = currentController == "Profile" && currentAction == "Edit";
+
+            if (isProfileIncomplete && !isOnProfileEdit)
+            {
+                <div style="background-color: var(--danger); color: white; text-align: center; padding: 12px; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);">
+                    <i class="fa-solid fa-triangle-exclamation" style="margin-right: 5px;"></i> 
+                    Your profile is incomplete! Please 
+                    <a asp-controller="Profile" asp-action="Edit" style="color: white; text-decoration: underline; font-weight: 800;">update your details</a> 
+                    to ensure smooth appointments.
+                </div>
+            }
+        }
+    }
 
     <main class="container">
         @if (TempData["Message"] != null)

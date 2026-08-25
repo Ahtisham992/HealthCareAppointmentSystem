@@ -71,9 +71,6 @@
                 </tr>
             </thead>
             <tbody>
-                @if(!Model.RecentLogs.Any()) {
-                    <tr><td colspan="4" class="text-center text-muted">No recent activity.</td></tr>
-                }
                 @foreach (var log in Model.RecentLogs)
                 {
                     <tr>

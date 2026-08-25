@@ -1,5 +1,8 @@
 @using HealthCareAppointmentSystem.ViewModels
+@using Microsoft.AspNetCore.Identity
+@using HealthCareAppointmentSystem.Models
 @model IEnumerable<AccountViewModel>
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Accounts Management";
@@ -63,14 +66,18 @@
                     <td style="display: flex; gap: 0.5rem;">
                         <a asp-action="Edit" asp-route-id="@account.Id" class="btn-action btn-action-primary">EDIT</a>
                         <a asp-action="Details" asp-route-id="@account.Id" class="btn-action btn-action-secondary">DETAILS</a>
-                        <form asp-action="ToggleBan" asp-route-id="@account.Id" method="post" onsubmit="return confirm('Are you sure you want to toggle the ban status for this user?');" style="margin:0;">
-                            <button type="submit" class="btn-action btn-action-warning">
-                                @(account.IsBanned ? "UNBAN" : "BAN")
-                            </button>
-                        </form>
-                        <form asp-action="Delete" asp-route-id="@account.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to permanently delete this user? This cannot be undone.');">
-                            <button type="submit" class="btn-action btn-action-danger">DELETE</button>
-                        </form>
+                        
+                        @if (UserManager.GetUserId(User) != account.Id)
+                        {
+                            <form asp-action="ToggleBan" asp-route-id="@account.Id" method="post" onsubmit="return confirm('Are you sure you want to toggle the ban status for this user?');" style="margin:0;">
+                                <button type="submit" class="btn-action btn-action-warning">
+                                    @(account.IsBanned ? "UNBAN" : "BAN")
+                                </button>
+                            </form>
+                            <form asp-action="Delete" asp-route-id="@account.Id" method="post" style="display:inline; margin:0;" onsubmit="return confirm('Are you sure you want to permanently delete this user? This cannot be undone.');">
+                                <button type="submit" class="btn-action btn-action-danger">DELETE</button>
+                            </form>
+                        }
                     </td>
                 </tr>
             }

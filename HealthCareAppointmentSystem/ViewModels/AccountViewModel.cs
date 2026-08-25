@@ -29,6 +29,35 @@ namespace HealthCareAppointmentSystem.ViewModels
 
         [Required]
         public string Role { get; set; } = string.Empty;
+
+        [RegularExpression(@"^[0-9]{5}-[0-9]{7}-[0-9]{1}$", ErrorMessage = "CNIC format must be XXXXX-XXXXXXX-X")]
+        [Display(Name = "CNIC Number (Required for Doctors and Patients)")]
+        [StringLength(15)]
+        public string? CNIC { get; set; }
+
+        // --- Patient Fields ---
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of Birth")]
+        public DateTime? DateOfBirth { get; set; }
+
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string? PhoneNumber { get; set; }
+
+        public string? Address { get; set; }
+
+        // --- Doctor Fields ---
+        [Display(Name = "Specialization")]
+        public int? SpecializationId { get; set; }
+
+        [Display(Name = "License Number")]
+        public string? LicenseNumber { get; set; }
+
+        [Display(Name = "Years of Experience")]
+        public int? YearsOfExperience { get; set; }
+
+        [Display(Name = "Consultation Fee")]
+        public decimal? ConsultationFee { get; set; }
     }
 
     public class AccountEditViewModel

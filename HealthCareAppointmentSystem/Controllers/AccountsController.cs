@@ -11,16 +11,20 @@ namespace HealthCareAppointmentSystem.Controllers
     public class AccountsController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly HealthCareAppointmentSystem.Data.ApplicationDbContext _context;
 
-        public AccountsController(UserManager<ApplicationUser> userManager)
+        public AccountsController(UserManager<ApplicationUser> userManager, HealthCareAppointmentSystem.Data.ApplicationDbContext context)
         {
             _userManager = userManager;
+            _context = context;
         }
 
         // GET: Accounts/Create
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var context = HttpContext.RequestServices.GetRequiredService<HealthCareAppointmentSystem.Data.ApplicationDbContext>();
+            ViewBag.Specializations = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(await context.Specializations.ToListAsync(), "Id", "Name");
             return View(new AccountCreateViewModel());
         }
 
@@ -29,8 +33,28 @@ namespace HealthCareAppointmentSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AccountCreateViewModel model)
         {
+            if (model.Role == "Doctor" || model.Role == "Patient")
+            {
+                if (string.IsNullOrWhiteSpace(model.CNIC))
+                {
+                    ModelState.AddModelError("CNIC", "CNIC is required for Doctors and Patients.");
+                }
+                else
+                {
+                    var context = HttpContext.RequestServices.GetRequiredService<HealthCareAppointmentSystem.Data.ApplicationDbContext>();
+                    bool cnicExists = await context.Patients.AnyAsync(p => p.CNIC == model.CNIC) || 
+                                      await context.Doctors.AnyAsync(d => d.CNIC == model.CNIC);
+                    if (cnicExists)
+                    {
+                        ModelState.AddModelError("CNIC", "An account with this CNIC already exists.");
+                    }
+                }
+            }
+
             if (!ModelState.IsValid)
             {
+                var context = HttpContext.RequestServices.GetRequiredService<HealthCareAppointmentSystem.Data.ApplicationDbContext>();
+                ViewBag.Specializations = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(await context.Specializations.ToListAsync(), "Id", "Name");
                 return View(model);
             }
 
@@ -54,6 +78,45 @@ namespace HealthCareAppointmentSystem.Controllers
                     context.Receptionists.Add(new Receptionist { ApplicationUserId = user.Id });
                     await context.SaveChangesAsync();
                 }
+                else if (model.Role == "Doctor")
+                {
+                    var context = HttpContext.RequestServices.GetRequiredService<HealthCareAppointmentSystem.Data.ApplicationDbContext>();
+                    var defaultSpecialization = await context.Specializations.FirstOrDefaultAsync();
+                    
+                    context.Doctors.Add(new Doctor 
+                    { 
+                        ApplicationUserId = user.Id,
+                        CNIC = model.CNIC!,
+                        SpecializationId = model.SpecializationId ?? defaultSpecialization?.Id ?? 1,
+                        LicenseNumber = string.IsNullOrWhiteSpace(model.LicenseNumber) ? "PENDING-UPDATE-REQUIRED" : model.LicenseNumber,
+                        YearsOfExperience = model.YearsOfExperience ?? 0,
+                        ConsultationFee = model.ConsultationFee ?? 0m,
+                        IsApproved = true // Admin creates them, so they are approved by default
+                    });
+                    await context.SaveChangesAsync();
+                }
+                else if (model.Role == "Patient")
+                {
+                    var context = HttpContext.RequestServices.GetRequiredService<HealthCareAppointmentSystem.Data.ApplicationDbContext>();
+                    
+                    context.Patients.Add(new Patient 
+                    { 
+                        ApplicationUserId = user.Id,
+                        CNIC = model.CNIC!,
+                        PhoneNumber = model.PhoneNumber,
+                        DateOfBirth = model.DateOfBirth,
+                        Address = model.Address
+                    });
+                    await context.SaveChangesAsync();
+                }
+
+                var currentUser = await _userManager.GetUserAsync(User);
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    UserId = currentUser?.Id ?? user.Id,
+                    Action = $"Created {model.Role} account for {user.Email}"
+                });
+                await _context.SaveChangesAsync();
 
                 TempData["Message"] = $"Account for {user.Email} created successfully with role '{model.Role}'.";
                 return RedirectToAction(nameof(Index));
@@ -108,16 +171,29 @@ namespace HealthCareAppointmentSystem.Controllers
             {
                 var isBanned = await _userManager.IsLockedOutAsync(user);
                 await _userManager.SetLockoutEnabledAsync(user, true);
+                
+                var currentUser = await _userManager.GetUserAsync(User);
+                string actionMsg = "";
+                
                 if (isBanned)
                 {
                     await _userManager.SetLockoutEndDateAsync(user, null);
+                    actionMsg = $"Unbanned user {user.Email}";
                     TempData["Message"] = $"User {user.Email} has been unbanned.";
                 }
                 else
                 {
                     await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+                    actionMsg = $"Banned user {user.Email}";
                     TempData["Message"] = $"User {user.Email} has been banned.";
                 }
+
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    UserId = currentUser?.Id ?? user.Id,
+                    Action = actionMsg
+                });
+                await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
         }
@@ -126,6 +202,13 @@ namespace HealthCareAppointmentSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser != null && currentUser.Id == id)
+            {
+                TempData["Error"] = "You cannot delete your own account.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var user = await _userManager.FindByIdAsync(id);
             if (user != null)
             {
@@ -138,6 +221,12 @@ namespace HealthCareAppointmentSystem.Controllers
                     }
                     else
                     {
+                        _context.AuditLogs.Add(new AuditLog
+                        {
+                            UserId = currentUser?.Id ?? user.Id,
+                            Action = $"Deleted user account {user.Email}"
+                        });
+                        await _context.SaveChangesAsync();
                         TempData["Message"] = $"User {user.Email} deleted successfully.";
                     }
                 }
@@ -222,6 +311,14 @@ namespace HealthCareAppointmentSystem.Controllers
                             return View(model);
                         }
                     }
+
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    _context.AuditLogs.Add(new AuditLog
+                    {
+                        UserId = currentUser?.Id ?? user.Id,
+                        Action = $"Admin updated account details for {user.Email}"
+                    });
+                    await _context.SaveChangesAsync();
 
                     TempData["Message"] = "Account updated successfully.";
                     return RedirectToAction(nameof(Index));

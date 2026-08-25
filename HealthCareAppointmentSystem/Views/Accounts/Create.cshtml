@@ -32,7 +32,7 @@
 
         <div class="form-group">
             <label asp-for="Role"></label>
-            <select asp-for="Role" class="form-control">
+            <select asp-for="Role" class="form-control" id="roleSelect">
                 <option value="">Select a Role...</option>
                 <option value="Admin">Admin</option>
                 <option value="Receptionist">Receptionist</option>
@@ -45,6 +45,59 @@
             </p>
         </div>
 
+        <div class="form-group" id="cnicGroup" style="display: none;">
+            <label asp-for="CNIC"></label>
+            <input asp-for="CNIC" class="form-control" placeholder="e.g. 12345-1234567-1" id="cnicInput" />
+            <span asp-validation-for="CNIC" class="text-danger" style="color: var(--danger); font-size: 0.85rem;"></span>
+        </div>
+
+        <!-- Patient Specific Fields (Optional for Admin) -->
+        <div id="patientFields" style="display:none; background-color: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+            <h4 style="margin-top: 0; font-size: 1.1rem; color: var(--primary);">Patient Details (Optional)</h4>
+            <div class="form-group">
+                <label asp-for="DateOfBirth" class="form-label"></label>
+                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PhoneNumber" class="form-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" placeholder="03001234567" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label asp-for="Address" class="form-label"></label>
+                <textarea asp-for="Address" class="form-control" placeholder="123 Main St..."></textarea>
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+        </div>
+
+        <!-- Doctor Specific Fields (Optional for Admin) -->
+        <div id="doctorFields" style="display:none; background-color: var(--bg-color); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
+            <h4 style="margin-top: 0; font-size: 1.1rem; color: var(--primary);">Doctor Details (Optional)</h4>
+            <div class="form-group">
+                <label asp-for="SpecializationId" class="form-label"></label>
+                <select asp-for="SpecializationId" class="form-control" asp-items="ViewBag.Specializations">
+                    <option value="">-- Select Specialization --</option>
+                </select>
+                <span asp-validation-for="SpecializationId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="LicenseNumber" class="form-label"></label>
+                <input asp-for="LicenseNumber" class="form-control" placeholder="MED-12345" />
+                <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="YearsOfExperience" class="form-label"></label>
+                <input asp-for="YearsOfExperience" class="form-control" type="number" placeholder="5" />
+                <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label asp-for="ConsultationFee" class="form-label"></label>
+                <input asp-for="ConsultationFee" class="form-control" type="number" step="0.01" placeholder="100.00" />
+                <span asp-validation-for="ConsultationFee" class="text-danger"></span>
+            </div>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary" style="flex: 1;">Create Account</button>
             <a asp-action="Index" class="btn btn-secondary" style="flex: 1;">Cancel</a>
@@ -54,4 +107,44 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var roleSelect = document.getElementById('roleSelect');
+            var cnicGroup = document.getElementById('cnicGroup');
+            var cnicInput = document.getElementById('cnicInput');
+            var patientFields = document.getElementById('patientFields');
+            var doctorFields = document.getElementById('doctorFields');
+
+            function toggleFields() {
+                var role = roleSelect.value;
+                
+                if (role === 'Doctor' || role === 'Patient') {
+                    cnicGroup.style.display = 'block';
+                } else {
+                    cnicGroup.style.display = 'none';
+                    cnicInput.value = ''; // clear when hidden
+                }
+
+                if (role === 'Patient') {
+                    patientFields.style.display = 'block';
+                    doctorFields.style.display = 'none';
+                } else if (role === 'Doctor') {
+                    patientFields.style.display = 'none';
+                    doctorFields.style.display = 'block';
+                } else {
+                    patientFields.style.display = 'none';
+                    doctorFields.style.display = 'none';
+                }
+            }
+
+            roleSelect.addEventListener('change', toggleFields);
+            toggleFields(); // on page load, in case of validation error reload
+            
+            // CNIC mask
+            cnicInput.addEventListener('input', function (e) {
+                var x = e.target.value.replace(/\D/g, '').match(/(\d{0,5})(\d{0,7})(\d{0,1})/);
+                e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2] + (x[3] ? '-' + x[3] : '');
+            });
+        });
+    </script>
 }

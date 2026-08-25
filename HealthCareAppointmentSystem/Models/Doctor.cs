@@ -15,6 +15,12 @@ namespace HealthCareAppointmentSystem.Models
         public ApplicationUser? ApplicationUser { get; set; }
 
         [Required]
+        [RegularExpression(@"^[0-9]{5}-[0-9]{7}-[0-9]{1}$", ErrorMessage = "CNIC format must be XXXXX-XXXXXXX-X")]
+        [Display(Name = "CNIC Number")]
+        [StringLength(15)]
+        public string CNIC { get; set; } = string.Empty;
+
+        [Required]
         public int SpecializationId { get; set; }
 
         [ForeignKey(nameof(SpecializationId))]

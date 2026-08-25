@@ -61,6 +61,11 @@ namespace HealthCareAppointmentSystem.Areas.Identity.Pages.Account
             [Display(Name = "I am a...")]
             public string Role { get; set; }
 
+            [RegularExpression(@"^[0-9]{5}-[0-9]{7}-[0-9]{1}$", ErrorMessage = "CNIC format must be XXXXX-XXXXXXX-X")]
+            [Display(Name = "CNIC Number")]
+            [StringLength(15)]
+            public string? CNIC { get; set; }
+
             // --- Patient Fields ---
             [DataType(DataType.Date)]
             [Display(Name = "Date of Birth")]
@@ -108,6 +113,23 @@ namespace HealthCareAppointmentSystem.Areas.Identity.Pages.Account
                 if (!Input.ConsultationFee.HasValue) ModelState.AddModelError("Input.ConsultationFee", "Consultation Fee is required for doctors.");
             }
 
+            if (Input.Role == "Doctor" || Input.Role == "Patient")
+            {
+                if (string.IsNullOrWhiteSpace(Input.CNIC))
+                {
+                    ModelState.AddModelError("Input.CNIC", "CNIC is required.");
+                }
+                else
+                {
+                    bool cnicExists = await _context.Patients.AnyAsync(p => p.CNIC == Input.CNIC) || 
+                                      await _context.Doctors.AnyAsync(d => d.CNIC == Input.CNIC);
+                    if (cnicExists)
+                    {
+                        ModelState.AddModelError("Input.CNIC", "An account with this CNIC already exists.");
+                    }
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
@@ -128,6 +150,7 @@ namespace HealthCareAppointmentSystem.Areas.Identity.Pages.Account
                         var patient = new Patient
                         {
                             ApplicationUserId = user.Id,
+                            CNIC = Input.CNIC!,
                             DateOfBirth = Input.DateOfBirth,
                             PhoneNumber = Input.PhoneNumber,
                             Address = Input.Address
@@ -140,6 +163,7 @@ namespace HealthCareAppointmentSystem.Areas.Identity.Pages.Account
                         var doctor = new Doctor
                         {
                             ApplicationUserId = user.Id,
+                            CNIC = Input.CNIC!,
                             SpecializationId = Input.SpecializationId.Value,
                             LicenseNumber = Input.LicenseNumber!,
                             YearsOfExperience = Input.YearsOfExperience.Value,

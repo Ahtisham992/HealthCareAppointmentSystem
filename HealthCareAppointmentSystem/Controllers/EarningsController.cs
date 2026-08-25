@@ -49,7 +49,8 @@ namespace HealthCareAppointmentSystem.Controllers
                                  (i.Status == PaymentStatus.Refunded && i.PaidAt.HasValue && i.PaidAt.Value.Month == selectedMonth && i.PaidAt.Value.Year == selectedYear)))
                     .ToListAsync();
 
-                decimal totalEarned = invoices.Where(i => i.Status == PaymentStatus.Paid).Sum(i => i.Amount);
+                // Refunded invoices were paid initially, so they still count towards Total Earned before being subtracted
+                decimal totalEarned = invoices.Where(i => i.Status == PaymentStatus.Paid || i.Status == PaymentStatus.Refunded).Sum(i => i.Amount);
                 decimal totalRefunded = invoices.Where(i => i.Status == PaymentStatus.Refunded).Sum(i => i.RefundAmount ?? i.Amount);
                 decimal netEarned = totalEarned - totalRefunded;
 
@@ -173,8 +174,9 @@ namespace HealthCareAppointmentSystem.Controllers
 
             foreach (var invoice in invoices)
             {
-                if (invoice.Status == PaymentStatus.Paid)
+                if (invoice.Status == PaymentStatus.Paid || invoice.Status == PaymentStatus.Refunded)
                 {
+                    // Every paid or refunded invoice was earned initially
                     viewModel.Logs.Add(new EarningLogViewModel
                     {
                         Date = invoice.PaidAt.Value,
@@ -184,12 +186,13 @@ namespace HealthCareAppointmentSystem.Controllers
                     });
                     viewModel.TotalEarnedThisMonth += invoice.Amount;
                 }
-                else if (invoice.Status == PaymentStatus.Refunded)
+                
+                if (invoice.Status == PaymentStatus.Refunded)
                 {
                     var refundAmount = invoice.RefundAmount ?? invoice.Amount;
                     viewModel.Logs.Add(new EarningLogViewModel
                     {
-                        Date = invoice.PaidAt.Value,
+                        Date = invoice.PaidAt.Value, // We don't have a dedicated RefundedAt field, using PaidAt
                         Description = $"Refund processed for Appointment #{invoice.Appointment.Id}",
                         Amount = refundAmount,
                         Type = "Refund"

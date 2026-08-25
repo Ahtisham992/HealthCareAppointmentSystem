@@ -182,6 +182,13 @@ namespace HealthCareAppointmentSystem.Controllers
                 }
             }
 
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = user.Id,
+                Action = $"User {user.Email} updated their profile"
+            });
+            await _context.SaveChangesAsync();
+
             TempData["Message"] = "Profile updated successfully.";
             return RedirectToAction(nameof(Index));
         }
