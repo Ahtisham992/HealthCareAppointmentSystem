@@ -1,0 +1,192 @@
+@model HealthCareAppointmentSystem.Models.Prescription
+@{
+    Layout = null; // No layout for print view
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Prescription #@Model.Id</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 2rem;
+            color: #333;
+        }
+        .prescription-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 3rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            position: relative;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .hospital-brand h1 {
+            color: var(--primary);
+            margin: 0 0 0.5rem 0;
+        }
+        .doctor-info {
+            text-align: right;
+        }
+        .doctor-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-dark);
+        }
+        .patient-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        .patient-info p { margin: 0.5rem 0; }
+        .rx-symbol {
+            font-size: 4rem;
+            font-family: serif;
+            font-weight: bold;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+        .medicine-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+        .medicine-table th {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+        .medicine-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .notes-section {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin-bottom: 3rem;
+        }
+        .footer-sig {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 4rem;
+        }
+        .signature-line {
+            text-align: center;
+            width: 250px;
+        }
+        .signature-line div {
+            border-top: 2px solid #333;
+            padding-top: 0.5rem;
+            font-weight: bold;
+        }
+
+        .action-bar {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        @@media print {
+            body { background: white; padding: 0; }
+            .prescription-container { box-shadow: none; max-width: 100%; padding: 0; }
+            .action-bar { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-bar">
+        <button onclick="window.print()" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.2rem; cursor: pointer;">
+            <i class="fa-solid fa-print"></i> Print / Save as PDF
+        </button>
+        <button onclick="window.close()" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1.2rem; cursor: pointer; margin-left: 1rem;">
+            Close
+        </button>
+    </div>
+
+    <div class="prescription-container">
+        
+        <div class="header">
+            <div class="hospital-brand">
+                <h1><i class="fa-solid fa-staff-snake"></i> MediCare</h1>
+                <p>123 Health Avenue, City<br/>+1 (555) 123-4567</p>
+            </div>
+            <div class="doctor-info">
+                <h3>Dr. @Model.Appointment?.Doctor?.ApplicationUser?.FullName</h3>
+                <p><strong>@Model.Appointment?.Doctor?.Specialization?.Name</strong></p>
+                <p>License: @Model.Appointment?.Doctor?.LicenseNumber</p>
+            </div>
+        </div>
+
+        <div class="patient-info">
+            <div>
+                <p><strong>Patient Name:</strong> @Model.Appointment?.Patient?.ApplicationUser?.FullName</p>
+                <p><strong>Phone:</strong> @Model.Appointment?.Patient?.PhoneNumber</p>
+            </div>
+            <div>
+                <p><strong>Date:</strong> @Model.CreatedAt.ToString("dd MMM yyyy")</p>
+                <p><strong>Prescription ID:</strong> RX-@Model.Id.ToString("D5")</p>
+            </div>
+        </div>
+
+        <div class="rx-symbol">Rx</div>
+
+        <table class="medicine-table">
+            <thead>
+                <tr>
+                    <th>Medicine Name</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Instructions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var item in Model.Items)
+                {
+                    <tr>
+                        <td><strong>@item.MedicineName</strong></td>
+                        <td>@item.Dosage</td>
+                        <td>@item.Frequency</td>
+                        <td>@item.Duration</td>
+                        <td>@item.SpecialInstructions</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @if (!string.IsNullOrWhiteSpace(Model.DoctorNotes))
+        {
+            <div class="notes-section">
+                <strong>Clinical Notes / Diagnosis:</strong><br/>
+                @Model.DoctorNotes
+            </div>
+        }
+
+        <div class="footer-sig">
+            <div class="signature-line">
+                <br/><br/><br/>
+                <div>Dr. @Model.Appointment?.Doctor?.ApplicationUser?.FullName</div>
+                <small>Digital Signature</small>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

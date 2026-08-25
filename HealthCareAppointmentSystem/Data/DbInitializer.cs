@@ -15,7 +15,7 @@ namespace HealthCareAppointmentSystem.Data
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
             // 1. Seed roles
-            string[] roles = { "Admin", "Doctor", "Patient", "Receptionist" };
+            string[] roles = { "Admin", "Doctor", "Patient", "Receptionist", "Pharmacist" };
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -48,6 +48,16 @@ namespace HealthCareAppointmentSystem.Data
             await CreateUser("receptionist2@healthcare.local", "Receptionist 2", "Receptionist", "Receptionist2@123");
             await CreateUser("receptionist3@healthcare.local", "Receptionist 3", "Receptionist", "Receptionist3@123");
 
+            var pharmUser = await CreateUser("pharmacist1@healthcare.local", "Pharmacist 1", "Pharmacist", "Pharmacist1@123");
+            if (pharmUser != null && !await context.Pharmacists.AnyAsync(p => p.ApplicationUserId == pharmUser.Id))
+            {
+                context.Pharmacists.Add(new Pharmacist
+                {
+                    ApplicationUserId = pharmUser.Id,
+                    IsActive = true
+                });
+                await context.SaveChangesAsync();
+            }
             // 3. Specializations
             if (!await context.Specializations.AnyAsync())
             {
@@ -143,6 +153,31 @@ namespace HealthCareAppointmentSystem.Data
                 }
                 await context.SaveChangesAsync();
             }
+
+            // 7. Wallets
+            // Create Platform Escrow Wallet
+            if (!await context.Wallets.AnyAsync(w => w.ApplicationUserId == null))
+            {
+                context.Wallets.Add(new Wallet { Balance = 0, Currency = "PKR" });
+            }
+            
+            // Create Wallet for every user
+            var allUsers = await userManager.Users.ToListAsync();
+            foreach (var u in allUsers)
+            {
+                if (!await context.Wallets.AnyAsync(w => w.ApplicationUserId == u.Id))
+                {
+                    // Give patients a starting balance of 5000 for dummy testing
+                    decimal startingBalance = await userManager.IsInRoleAsync(u, "Patient") ? 5000m : 0m;
+                    context.Wallets.Add(new Wallet
+                    {
+                        ApplicationUserId = u.Id,
+                        Balance = startingBalance,
+                        Currency = "PKR"
+                    });
+                }
+            }
+            await context.SaveChangesAsync();
         }
     }
 }

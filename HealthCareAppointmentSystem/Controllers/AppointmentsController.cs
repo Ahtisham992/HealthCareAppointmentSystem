@@ -34,6 +34,7 @@ namespace HealthCareAppointmentSystem.Controllers
                 .Include(a => a.Doctor).ThenInclude(d => d!.Specialization)
                 .Include(a => a.Patient).ThenInclude(p => p!.ApplicationUser)
                 .Include(a => a.Invoice)
+                .Include(a => a.Prescription)
                 .OrderByDescending(a => a.AppointmentDateTime);
 
             if (User.IsInRole("Doctor"))

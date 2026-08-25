@@ -1,0 +1,131 @@
+@model HealthCareAppointmentSystem.ViewModels.CreatePrescriptionViewModel
+@{
+    ViewData["Title"] = "Write Prescription";
+}
+
+<div class="page-header">
+    <h1 style="margin: 0;">Write Prescription</h1>
+    <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">For Patient: <strong style="color: var(--primary);">@Model.PatientName</strong> (Appointment: @Model.AppointmentDate?.ToString("dd MMM yyyy, hh:mm tt"))</p>
+</div>
+
+<div class="card" style="padding: 2rem;">
+    <form asp-action="Create" method="post" id="prescriptionForm">
+        <input type="hidden" asp-for="AppointmentId" />
+        
+        <div class="form-group" style="margin-bottom: 2rem;">
+            <label asp-for="DoctorNotes" style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Clinical Notes & Diagnosis</label>
+            <textarea asp-for="DoctorNotes" class="form-control" rows="3" placeholder="Enter clinical notes..."></textarea>
+            <span asp-validation-for="DoctorNotes" class="text-danger"></span>
+        </div>
+
+        <h3 style="margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; color: var(--text-dark);">Medicines</h3>
+        
+        <div id="medicine-container">
+            @for (int i = 0; i < Model.Items.Count; i++)
+            {
+                <div class="medicine-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr auto; gap: 1rem; margin-bottom: 1rem; align-items: start; background: var(--bg-color); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border);">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Medicine Name *</label>
+                        <input name="Items[@i].MedicineName" value="@Model.Items[i].MedicineName" class="form-control" required placeholder="e.g. Paracetamol" />
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Dosage *</label>
+                        <input name="Items[@i].Dosage" value="@Model.Items[i].Dosage" class="form-control" required placeholder="500mg" />
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Freq *</label>
+                        <input name="Items[@i].Frequency" value="@Model.Items[i].Frequency" class="form-control" required placeholder="1x/day" />
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Duration *</label>
+                        <input name="Items[@i].Duration" value="@Model.Items[i].Duration" class="form-control" required placeholder="5 days" />
+                    </div>
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Instructions</label>
+                        <input name="Items[@i].SpecialInstructions" value="@Model.Items[i].SpecialInstructions" class="form-control" placeholder="After meal" />
+                    </div>
+                    <div style="padding-top: 1.65rem;">
+                        <button type="button" class="btn btn-danger btn-remove-row" style="padding: 0.5rem 1rem;">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button type="button" id="btnAddRow" class="btn btn-secondary" style="margin-bottom: 2rem;">
+            <i class="fa-solid fa-plus" style="margin-right: 0.5rem;"></i> Add Medicine
+        </button>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+            <a asp-controller="Appointments" asp-action="Index" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary" onclick="return confirm('Send prescription to Pharmacy?');">
+                <i class="fa-solid fa-paper-plane" style="margin-right: 0.5rem;"></i> Send to Pharmacy
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let rowIdx = @Model.Items.Count;
+
+            $('#btnAddRow').click(function () {
+                let newRow = `
+                    <div class="medicine-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 2fr auto; gap: 1rem; margin-bottom: 1rem; align-items: start; background: var(--bg-color); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); animation: zoomIn 0.2s ease-out;">
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Medicine Name *</label>
+                            <input name="Items[${rowIdx}].MedicineName" class="form-control" required placeholder="e.g. Paracetamol" />
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Dosage *</label>
+                            <input name="Items[${rowIdx}].Dosage" class="form-control" required placeholder="500mg" />
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Freq *</label>
+                            <input name="Items[${rowIdx}].Frequency" class="form-control" required placeholder="1x/day" />
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Duration *</label>
+                            <input name="Items[${rowIdx}].Duration" class="form-control" required placeholder="5 days" />
+                        </div>
+                        <div>
+                            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">Instructions</label>
+                            <input name="Items[${rowIdx}].SpecialInstructions" class="form-control" placeholder="After meal" />
+                        </div>
+                        <div style="padding-top: 1.65rem;">
+                            <button type="button" class="btn btn-danger btn-remove-row" style="padding: 0.5rem 1rem;">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                $('#medicine-container').append(newRow);
+                rowIdx++;
+            });
+
+            $(document).on('click', '.btn-remove-row', function () {
+                if ($('.medicine-row').length > 1) {
+                    $(this).closest('.medicine-row').remove();
+                    reindexRows();
+                } else {
+                    alert('You must have at least one medicine.');
+                }
+            });
+
+            function reindexRows() {
+                $('.medicine-row').each(function(index) {
+                    $(this).find('input').each(function() {
+                        let name = $(this).attr('name');
+                        if (name) {
+                            let newName = name.replace(/Items\[\d+\]/, `Items[${index}]`);
+                            $(this).attr('name', newName);
+                        }
+                    });
+                });
+                rowIdx = $('.medicine-row').length;
+            }
+        });
+    </script>
+}

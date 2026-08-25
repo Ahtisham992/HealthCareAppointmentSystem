@@ -91,8 +91,24 @@
                                 </form>
                             }
 
+                            @if (User.IsInRole("Doctor") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Completed)
+                            {
+                                if (item.Prescription != null)
+                                {
+                                    <a asp-controller="Prescription" asp-action="Print" asp-route-id="@item.Prescription.Id" target="_blank" class="btn-action btn-action-info">VIEW PRESCRIPTION</a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Prescription" asp-action="Create" asp-route-appointmentId="@item.Id" class="btn-action btn-action-info">WRITE PRESCRIPTION</a>
+                                }
+                            }
+
                             @if (User.IsInRole("Patient") && item.Status == HealthCareAppointmentSystem.Models.AppointmentStatus.Completed)
                             {
+                                if (item.Prescription != null)
+                                {
+                                    <a asp-controller="Prescription" asp-action="Print" asp-route-id="@item.Prescription.Id" target="_blank" class="btn-action btn-action-info">PRESCRIPTION</a>
+                                }
                                 var reviewedIds = ViewBag.ReviewedAppointmentIds as List<int> ?? new List<int>();
                                 if (reviewedIds.Contains(item.Id))
                                 {
@@ -104,7 +120,7 @@
                                 }
                             }
 
-                            @if (User.IsInRole("Admin") || User.IsInRole("Doctor"))
+                            @if (User.IsInRole("Admin"))
                             {
                                 <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action btn-action-primary">EDIT</a>
                             }

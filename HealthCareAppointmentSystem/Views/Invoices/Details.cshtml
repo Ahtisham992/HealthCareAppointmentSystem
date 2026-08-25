@@ -234,23 +234,16 @@
     
     @if (User.IsInRole("Patient") && Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Pending)
     {
-        <a asp-action="SubmitPayment" asp-route-id="@Model.Id" class="btn btn-primary">
-            <i class="fa-solid fa-credit-card"></i> Submit Payment Proof
-        </a>
-    }
-
-    @if ((User.IsInRole("Admin") || User.IsInRole("Doctor")) && Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification)
-    {
-        <form asp-action="VerifyPayment" asp-route-id="@Model.Id" method="post" style="display: inline-block;">
-            <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;">
-                <i class="fa-solid fa-check-double"></i> Verify & Mark Paid
+        <form asp-action="PayWithWallet" asp-route-id="@Model.Id" method="post" style="display: inline-block;">
+            <button type="submit" class="btn btn-primary" onclick="return confirm('Rs. @Model.Amount.ToString("N0") will be deducted from your Digital Wallet. Proceed?');">
+                <i class="fa-solid fa-wallet"></i> Pay with Digital Wallet
             </button>
         </form>
     }
 
     @if (User.IsInRole("Receptionist") && (Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Pending || Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification))
     {
-        <form asp-action="VerifyPayment" asp-route-id="@Model.Id" method="post" style="display: inline-block;">
+        <form asp-action="CollectCashPayment" asp-route-id="@Model.Id" method="post" style="display: inline-block;">
             <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="return confirm('Confirm you have received Rs. @Model.Amount.ToString("N0") cash?');">
                 <i class="fa-solid fa-money-bill-wave"></i> Collect Cash & Mark Paid
             </button>

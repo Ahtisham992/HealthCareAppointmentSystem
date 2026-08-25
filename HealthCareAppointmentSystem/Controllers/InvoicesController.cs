@@ -37,124 +37,133 @@ namespace HealthCareAppointmentSystem.Controllers
             return View(invoice);
         }
 
-        // GET: /Invoices/SubmitPayment/5
+        // POST: /Invoices/PayWithWallet/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> SubmitPayment(int? id)
+        public async Task<IActionResult> PayWithWallet(int id)
         {
-            if (id == null) return NotFound();
-
             var invoice = await _context.Invoices
-                .Include(i => i.Appointment)
+                .Include(i => i.Appointment).ThenInclude(a => a!.Doctor)
+                .Include(i => i.Appointment).ThenInclude(a => a!.Patient)
                 .FirstOrDefaultAsync(i => i.Id == id);
 
             if (invoice == null) return NotFound();
             if (!await UserCanAccessInvoice(invoice)) return Forbid();
+            if (invoice.Status == PaymentStatus.Paid) return RedirectToAction(nameof(Details), new { id = invoice.Id });
 
-            if (invoice.Status == PaymentStatus.Paid)
+            var currentUser = await _userManager.GetUserAsync(User);
+            var patientWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == currentUser.Id);
+            var doctorUser = await _userManager.FindByIdAsync(invoice.Appointment!.Doctor!.ApplicationUserId!);
+            var doctorWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == doctorUser!.Id);
+            var platformWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == null);
+
+            if (patientWallet == null || doctorWallet == null || platformWallet == null)
             {
+                TempData["Error"] = "Critical wallet error. Please contact support.";
                 return RedirectToAction(nameof(Details), new { id = invoice.Id });
             }
 
-            return View(invoice);
-        }
-
-        // POST: /Invoices/SubmitPayment/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Patient")]
-        public async Task<IActionResult> SubmitPayment(int id, string paymentMethod, string transactionReference, IFormFile? screenshot)
-        {
-            var invoice = await _context.Invoices
-                .Include(i => i.Appointment)
-                .FirstOrDefaultAsync(i => i.Id == id);
-
-            if (invoice == null) return NotFound();
-            if (!await UserCanAccessInvoice(invoice)) return Forbid();
-
-            if (string.IsNullOrWhiteSpace(paymentMethod) || string.IsNullOrWhiteSpace(transactionReference))
+            if (patientWallet.Balance < invoice.Amount)
             {
-                ModelState.AddModelError("", "Payment Method and Transaction Reference are required.");
-                return View(invoice);
+                TempData["Error"] = $"Insufficient wallet balance. You need Rs. {invoice.Amount:N2} but have Rs. {patientWallet.Balance:N2}. Please add funds to your wallet.";
+                return RedirectToAction("Index", "Wallet");
             }
 
-            if (screenshot == null || screenshot.Length == 0)
-            {
-                ModelState.AddModelError("", "Payment screenshot is required.");
-                return View(invoice);
-            }
+            // Calculate Split
+            var totalAmount = invoice.Amount;
+            var platformCommission = totalAmount * 0.10m; // 10%
+            var doctorEarnings = totalAmount - platformCommission;
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "screenshots");
-            Directory.CreateDirectory(uploadsFolder);
-            var uniqueFileName = Guid.NewGuid().ToString() + "_" + screenshot.FileName;
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            // Apply transactions
+            patientWallet.Balance -= totalAmount;
+            doctorWallet.Balance += doctorEarnings;
+            platformWallet.Balance += platformCommission;
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await screenshot.CopyToAsync(stream);
-            }
-
-            invoice.PaymentScreenshotUrl = "/uploads/screenshots/" + uniqueFileName;
-            invoice.PaymentMethod = paymentMethod;
-            invoice.TransactionReference = transactionReference;
-            invoice.Status = PaymentStatus.AwaitingVerification;
-            
-            var currentUser = await _userManager.GetUserAsync(User);
-            _context.AuditLogs.Add(new AuditLog
-            {
-                Action = "Submitted Payment Reference",
-                UserId = currentUser?.Id ?? "System",
-                Details = $"Invoice #{invoice.Id} marked AwaitingVerification. Ref: {transactionReference}"
-            });
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Details), new { id = invoice.Id });
-        }
-
-        // POST: /Invoices/VerifyPayment/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Doctor,Receptionist")]
-        public async Task<IActionResult> VerifyPayment(int id)
-        {
-            var invoice = await _context.Invoices
-                .Include(i => i.Appointment)
-                .FirstOrDefaultAsync(i => i.Id == id);
-
-            if (invoice == null) return NotFound();
-            if (!await UserCanAccessInvoice(invoice)) return Forbid();
+            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = -totalAmount, Type = TransactionType.ServicePayment, Description = $"Payment for Appointment #{invoice.AppointmentId}", ReferenceId = $"APP-{invoice.AppointmentId}" });
+            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = doctorEarnings, Type = TransactionType.ServiceEarning, Description = $"Earnings from Appointment #{invoice.AppointmentId}", ReferenceId = $"APP-{invoice.AppointmentId}" });
+            _context.WalletTransactions.Add(new WalletTransaction { WalletId = platformWallet.Id, Amount = platformCommission, Type = TransactionType.PlatformCommission, Description = $"10% Commission from Appointment #{invoice.AppointmentId}", ReferenceId = $"APP-{invoice.AppointmentId}" });
 
             invoice.Status = PaymentStatus.Paid;
             invoice.PaidAt = DateTime.UtcNow;
-
+            invoice.PaymentMethod = "Digital Wallet";
+            
             if (invoice.Appointment != null && invoice.Appointment.Status == AppointmentStatus.Pending)
             {
                 invoice.Appointment.Status = AppointmentStatus.Confirmed;
             }
 
-            var currentUser = await _userManager.GetUserAsync(User);
-            
-            if (User.IsInRole("Receptionist") && currentUser != null)
-            {
-                var receptionist = await _context.Receptionists.FirstOrDefaultAsync(r => r.ApplicationUserId == currentUser.Id);
-                if (receptionist != null)
-                {
-                    invoice.CollectedByReceptionistId = receptionist.Id;
-                    receptionist.CashDrawerBalance += invoice.Amount;
-                }
-            }
-
-            _context.AuditLogs.Add(new AuditLog
-            {
-                Action = "Verified Payment",
-                UserId = currentUser?.Id ?? "System",
-                Details = $"Invoice #{invoice.Id} marked as Paid."
-            });
-
             await _context.SaveChangesAsync();
-
-            // Redirect back to dashboard or invoice details
+            
+            TempData["Success"] = $"Successfully paid Rs. {totalAmount:N2} via Digital Wallet.";
             return RedirectToAction(nameof(Details), new { id = invoice.Id });
         }
+
+        // POST: /Invoices/CollectCashPayment/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Receptionist")]
+        public async Task<IActionResult> CollectCashPayment(int id)
+        {
+            var invoice = await _context.Invoices
+                .Include(i => i.Appointment).ThenInclude(a => a!.Doctor)
+                .Include(i => i.Appointment).ThenInclude(a => a!.Patient)
+                .FirstOrDefaultAsync(i => i.Id == id);
+
+            if (invoice == null) return NotFound();
+            if (invoice.Status == PaymentStatus.Paid) return RedirectToAction(nameof(Details), new { id = invoice.Id });
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var receptionist = await _context.Receptionists.FirstOrDefaultAsync(r => r.ApplicationUserId == currentUser!.Id);
+            
+            var patientUser = await _userManager.FindByIdAsync(invoice.Appointment!.Patient!.ApplicationUserId!);
+            var patientWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == patientUser!.Id);
+            var doctorUser = await _userManager.FindByIdAsync(invoice.Appointment!.Doctor!.ApplicationUserId!);
+            var doctorWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == doctorUser!.Id);
+            var platformWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == null);
+
+            if (patientWallet == null || doctorWallet == null || platformWallet == null || receptionist == null)
+            {
+                TempData["Error"] = "Critical wallet/receptionist error.";
+                return RedirectToAction(nameof(Details), new { id = invoice.Id });
+            }
+
+            // 1. Receptionist takes physical cash. Add to CashDrawer.
+            receptionist.CashDrawerBalance += invoice.Amount;
+
+            // 2. Deposit digital equivalent to Patient Wallet
+            patientWallet.Balance += invoice.Amount;
+            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = invoice.Amount, Type = TransactionType.CashDeposit, Description = "Cash Deposit by Receptionist", ReferenceId = $"CASH-{invoice.Id}" });
+
+            // 3. Process Payment (Split)
+            var totalAmount = invoice.Amount;
+            var platformCommission = totalAmount * 0.10m;
+            var doctorEarnings = totalAmount - platformCommission;
+
+            patientWallet.Balance -= totalAmount;
+            doctorWallet.Balance += doctorEarnings;
+            platformWallet.Balance += platformCommission;
+
+            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = -totalAmount, Type = TransactionType.ServicePayment, Description = $"Payment for Appointment #{invoice.AppointmentId}", ReferenceId = $"APP-{invoice.AppointmentId}" });
+            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = doctorEarnings, Type = TransactionType.ServiceEarning, Description = $"Earnings from Appointment #{invoice.AppointmentId}", ReferenceId = $"APP-{invoice.AppointmentId}" });
+            _context.WalletTransactions.Add(new WalletTransaction { WalletId = platformWallet.Id, Amount = platformCommission, Type = TransactionType.PlatformCommission, Description = $"10% Commission from Appointment #{invoice.AppointmentId}", ReferenceId = $"APP-{invoice.AppointmentId}" });
+
+            invoice.Status = PaymentStatus.Paid;
+            invoice.PaidAt = DateTime.UtcNow;
+            invoice.PaymentMethod = "Cash at Desk";
+            invoice.CollectedByReceptionistId = receptionist.Id;
+            
+            if (invoice.Appointment != null && invoice.Appointment.Status == AppointmentStatus.Pending)
+            {
+                invoice.Appointment.Status = AppointmentStatus.Confirmed;
+            }
+
+            await _context.SaveChangesAsync();
+            
+            TempData["Success"] = $"Cash collected and payment successfully processed via Ledger.";
+            return RedirectToAction(nameof(Details), new { id = invoice.Id });
+        }
+
 
         private async Task<bool> UserCanAccessInvoice(Invoice invoice)
         {

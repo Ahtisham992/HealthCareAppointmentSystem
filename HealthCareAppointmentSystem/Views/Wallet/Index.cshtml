@@ -1,0 +1,170 @@
+@model HealthCareAppointmentSystem.Models.Wallet
+@{
+    ViewData["Title"] = "My Digital Wallet";
+    var isAdmin = User.IsInRole("Admin");
+    var isPatient = User.IsInRole("Patient");
+    var canWithdraw = User.IsInRole("Doctor") || User.IsInRole("Pharmacist");
+}
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+        <h1 style="margin: 0; color: var(--primary);">@(isAdmin ? "Platform Escrow Wallet" : "My Digital Wallet")</h1>
+        <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">
+            @(isAdmin ? "Manage system-wide commissions and escrow." : "Manage your funds, deposits, and withdrawals.")
+        </p>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="background: white; border: 1px solid var(--border); padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: right;">
+            <h4 style="margin: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Current Balance</h4>
+            <h2 style="margin: 0.5rem 0 0 0; color: var(--primary);">Rs. @Model.Balance.ToString("N2")</h2>
+        </div>
+        
+        @if (isPatient)
+        {
+            <button type="button" class="btn btn-success" style="padding: 1.25rem 1.5rem; font-size: 1.1rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" onclick="document.getElementById('depositModal').style.display='flex'">
+                <i class="fa-solid fa-plus-circle"></i> Add Funds via SafePay
+            </button>
+        }
+        else if (canWithdraw)
+        {
+            <button type="button" class="btn btn-primary" style="padding: 1.25rem 1.5rem; font-size: 1.1rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" onclick="document.getElementById('withdrawModal').style.display='flex'">
+                <i class="fa-solid fa-money-bill-transfer"></i> Withdraw Funds
+            </button>
+        }
+    </div>
+</div>
+
+<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 1.5rem; overflow-x: auto;">
+    <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-dark); font-size: 1.2rem; font-weight: 700;">Transaction Ledger</h3>
+    <table id="txTable" class="data-table" style="width:100%;">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Reference</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th style="text-align: right;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Transactions == null || !Model.Transactions.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center" style="padding: 3rem; color: var(--text-muted);">No transactions found in this wallet.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var tx in Model.Transactions)
+                {
+                    <tr>
+                        <td>@tx.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                        <td><span style="font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">@(tx.ReferenceId ?? "N/A")</span></td>
+                        <td>@tx.Description</td>
+                        <td>
+                            @if (tx.Type == HealthCareAppointmentSystem.Models.TransactionType.Deposit || tx.Type == HealthCareAppointmentSystem.Models.TransactionType.CashDeposit)
+                            {
+                                <span class="badge" style="background: #dcfce7; color: #166534;">DEPOSIT</span>
+                            }
+                            else if (tx.Type == HealthCareAppointmentSystem.Models.TransactionType.Withdrawal)
+                            {
+                                <span class="badge" style="background: #f3e8ff; color: #6b21a8;">WITHDRAWAL</span>
+                            }
+                            else if (tx.Type == HealthCareAppointmentSystem.Models.TransactionType.ServicePayment)
+                            {
+                                <span class="badge" style="background: #fee2e2; color: #991b1b;">PAYMENT</span>
+                            }
+                            else if (tx.Type == HealthCareAppointmentSystem.Models.TransactionType.ServiceEarning)
+                            {
+                                <span class="badge" style="background: #e0f2fe; color: #075985;">EARNING</span>
+                            }
+                            else if (tx.Type == HealthCareAppointmentSystem.Models.TransactionType.PlatformCommission || tx.Type == HealthCareAppointmentSystem.Models.TransactionType.WithdrawalFee)
+                            {
+                                <span class="badge" style="background: #ffedd5; color: #9a3412;">FEE</span>
+                            }
+                        </td>
+                        <td style="text-align: right; font-weight: bold; color: @(tx.Amount >= 0 ? "var(--success)" : "var(--danger)")">
+                            @(tx.Amount >= 0 ? "+" : "")Rs. @tx.Amount.ToString("N2")
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Deposit Modal -->
+@if (isPatient)
+{
+    <div id="depositModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 12px; width: 100%; max-width: 450px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="margin: 0; color: var(--text-dark); display: flex; align-items: center; gap: 10px;">
+                    <img src="https://getsafepay.com/images/safepay_logo.svg" alt="SafePay" style="height: 24px;" onerror="this.style.display='none'">
+                    Add Funds via SafePay
+                </h3>
+                <button type="button" onclick="document.getElementById('depositModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div style="padding: 1.5rem;">
+                <p style="color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enter the amount you wish to deposit. You will be redirected to the secure SafePay checkout portal to complete your transaction.</p>
+                <form asp-action="InitiateDeposit" method="post">
+                    <div class="form-group">
+                        <label>Deposit Amount (PKR)</label>
+                        <input type="number" name="amount" class="form-control" min="100" step="0.01" required placeholder="e.g. 1500" />
+                        <small style="color: var(--text-muted); display: block; margin-top: 5px;">Minimum deposit: Rs. 100</small>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('depositModal').style.display='none'">Cancel</button>
+                        <button type="submit" class="btn btn-success" style="background: #22c55e;">Proceed to SafePay</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Withdraw Modal -->
+@if (canWithdraw)
+{
+    <div id="withdrawModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 12px; width: 100%; max-width: 450px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="margin: 0; color: var(--text-dark);">Withdraw Funds</h3>
+                <button type="button" onclick="document.getElementById('withdrawModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            </div>
+            <div style="padding: 1.5rem;">
+                <div style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                    <i class="fa-solid fa-circle-info"></i> A flat fee of Rs. 50 applies to all withdrawals. Minimum withdrawal is Rs. 500.
+                </div>
+                <form asp-action="WithdrawFunds" method="post">
+                    <div class="form-group">
+                        <label>Withdrawal Amount (PKR)</label>
+                        <input type="number" name="amount" class="form-control" min="500" step="0.01" max="@(Model.Balance - 50)" required placeholder="Available: Rs. @((Model.Balance - 50) > 0 ? (Model.Balance - 50).ToString("N2") : "0")" />
+                    </div>
+                    <div class="form-group">
+                        <label>Bank Account Details</label>
+                        <textarea name="bankDetails" class="form-control" required rows="3" placeholder="Bank Name: Habib Bank Limited&#10;Account Title: John Doe&#10;IBAN: PK35HABB001..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('withdrawModal').style.display='none'">Cancel</button>
+                        <button type="submit" class="btn btn-primary" onclick="return confirm('Confirm withdrawal request?');">Submit Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            if ($('#txTable tbody tr td').length > 1) {
+                $('#txTable').DataTable({
+                    "pageLength": 20,
+                    "ordering": false,
+                    "responsive": true
+                });
+            }
+        });
+    </script>
+}

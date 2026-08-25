@@ -1,0 +1,120 @@
+@model IEnumerable<HealthCareAppointmentSystem.Models.Prescription>
+@{
+    ViewData["Title"] = "Pharmacy Dashboard";
+}
+
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
+    <div>
+        <h1 style="margin: 0; color: var(--primary);">Pharmacy Dashboard</h1>
+        <p style="color: var(--text-muted); margin: 0.5rem 0 0 0;">Manage patient prescriptions and dispense medicines.</p>
+    </div>
+</div>
+
+<div class="row mb-4" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); text-align: center;">
+        <h5 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 600;">Total Prescriptions</h5>
+        <h2 style="margin: 0; color: var(--text); font-weight: 800;">@Model.Count()</h2>
+    </div>
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); text-align: center;">
+        <h5 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 600;">New / Pending</h5>
+        <h2 style="margin: 0; color: #eab308; font-weight: 800;">@Model.Count(p => p.Status == HealthCareAppointmentSystem.Models.PrescriptionStatus.Pending)</h2>
+    </div>
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); text-align: center;">
+        <h5 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; font-weight: 600;">Awaiting Payment</h5>
+        <h2 style="margin: 0; color: #06b6d4; font-weight: 800;">@Model.Count(p => p.Status == HealthCareAppointmentSystem.Models.PrescriptionStatus.Processing)</h2>
+    </div>
+    <div style="background: var(--success); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); text-align: center; color: white;">
+        <h5 style="font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; opacity: 0.9; font-weight: 600;">Today's Sales</h5>
+        <h2 style="margin: 0; font-weight: 800;">Rs. @Model.Where(p => p.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.Paid && p.PaidAt.HasValue && p.PaidAt.Value.Date == DateTime.UtcNow.Date).Sum(p => p.TotalAmount).ToString("N0")</h2>
+    </div>
+</div>
+
+<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 1.5rem; overflow-x: auto;">
+    <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: var(--text-dark); font-size: 1.2rem; font-weight: 700;">Recent Prescriptions</h3>
+    <table id="prescriptionsTable" class="data-table" style="width:100%;">
+        <thead>
+            <tr>
+                <th>RX ID</th>
+                <th>Date</th>
+                <th>Patient Name</th>
+                <th>Doctor Name</th>
+                <th>Medicines</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rx in Model)
+            {
+                <tr>
+                    <td><strong>RX-@rx.Id.ToString("D5")</strong></td>
+                    <td>@rx.CreatedAt.ToString("MMM dd, yyyy")</td>
+                    <td>@rx.Appointment?.Patient?.ApplicationUser?.FullName</td>
+                    <td>Dr. @rx.Appointment?.Doctor?.ApplicationUser?.FullName</td>
+                    <td>@rx.Items.Count items</td>
+                    <td>Rs. @rx.TotalAmount.ToString("N2")</td>
+                    <td>
+                        @if (rx.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.Paid)
+                        {
+                            <span class="badge badge-success">Paid</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-warning">Unpaid</span>
+                        }
+                    </td>
+                    <td>
+                        @if (rx.Status == HealthCareAppointmentSystem.Models.PrescriptionStatus.Pending)
+                        {
+                            <span class="badge badge-warning">Pending</span>
+                        }
+                        else if (rx.Status == HealthCareAppointmentSystem.Models.PrescriptionStatus.Processing)
+                        {
+                            <span class="badge badge-info">Processing</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-success">Dispensed</span>
+                        }
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a asp-controller="Prescription" asp-action="Print" asp-route-id="@rx.Id" target="_blank" class="btn btn-sm btn-info" title="View/Print PDF">
+                                Print
+                            </a>
+                            
+                            @if (rx.Status == HealthCareAppointmentSystem.Models.PrescriptionStatus.Pending)
+                            {
+                                <a asp-action="Process" asp-route-id="@rx.Id" class="btn btn-sm btn-secondary" title="Bill & Process">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i> Bill & Process
+                                </a>
+                            }
+                            else if (rx.Status == HealthCareAppointmentSystem.Models.PrescriptionStatus.Processing)
+                            {
+                                <form asp-action="CollectPayment" method="post" style="display:inline;" onsubmit="return confirm('Collect Rs. @rx.TotalAmount and dispense?');">
+                                    <input type="hidden" name="id" value="@rx.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success" title="Collect Payment & Dispense">
+                                        <i class="fa-solid fa-money-bill-wave"></i> Collect Payment
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#prescriptionsTable').DataTable({
+                "order": [[1, "desc"]],
+                "pageLength": 10
+            });
+        });
+    </script>
+}

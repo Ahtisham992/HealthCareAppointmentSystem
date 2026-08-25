@@ -38,8 +38,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // required for Identity's default UI
+builder.Services.AddHttpClient();
 
 // Register background service for auto-canceling unpaid appointments
+builder.Services.AddScoped<HealthCareAppointmentSystem.Services.IStripePaymentService, HealthCareAppointmentSystem.Services.StripePaymentService>();
 builder.Services.AddHostedService<PaymentTimeoutService>();
 
 var app = builder.Build();

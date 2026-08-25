@@ -4,6 +4,7 @@ using HealthCareAppointmentSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HealthCareAppointmentSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825155530_AddWalletSystem")]
+    partial class AddWalletSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,6 +163,36 @@ namespace HealthCareAppointmentSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AuditLogs");
+                });
+
+            modelBuilder.Entity("HealthCareAppointmentSystem.Models.CashHandover", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("HandoverDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReceptionistId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminUserId");
+
+                    b.HasIndex("ReceptionistId");
+
+                    b.ToTable("CashHandovers");
                 });
 
             modelBuilder.Entity("HealthCareAppointmentSystem.Models.Doctor", b =>
@@ -336,6 +369,56 @@ namespace HealthCareAppointmentSystem.Migrations
                         .IsUnique();
 
                     b.ToTable("Pharmacists");
+                });
+
+            modelBuilder.Entity("HealthCareAppointmentSystem.Models.PlatformBill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CommissionAmount")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TotalEarnings")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("TransactionReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.ToTable("PlatformBills");
                 });
 
             modelBuilder.Entity("HealthCareAppointmentSystem.Models.Prescription", b =>
@@ -720,6 +803,25 @@ namespace HealthCareAppointmentSystem.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("HealthCareAppointmentSystem.Models.CashHandover", b =>
+                {
+                    b.HasOne("HealthCareAppointmentSystem.Models.ApplicationUser", "AdminUser")
+                        .WithMany()
+                        .HasForeignKey("AdminUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HealthCareAppointmentSystem.Models.Receptionist", "Receptionist")
+                        .WithMany("CashHandovers")
+                        .HasForeignKey("ReceptionistId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AdminUser");
+
+                    b.Navigation("Receptionist");
+                });
+
             modelBuilder.Entity("HealthCareAppointmentSystem.Models.Doctor", b =>
                 {
                     b.HasOne("HealthCareAppointmentSystem.Models.ApplicationUser", "ApplicationUser")
@@ -777,6 +879,17 @@ namespace HealthCareAppointmentSystem.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
+                });
+
+            modelBuilder.Entity("HealthCareAppointmentSystem.Models.PlatformBill", b =>
+                {
+                    b.HasOne("HealthCareAppointmentSystem.Models.Doctor", "Doctor")
+                        .WithMany("PlatformBills")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("HealthCareAppointmentSystem.Models.Prescription", b =>
@@ -920,6 +1033,8 @@ namespace HealthCareAppointmentSystem.Migrations
             modelBuilder.Entity("HealthCareAppointmentSystem.Models.Doctor", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("PlatformBills");
                 });
 
             modelBuilder.Entity("HealthCareAppointmentSystem.Models.Patient", b =>
@@ -934,6 +1049,8 @@ namespace HealthCareAppointmentSystem.Migrations
 
             modelBuilder.Entity("HealthCareAppointmentSystem.Models.Receptionist", b =>
                 {
+                    b.Navigation("CashHandovers");
+
                     b.Navigation("CollectedInvoices");
                 });
 

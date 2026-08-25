@@ -22,22 +22,29 @@
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
                     <li><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
-                    <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+                    @if (!User.IsInRole("Pharmacist"))
+                    {
+                        <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+                    }
                     @if (User.IsInRole("Receptionist"))
                     {
                         <li><a asp-controller="Receptionist" asp-action="MyDrawer">Cash Drawer</a></li>
                     }
+                    <!-- @if (User.IsInRole("Pharmacist"))
+                    {
+                        <li><a asp-controller="Pharmacist" asp-action="Index">Pharmacy Dashboard</a></li>
+                    } -->
                     @if (User.IsInRole("Admin"))
                     {
                         <li><a asp-controller="Doctors" asp-action="Index">Doctors</a></li>
                         <li><a asp-controller="Patients" asp-action="Index">Patients</a></li>
                         <li><a asp-controller="Accounts" asp-action="Index">Accounts</a></li>
-                        <li><a asp-controller="Earnings" asp-action="AdminIndex">Billing</a></li>
+                        <li><a asp-controller="Wallet" asp-action="Index">Platform Wallet</a></li>
                         <li><a asp-controller="AuditLogs" asp-action="Index">Audit Logs</a></li>
                     }
-                    @if (User.IsInRole("Doctor"))
+                    @if (!User.IsInRole("Admin") && !User.IsInRole("Receptionist"))
                     {
-                        <li><a asp-controller="Earnings" asp-action="MyEarnings">Earnings</a></li>
+                        <li><a asp-controller="Wallet" asp-action="Index">My Wallet</a></li>
                     }
                     <li class="navbar-user">
                         <a asp-controller="Profile" asp-action="Index" style="text-decoration: none; color: var(--primary); font-weight: 600; margin-right: 10px;">

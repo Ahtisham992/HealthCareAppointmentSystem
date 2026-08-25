@@ -48,6 +48,8 @@ namespace HealthCareAppointmentSystem.Models
 
         public Invoice? Invoice { get; set; }
 
+        public Prescription? Prescription { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

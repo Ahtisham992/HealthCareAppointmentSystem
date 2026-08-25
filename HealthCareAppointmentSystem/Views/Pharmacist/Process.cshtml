@@ -1,0 +1,91 @@
+@model HealthCareAppointmentSystem.Models.Prescription
+@{
+    ViewData["Title"] = "Process Prescription & Bill";
+}
+
+<div class="page-header">
+    <h1>Process Prescription</h1>
+    <p>Set pricing for each medicine and generate the bill.</p>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Prescription Details (RX-@Model.Id.ToString("D5"))</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Patient:</strong> @Model.Appointment?.Patient?.ApplicationUser?.FullName</p>
+                <p><strong>Doctor:</strong> Dr. @Model.Appointment?.Doctor?.ApplicationUser?.FullName</p>
+                <p><strong>Notes:</strong> @(Model.DoctorNotes ?? "No additional notes")</p>
+
+                <form asp-action="Process" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    
+                    <table class="table table-bordered mt-3">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Dosage</th>
+                                <th>Freq & Dur</th>
+                                <th>Price (Rs.)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@item.MedicineName</strong>
+                                        @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                        {
+                                            <br /><small class="text-muted">@item.SpecialInstructions</small>
+                                        }
+                                    </td>
+                                    <td>@item.Dosage</td>
+                                    <td>@item.Frequency for @item.Duration</td>
+                                    <td>
+                                        <input type="number" step="0.01" min="0" class="form-control item-price" name="ItemPrices[@item.Id]" value="@item.Price" required />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-right">Total Bill Amount:</th>
+                                <th>
+                                    <input type="text" id="totalAmountDisplay" class="form-control" value="0.00" readonly style="background-color: #e9ecef; font-weight: bold; color: var(--primary);" />
+                                </th>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="form-actions mt-4">
+                        <button type="submit" class="btn btn-primary">Generate Bill & Start Processing</button>
+                        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function calculateTotal() {
+                var total = 0;
+                $('.item-price').each(function() {
+                    var val = parseFloat($(this).val());
+                    if (!isNaN(val)) {
+                        total += val;
+                    }
+                });
+                $('#totalAmountDisplay').val(total.toFixed(2));
+            }
+
+            $('.item-price').on('input', calculateTotal);
+            calculateTotal(); // initial calculation
+        });
+    </script>
+}

@@ -17,26 +17,19 @@ namespace HealthCareAppointmentSystem.Data
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
-        public DbSet<PlatformBill> PlatformBills { get; set; } = null!;
         public DbSet<Invoice> Invoices { get; set; } = null!;
         public DbSet<Receptionist> Receptionists { get; set; } = null!;
-        public DbSet<CashHandover> CashHandovers { get; set; } = null!;
+        public DbSet<Pharmacist> Pharmacists { get; set; } = null!;
+        public DbSet<Prescription> Prescriptions { get; set; } = null!;
+        public DbSet<PrescriptionItem> PrescriptionItems { get; set; } = null!;
+        public DbSet<Wallet> Wallets { get; set; } = null!;
+        public DbSet<WalletTransaction> WalletTransactions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); // required first for Identity's own tables
 
-            builder.Entity<CashHandover>()
-                .HasOne(ch => ch.AdminUser)
-                .WithMany()
-                .HasForeignKey(ch => ch.AdminUserId)
-                .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<CashHandover>()
-                .HasOne(ch => ch.Receptionist)
-                .WithMany(r => r.CashHandovers)
-                .HasForeignKey(ch => ch.ReceptionistId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Invoice>()
                 .HasOne(i => i.CollectedByReceptionist)
@@ -103,6 +96,34 @@ namespace HealthCareAppointmentSystem.Data
                 .HasOne(i => i.Appointment)
                 .WithOne(a => a.Invoice)
                 .HasForeignKey<Invoice>(i => i.AppointmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Pharmacist -> ApplicationUser (1:1)
+            builder.Entity<Pharmacist>()
+                .HasOne(p => p.ApplicationUser)
+                .WithOne()
+                .HasForeignKey<Pharmacist>(p => p.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Prescription -> Appointment (1:1)
+            builder.Entity<Prescription>()
+                .HasOne(p => p.Appointment)
+                .WithOne(a => a.Prescription)
+                .HasForeignKey<Prescription>(p => p.AppointmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // PrescriptionItem -> Prescription (N:1)
+            builder.Entity<PrescriptionItem>()
+                .HasOne(pi => pi.Prescription)
+                .WithMany(p => p.Items)
+                .HasForeignKey(pi => pi.PrescriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Wallet -> WalletTransaction (1:N)
+            builder.Entity<WalletTransaction>()
+                .HasOne(wt => wt.Wallet)
+                .WithMany(w => w.Transactions)
+                .HasForeignKey(wt => wt.WalletId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
