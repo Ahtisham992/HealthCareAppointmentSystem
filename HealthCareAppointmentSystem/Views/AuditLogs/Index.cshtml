@@ -8,28 +8,44 @@
     <h1>System Audit Logs</h1>
 </div>
 
-<div class="detail-card" style="padding: 0;">
-    <div style="max-height: 600px; overflow-y: auto; border-radius: 8px;">
-        <table class="data-table" style="margin: 0;">
-            <thead style="position: sticky; top: 0; background-color: var(--bg-color); z-index: 1;">
+<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 1.5rem; overflow-x: auto;">
+    <table id="auditLogsTable" class="data-table" style="width: 100%;">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var log in Model)
+            {
                 <tr>
-                    <th>Time</th>
-                    <th>User</th>
-                    <th>Action</th>
-                    <th>Details</th>
+                    <td style="white-space: nowrap; color: var(--text-muted); font-size: 0.9rem;">@log.Timestamp.ToString("dd MMM yyyy, HH:mm:ss")</td>
+                    <td style="font-weight: 600; color: var(--text);">@(users.ContainsKey(log.UserId) ? users[log.UserId] : log.UserId)</td>
+                    <td><span class="status-badge" style="background: #e0f2fe; color: #0369a1;">@log.Action</span></td>
+                    <td style="color: var(--secondary); font-size: 0.95rem;">@log.Details</td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var log in Model)
-                {
-                    <tr>
-                        <td style="white-space: nowrap;">@log.Timestamp.ToString("dd MMM yyyy, HH:mm:ss")</td>
-                        <td>@(users.ContainsKey(log.UserId) ? users[log.UserId] : log.UserId)</td>
-                        <td><span style="font-weight: 600; color: var(--primary);">@log.Action</span></td>
-                        <td style="color: var(--secondary);">@log.Details</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            }
+        </tbody>
+    </table>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            if ($('#auditLogsTable tbody tr').length > 0) {
+                $('#auditLogsTable').DataTable({
+                    "pageLength": 10,
+                    "ordering": true,
+                    "order": [[0, 'desc']], /* Sort by time descending by default */
+                    "responsive": true,
+                    "language": {
+                        "search": "Filter:"
+                    }
+                });
+            }
+        });
+    </script>
+}

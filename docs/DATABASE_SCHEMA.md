@@ -16,9 +16,15 @@
       │ N            │ N      
 ┌─────▼──────────────▼──────┐         1 ┌─────────────┐
 │       Appointment         │◄──────────┤   Review    │
-└───────────────────────────┘ 1         └─────────────┘
+└─────────────┬─────────────┘ 1         └─────────────┘
+              │ 1
+              │
+              │ 1
+        ┌─────▼──────┐
+        │  Invoice   │
+        └────────────┘
 ```
-*(Note: AuditLogs are standalone records linked by UserId strings, not strict foreign keys, to preserve history if users are deleted).*
+*(Note: AuditLogs and PlatformBills run in parallel to standard workflows to preserve history/earnings).*
 
 ## Tables
 
@@ -54,6 +60,7 @@
 | DateOfBirth | datetime2 | |
 | PhoneNumber | nvarchar(20) | |
 | Address | nvarchar(300) | |
+| CNIC | nvarchar(20) | Required for verification |
 
 ### Appointments
 | Column | Type | Notes |
@@ -62,9 +69,32 @@
 | DoctorId | int | FK → Doctors.Id |
 | PatientId | int | FK → Patients.Id |
 | AppointmentDateTime | datetime2 | Scheduled date/time |
-| Status | int (enum) | 0=Pending, 1=Confirmed, 2=Completed, 3=Cancelled, 4=PatientCancellationRequested, 5=DoctorCancellationRequested |
+| Status | int (enum) | 0=Pending, 1=Confirmed, 2=Completed, 3=Cancelled, 4=PatientCancelReq, 5=DoctorCancelReq |
 | Notes | nvarchar(500) | Optional booking notes |
 | CreatedAt | datetime2 | Auto-timestamp |
+
+### Invoices (Cash & Refund Tracking)
+| Column | Type | Notes |
+|---|---|---|
+| Id | int | PK, identity |
+| AppointmentId | int | FK → Appointments.Id (1:1) |
+| Amount | decimal(10,2) | Matches Doctor ConsultationFee |
+| PaymentDateTime | datetime2 | |
+| Status | int (enum) | 0=Pending, 1=Paid, 2=Refunded, 3=RefundPending |
+| CollectedByReceptionistId | nvarchar | Links to Receptionist user |
+| HandedOverToDoctor | bit | True if cash given to doctor |
+| RefundScreenshotUrl | nvarchar | Path to uploaded receipt/proof |
+
+### PlatformBills (Incremental Billing System)
+| Column | Type | Notes |
+|---|---|---|
+| Id | int | PK, identity |
+| DoctorId | int | FK → Doctors.Id |
+| Month, Year | int | Billing period |
+| EarningsAmount | decimal(10,2) | Total cash collected |
+| CommissionAmount| decimal(10,2) | 10% platform fee |
+| Status | int (enum) | 0=Pending, 1=PaymentSubmitted, 2=Paid, 3=Cancelled |
+| CreatedAt, PaidAt | datetime2 | Timestamps |
 
 ### Reviews
 | Column | Type | Notes |
@@ -75,24 +105,15 @@
 | PatientId | int | FK → Patients.Id |
 | Rating | int | 1 to 5 scale |
 | Comment | nvarchar(1000)| Optional feedback |
-| CreatedAt | datetime2 | Auto-timestamp |
 
 ### AuditLogs
 | Column | Type | Notes |
 |---|---|---|
 | Id | int | PK, identity |
 | UserId | nvarchar(max) | The email or ID of the user performing the action |
-| Action | nvarchar(200) | e.g., "Appointment Created", "Status Updated" |
+| Action | nvarchar(200) | e.g., "Appointment Created", "Invoice Refunded" |
 | Details | nvarchar(max) | Contextual details regarding the action |
 | Timestamp | datetime2 | Auto-timestamp |
-
-## Relationships Summary
-- `ApplicationUser` 1 — 1 `Doctor`
-- `ApplicationUser` 1 — 1 `Patient`
-- `Specialization` 1 — N `Doctor`
-- `Doctor` 1 — N `Appointment`
-- `Patient` 1 — N `Appointment`
-- `Appointment` 1 — 1 `Review`
 
 ## Migration Strategy
 The schema is managed via **EF Core Code-First Migrations**. 

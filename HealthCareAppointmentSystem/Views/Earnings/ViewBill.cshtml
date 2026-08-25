@@ -37,10 +37,27 @@
             </div>
             <div style="text-align: right;">
                 <h4 style="color: var(--text-muted); margin: 0 0 0.5rem 0; text-transform: uppercase; font-size: 0.85rem;">Status</h4>
-                @if (isPaid)
+                @if (isPaid || Model.Status == HealthCareAppointmentSystem.Models.BillStatus.PaymentSubmitted)
                 {
-                    <div style="color: var(--success); font-weight: 800; font-size: 1.5rem; letter-spacing: 1px;">PAID</div>
-                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">On @Model.PaidAt?.ToString("dd MMM yyyy")</p>
+                    if (isPaid)
+                    {
+                        <div style="color: var(--success); font-weight: 800; font-size: 1.5rem; letter-spacing: 1px;">PAID</div>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Verified on @Model.PaidAt?.ToString("dd MMM yyyy")</p>
+                    }
+                    else
+                    {
+                        <div style="color: #d97706; font-weight: 800; font-size: 1.5rem; letter-spacing: 1px;">SUBMITTED</div>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">On @Model.SubmittedAt?.ToString("dd MMM yyyy")</p>
+                    }
+                    
+                    @if (!string.IsNullOrEmpty(Model.TransactionReference))
+                    {
+                        <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px dashed var(--border); text-align: right;">
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Payment Details</p>
+                            <p style="margin: 0.25rem 0 0 0; font-weight: 600;">@Model.PaymentMethod</p>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Ref: @Model.TransactionReference</p>
+                        </div>
+                    }
                 }
                 else
                 {

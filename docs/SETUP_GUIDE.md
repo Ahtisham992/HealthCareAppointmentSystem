@@ -43,7 +43,7 @@ dotnet tool install --global dotnet-ef
 ```
 
 ### 4. Apply Database Migrations
-Initialize your Docker database with the necessary schema (Tables: Users, Appointments, Reviews, AuditLogs, etc.):
+Initialize your Docker database with the necessary schema (Tables: Users, Appointments, Invoices, PlatformBills, Reviews, AuditLogs, etc.):
 ```bash
 dotnet ef database update
 ```
@@ -53,18 +53,18 @@ Start the local Kestrel web server:
 ```bash
 dotnet run
 ```
-The application will boot up, and the terminal will output the local URL (usually `https://localhost:5001` or similar). Open this in your browser to view the premium corporate landing page.
+The application will boot up, and the terminal will output the local URL (usually `http://localhost:5000` or `https://localhost:5001`). Open this in your browser to view the premium corporate landing page.
 
-## Initial System State
+## Extensive Seeding System
 
-On the very first run, the `DbInitializer` automatically provisions the database with:
-- System Roles: `Admin`, `Doctor`, `Patient`
-- A master admin account:
-  - **Email:** `admin@healthcare.local`
-  - **Password:** `Admin@123`
-- Default Specializations (e.g., Cardiology, Neurology).
+On the very first run, the `DbInitializer` automatically provisions the database with massive amounts of realistic dummy data to allow immediate testing of all features:
+- **Roles & Admin:** `Admin`, `Doctor`, `Receptionist`, `Patient` roles, plus a master admin account (`admin@healthcare.local` / `Admin@123`).
+- **Doctors:** 20 verified doctors across various specializations.
+- **Patients:** 50 verified patients with CNIC details.
+- **Receptionists:** 2 receptionist accounts (`receptionist1@gmail.com` / `Receptionist1@123`).
+- **Appointments & Finances:** Over 100 appointments in various states (Pending, Confirmed, Completed, Cancelled). Automatically generated `Invoices`, partial refunds, and `PlatformBills` attached to these appointments.
 
-**Next Steps:** Log in with the admin credentials, navigate to the Dashboard to view the system statistics and Audit Logs, and begin registering Doctors and Patients to explore the two-step appointment workflows.
+**Next Steps:** Log in with the admin credentials, navigate to the Dashboard to view the system statistics and the Billing portal to see the generated platform fees. Log in as `receptionist1@gmail.com` to explore the Cash Drawer.
 
 ## Troubleshooting
 

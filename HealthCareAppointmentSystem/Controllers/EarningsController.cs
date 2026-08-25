@@ -54,8 +54,17 @@ namespace HealthCareAppointmentSystem.Controllers
                 decimal totalRefunded = invoices.Where(i => i.Status == PaymentStatus.Refunded).Sum(i => i.RefundAmount ?? i.Amount);
                 decimal netEarned = totalEarned - totalRefunded;
 
-                var existingBill = await _context.PlatformBills
-                    .FirstOrDefaultAsync(b => b.DoctorId == doc.Doctor.Id && b.Month == selectedMonth && b.Year == selectedYear);
+                var existingBills = await _context.PlatformBills
+                    .Where(b => b.DoctorId == doc.Doctor.Id && b.Month == selectedMonth && b.Year == selectedYear)
+                    .OrderByDescending(b => b.GeneratedAt)
+                    .ToListAsync();
+
+                decimal billedEarnings = existingBills.Sum(b => b.TotalEarnings);
+                decimal billedCommission = existingBills.Sum(b => b.CommissionAmount);
+                decimal unbilledEarnings = Math.Max(0, netEarned - billedEarnings);
+                decimal unbilledCommission = Math.Max(0, (netEarned > 0 ? netEarned * PLATFORM_COMMISSION_RATE : 0) - billedCommission);
+
+                var latestBill = existingBills.FirstOrDefault();
 
                 var row = new DoctorEarningRow
                 {
@@ -65,9 +74,14 @@ namespace HealthCareAppointmentSystem.Controllers
                     TotalRefunded = totalRefunded,
                     NetEarned = netEarned,
                     Commission = netEarned > 0 ? netEarned * PLATFORM_COMMISSION_RATE : 0,
-                    IsBillGenerated = existingBill != null,
-                    BillStatus = existingBill?.Status,
-                    BillId = existingBill?.Id
+                    BilledEarnings = billedEarnings,
+                    BilledCommission = billedCommission,
+                    UnbilledEarnings = unbilledEarnings,
+                    UnbilledCommission = unbilledCommission,
+                    HasPendingBills = existingBills.Any(b => b.Status == BillStatus.Pending),
+                    HasSubmittedBills = existingBills.Any(b => b.Status == BillStatus.PaymentSubmitted),
+                    LatestBillStatus = latestBill?.Status,
+                    LatestBillId = latestBill?.Id
                 };
 
                 viewModel.Doctors.Add(row);
@@ -83,12 +97,11 @@ namespace HealthCareAppointmentSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> GenerateBill(int doctorId, int month, int year, decimal totalEarnings, decimal commissionAmount)
         {
-            var existingBill = await _context.PlatformBills
-                .FirstOrDefaultAsync(b => b.DoctorId == doctorId && b.Month == month && b.Year == year);
-
-            if (existingBill != null)
+            // We allow multiple bills per month now to handle incremental earnings
+            // Just verifying we are not generating a bill for 0 earnings
+            if (totalEarnings <= 0 || commissionAmount <= 0)
             {
-                TempData["Error"] = "Bill already generated for this month.";
+                TempData["Error"] = "Cannot generate a bill for zero earnings.";
                 return RedirectToAction(nameof(AdminIndex), new { month, year });
             }
 
@@ -120,6 +133,44 @@ namespace HealthCareAppointmentSystem.Controllers
             return RedirectToAction(nameof(AdminIndex), new { month, year });
         }
 
+        // POST: Earnings/SubmitBillPayment
+        [HttpPost]
+        [Authorize(Roles = "Doctor")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitBillPayment(int id, string paymentMethod, string transactionReference)
+        {
+            var bill = await _context.PlatformBills.FindAsync(id);
+            if (bill == null) return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var doctor = await _context.Set<Doctor>().Include(d => d.ApplicationUser).FirstOrDefaultAsync(d => d.ApplicationUserId == userId);
+            
+            if (doctor == null || bill.DoctorId != doctor.Id) return Unauthorized();
+
+            if (bill.Status != BillStatus.Pending)
+            {
+                TempData["Error"] = "Bill is not in a state to accept payment submissions.";
+                return RedirectToAction(nameof(MyEarnings), new { month = bill.Month, year = bill.Year });
+            }
+
+            bill.Status = BillStatus.PaymentSubmitted;
+            bill.PaymentMethod = paymentMethod;
+            bill.TransactionReference = transactionReference;
+            bill.SubmittedAt = DateTime.UtcNow;
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                Action = "BillPaymentSubmitted",
+                UserId = userId,
+                Details = $"Doctor submitted payment for bill ID {id}. TrxRef: {transactionReference}",
+                Timestamp = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Payment submitted successfully. Awaiting admin verification.";
+            return RedirectToAction(nameof(MyEarnings), new { month = bill.Month, year = bill.Year });
+        }
+
         // POST: Earnings/MarkBillPaid
         [HttpPost]
         [Authorize(Roles = "Admin")]
@@ -135,14 +186,14 @@ namespace HealthCareAppointmentSystem.Controllers
             var doctor = await _context.Set<Doctor>().Include(d => d.ApplicationUser).FirstOrDefaultAsync(d => d.Id == bill.DoctorId);
             _context.AuditLogs.Add(new AuditLog
             {
-                Action = "BillPaid",
+                Action = "BillVerified",
                 UserId = User.FindFirstValue(ClaimTypes.NameIdentifier),
-                Details = $"Marked platform bill ID {id} as Paid for Dr. {doctor?.ApplicationUser?.FullName}",
+                Details = $"Admin verified and marked platform bill ID {id} as Paid for Dr. {doctor?.ApplicationUser?.FullName}",
                 Timestamp = DateTime.UtcNow
             });
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Bill marked as paid.";
+            TempData["Success"] = "Payment verified and marked as paid.";
             return RedirectToAction(nameof(AdminIndex), new { month = bill.Month, year = bill.Year });
         }
 
@@ -201,12 +252,30 @@ namespace HealthCareAppointmentSystem.Controllers
                 }
             }
 
-            viewModel.NetEarnedThisMonth = viewModel.TotalEarnedThisMonth - viewModel.TotalRefundedThisMonth;
-
-            ViewBag.Bills = await _context.PlatformBills
+            var platformBills = await _context.PlatformBills
                 .Where(b => b.DoctorId == doctor.Id)
                 .OrderByDescending(b => b.Year).ThenByDescending(b => b.Month)
                 .ToListAsync();
+                
+            var monthlyBills = platformBills.Where(b => b.Month == selectedMonth && b.Year == selectedYear).ToList();
+            foreach (var monthlyBill in monthlyBills)
+            {
+                if (monthlyBill.Status == BillStatus.Paid || monthlyBill.Status == BillStatus.PaymentSubmitted)
+                {
+                    viewModel.TotalPlatformFeesPaid += monthlyBill.CommissionAmount;
+                    viewModel.Logs.Add(new EarningLogViewModel
+                    {
+                        Date = monthlyBill.SubmittedAt ?? (monthlyBill.PaidAt ?? DateTime.UtcNow),
+                        Description = $"Platform Fee Payment (Bill #{monthlyBill.Id})",
+                        Amount = monthlyBill.CommissionAmount,
+                        Type = "Platform Fee"
+                    });
+                }
+            }
+            
+            viewModel.NetEarnedThisMonth = viewModel.TotalEarnedThisMonth - viewModel.TotalRefundedThisMonth - viewModel.TotalPlatformFeesPaid;
+
+            ViewBag.Bills = platformBills;
 
             return View(viewModel);
         }

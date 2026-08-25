@@ -5,97 +5,152 @@
     ViewData["Title"] = "Edit Profile";
 }
 
-<h1>Edit Profile</h1>
+<div class="page-header" style="margin-bottom: 2rem;">
+    <h1 style="margin: 0; color: var(--text-dark); font-weight: 800; letter-spacing: -0.5px;">Edit Profile</h1>
+    <p style="color: var(--text-muted); margin-top: 0.25rem; font-size: 0.95rem;">Update your information to keep your account current.</p>
+</div>
 
-<form asp-action="Edit" method="post" class="form-card" enctype="multipart/form-data">
-    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+<div class="form-card" style="padding: 2.5rem; max-width: 900px; margin: 0 auto; border-top: 5px solid var(--primary); box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
-    <div class="form-group">
-        <label asp-for="FullName"></label>
-        <input asp-for="FullName" class="form-control" />
-        <span asp-validation-for="FullName" class="text-danger"></span>
-    </div>
-
-    @if (Model.Role == "Patient")
-    {
-        <div class="form-group">
-            <label asp-for="DateOfBirth"></label>
-            <input asp-for="DateOfBirth" class="form-control" type="date" />
-            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="PhoneNumber"></label>
-            <input asp-for="PhoneNumber" class="form-control" />
-            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="Address"></label>
-            <textarea asp-for="Address" class="form-control"></textarea>
-            <span asp-validation-for="Address" class="text-danger"></span>
-        </div>
-    }
-    else if (Model.Role == "Doctor")
-    {
-        <div class="form-group">
-            <label asp-for="SpecializationId"></label>
-            <select asp-for="SpecializationId" class="form-control" asp-items="ViewBag.Specializations">
-                <option value="">-- Select Specialization --</option>
-            </select>
-            <span asp-validation-for="SpecializationId" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="LicenseNumber"></label>
-            <input asp-for="LicenseNumber" class="form-control" />
-            <span asp-validation-for="LicenseNumber" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="YearsOfExperience"></label>
-            <input asp-for="YearsOfExperience" class="form-control" />
-            <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="ConsultationFee"></label>
-            <input asp-for="ConsultationFee" class="form-control" />
-            <span asp-validation-for="ConsultationFee" class="text-danger"></span>
-        </div>
-        <hr />
-        <div class="form-group">
-            <label asp-for="AvailableFrom"></label>
-            <input asp-for="AvailableFrom" class="form-control" type="time" />
-            <span asp-validation-for="AvailableFrom" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="AvailableTo"></label>
-            <input asp-for="AvailableTo" class="form-control" type="time" />
-            <span asp-validation-for="AvailableTo" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="SlotDurationMinutes"></label>
-            <input asp-for="SlotDurationMinutes" class="form-control" type="number" min="5" max="120" />
-            <span asp-validation-for="SlotDurationMinutes" class="text-danger"></span>
-        </div>
-        <hr />
-        <div class="form-group">
-            <label asp-for="Education"></label>
-            <textarea asp-for="Education" class="form-control" rows="3" placeholder="E.g., MBBS from Harvard Medical School, MD in Cardiology..."></textarea>
-            <span asp-validation-for="Education" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <label asp-for="ProfileImage"></label>
-            <input asp-for="ProfileImage" type="file" class="form-control" accept="image/*" />
-            <span asp-validation-for="ProfileImage" class="text-danger"></span>
-            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+        <h3 style="color: var(--primary); font-size: 1.25rem; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+            <i class="fa-solid fa-user" style="margin-right: 0.5rem;"></i> Basic Information
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+            <div class="form-group">
+                <label asp-for="FullName" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                <input asp-for="FullName" class="form-control" placeholder="E.g. John Doe" />
+                <span asp-validation-for="FullName" class="text-danger"></span>
+            </div>
+            
+            @if (Model.Role == "Patient")
             {
-                <p class="text-muted mt-2" style="font-size: 0.85rem;">You already have a profile picture uploaded. Uploading a new one will replace it.</p>
+                <div class="form-group">
+                    <label asp-for="PhoneNumber" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="+92 300 1234567" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="DateOfBirth" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                </div>
             }
         </div>
-    }
 
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+        @if (Model.Role == "Patient")
+        {
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label asp-for="Address" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter your full home address"></textarea>
+                <span asp-validation-for="Address" class="text-danger"></span>
+            </div>
+        }
+        else if (Model.Role == "Doctor")
+        {
+            <h3 style="color: var(--primary); font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-user-doctor" style="margin-right: 0.5rem;"></i> Professional Details
+            </h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div class="form-group">
+                    <label asp-for="SpecializationId" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <select asp-for="SpecializationId" class="form-control" asp-items="ViewBag.Specializations">
+                        <option value="">-- Select Specialization --</option>
+                    </select>
+                    <span asp-validation-for="SpecializationId" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="LicenseNumber" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <input asp-for="LicenseNumber" class="form-control" placeholder="E.g. PMDC-12345" />
+                    <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="YearsOfExperience" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <input asp-for="YearsOfExperience" class="form-control" type="number" min="0" />
+                    <span asp-validation-for="YearsOfExperience" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ConsultationFee" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600;">Rs.</span>
+                        <input asp-for="ConsultationFee" class="form-control" style="padding-left: 45px;" type="number" min="0" />
+                    </div>
+                    <span asp-validation-for="ConsultationFee" class="text-danger"></span>
+                </div>
+            </div>
+
+            <h3 style="color: var(--primary); font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-clock" style="margin-right: 0.5rem;"></i> Availability Settings
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div class="form-group">
+                    <label asp-for="AvailableFrom" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <input asp-for="AvailableFrom" class="form-control" type="time" />
+                    <span asp-validation-for="AvailableFrom" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="AvailableTo" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <input asp-for="AvailableTo" class="form-control" type="time" />
+                    <span asp-validation-for="AvailableTo" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="SlotDurationMinutes" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <div style="position: relative;">
+                        <input asp-for="SlotDurationMinutes" class="form-control" style="padding-right: 55px;" type="number" min="5" max="120" />
+                        <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600; background-color: white; border-left: 1px solid #e2e8f0; padding-left: 10px;">Mins</span>
+                    </div>
+                    <span asp-validation-for="SlotDurationMinutes" class="text-danger"></span>
+                </div>
+            </div>
+
+            <h3 style="color: var(--primary); font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-graduation-cap" style="margin-right: 0.5rem;"></i> Qualifications
+            </h3>
+            <div class="form-group">
+                <label asp-for="Education" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                <textarea asp-for="Education" class="form-control" rows="4" placeholder="E.g., MBBS from King Edward Medical University, MD in Cardiology from Aga Khan University..."></textarea>
+                <span asp-validation-for="Education" class="text-danger"></span>
+            </div>
+
+            <h3 style="color: var(--primary); font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-image" style="margin-right: 0.5rem;"></i> Profile Picture
+            </h3>
+            <div class="form-group">
+                <div style="display: flex; align-items: center; gap: 1.5rem; background-color: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                    {
+                        <img src="@Model.ProfilePictureUrl" alt="Current Picture" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+                    }
+                    else
+                    {
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background-color: white; border: 3px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                            <i class="fa-solid fa-user-doctor"></i>
+                        </div>
+                    }
+                    <div style="flex: 1;">
+                        <label asp-for="ProfileImage" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem; display: block;">Upload New Picture</label>
+                        <input asp-for="ProfileImage" type="file" class="form-control" accept="image/*" style="border: none; background: transparent; padding-left: 0; box-shadow: none;" />
+                        <span asp-validation-for="ProfileImage" class="text-danger"></span>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; margin-bottom: 0;">Uploading a new image will replace the current one.</p>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <hr style="margin: 2.5rem 0; border: 0; border-top: 1px solid var(--border-color);" />
+
+        <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0;">
+            <a asp-action="Index" class="btn btn-secondary" style="padding: 0.75rem 1.5rem; font-weight: 600;">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-weight: 600;">
+                <i class="fa-solid fa-floppy-disk" style="margin-right: 0.5rem;"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

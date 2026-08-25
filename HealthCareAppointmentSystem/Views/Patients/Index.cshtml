@@ -11,14 +11,9 @@
     </a>
 </div>
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger" style="background-color: var(--danger); color: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        @TempData["Error"]
-    </div>
-}
 
-<table id="patientsTable" class="data-table display" style="width:100%; margin-top:1rem;">
+<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 1.5rem; overflow-x: auto;">
+    <table id="patientsTable" class="data-table" style="width:100%;">
     <thead>
         <tr>
             <th>ID</th>
@@ -49,6 +44,7 @@
         }
     </tbody>
 </table>
+</div>
 
 @if (!Model.Any())
 {

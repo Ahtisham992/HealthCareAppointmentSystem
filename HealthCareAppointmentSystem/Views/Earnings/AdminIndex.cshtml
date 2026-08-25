@@ -56,15 +56,13 @@
     </form>
 </div>
 
-<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid var(--border);">
-    <table class="data-table">
+<div style="background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); padding: 1.5rem; overflow-x: auto;">
+    <table id="adminBillingTable" class="data-table" style="width:100%;">
         <thead>
             <tr>
                 <th>Doctor</th>
-                <th>Total Earned</th>
-                <th>Total Refunded</th>
-                <th>Net Income</th>
-                <th>Platform Fee (10%)</th>
+                <th>Unbilled Income</th>
+                <th>Unbilled Fee (10%)</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
@@ -73,7 +71,7 @@
             @if (Model.Doctors.Count == 0)
             {
                 <tr>
-                    <td colspan="7" class="text-center" style="padding: 3rem;">No earning records found for this month.</td>
+                    <td colspan="5" class="text-center" style="padding: 3rem;">No earning records found for this month.</td>
                 </tr>
             }
             else
@@ -81,55 +79,62 @@
                 foreach (var item in Model.Doctors)
                 {
                     <tr>
-                        <td style="font-weight: 600;">@item.DoctorName</td>
-                        <td style="color: var(--success);">Rs. @item.TotalEarned.ToString("N0")</td>
-                        <td style="color: var(--danger);">Rs. @item.TotalRefunded.ToString("N0")</td>
-                        <td style="font-weight: bold;">Rs. @item.NetEarned.ToString("N0")</td>
-                        <td style="color: var(--primary); font-weight: bold;">Rs. @item.Commission.ToString("N0")</td>
+                        <td style="font-weight: 600; color: var(--text);">@item.DoctorName</td>
+                        <td style="font-weight: bold;">Rs. @item.UnbilledEarnings.ToString("N0")</td>
+                        <td style="color: var(--primary); font-weight: bold;">Rs. @item.UnbilledCommission.ToString("N0")</td>
                         <td>
-                            @if (item.IsBillGenerated)
+                            @if (item.HasSubmittedBills)
                             {
-                                @if (item.BillStatus == HealthCareAppointmentSystem.Models.BillStatus.Paid)
-                                {
-                                    <span class="status-badge status-completed">PAID</span>
-                                }
-                                else
-                                {
-                                    <span class="status-badge status-pending">PENDING</span>
-                                }
+                                <span class="status-badge status-pending">PAYMENT SUBMITTED</span>
                             }
-                            else
+                            else if (item.HasPendingBills)
+                            {
+                                <span class="status-badge status-cancelled">PENDING PAYMENT</span>
+                            }
+                            else if (item.IsFullyBilled && item.LatestBillStatus == HealthCareAppointmentSystem.Models.BillStatus.Paid)
+                            {
+                                <span class="status-badge status-completed">VERIFIED & PAID</span>
+                            }
+                            else if (item.UnbilledEarnings > 0)
                             {
                                 <span class="status-badge" style="background: #f1f5f9; color: #64748b;">UNBILLED</span>
                             }
-                        </td>
-                        <td style="display: flex; gap: 0.5rem; align-items: center;">
-                            @if (!item.IsBillGenerated)
+                            else
                             {
-                                @if (item.NetEarned > 0)
+                                <span class="status-badge" style="background: #f1f5f9; color: #64748b;">NO EARNINGS</span>
+                            }
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                                @if (item.UnbilledEarnings > 0)
                                 {
                                     <form asp-action="GenerateBill" method="post" style="margin: 0;">
                                         <input type="hidden" name="doctorId" value="@item.DoctorId" />
                                         <input type="hidden" name="month" value="@Model.Month" />
                                         <input type="hidden" name="year" value="@Model.Year" />
-                                        <input type="hidden" name="totalEarnings" value="@item.NetEarned" />
-                                        <input type="hidden" name="commissionAmount" value="@item.Commission" />
+                                        <input type="hidden" name="totalEarnings" value="@item.UnbilledEarnings" />
+                                        <input type="hidden" name="commissionAmount" value="@item.UnbilledCommission" />
                                         <button type="submit" class="btn-action btn-action-primary">GENERATE BILL</button>
                                     </form>
                                 }
-                            }
-                            else
-                            {
-                                <a asp-action="ViewBill" asp-route-id="@item.BillId" class="btn-action btn-action-secondary">VIEW BILL</a>
                                 
-                                @if (item.BillStatus == HealthCareAppointmentSystem.Models.BillStatus.Pending)
+                                @if (item.LatestBillId.HasValue)
                                 {
-                                    <form asp-action="MarkBillPaid" method="post" style="margin: 0;" onsubmit="return confirm('Confirm platform fee has been paid?');">
-                                        <input type="hidden" name="id" value="@item.BillId" />
-                                        <button type="submit" class="btn-action btn-action-success">MARK PAID</button>
-                                    </form>
+                                    <a asp-action="ViewBill" asp-route-id="@item.LatestBillId.Value" class="btn-action btn-action-secondary" title="View Latest Bill">VIEW SLIP</a>
+                                    
+                                    @if (item.LatestBillStatus == HealthCareAppointmentSystem.Models.BillStatus.PaymentSubmitted)
+                                    {
+                                        <button type="button" class="btn-action btn-action-success" onclick="openVerifyModal(@item.LatestBillId.Value, @item.Commission, '@item.DoctorName')">REVIEW & VERIFY</button>
+                                    }
+                                    else if (item.LatestBillStatus == HealthCareAppointmentSystem.Models.BillStatus.Pending)
+                                    {
+                                        <form asp-action="MarkBillPaid" method="post" style="margin: 0;" onsubmit="return confirm('Confirm platform fee has been paid manually? (Normally doctors submit this from their portal).');">
+                                            <input type="hidden" name="id" value="@item.LatestBillId.Value" />
+                                            <button type="submit" class="btn-action btn-action-primary" style="background-color: #64748b;">MARK PAID (MANUAL)</button>
+                                        </form>
+                                    }
                                 }
-                            }
+                            </div>
                         </td>
                     </tr>
                 }
@@ -137,3 +142,59 @@
         </tbody>
     </table>
 </div>
+
+<!-- Verify Modal -->
+<div id="verifyModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 100%; max-width: 500px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: var(--text-dark);">Verify Payment Submission</h3>
+            <button type="button" onclick="closeVerifyModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <div style="padding: 1.5rem;">
+            <p><strong>Doctor:</strong> <span id="verifyDoctorName"></span></p>
+            <p><strong>Amount to Verify:</strong> <span id="verifyAmount" style="color: var(--success); font-weight: bold;"></span></p>
+            
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin-top: 1rem; text-align: center;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0 0 0.5rem 0;">Transaction details can be viewed on the Bill Slip.</p>
+                <p style="margin: 0; font-size: 0.9rem;">Please ensure the amount has been successfully deposited into the platform's account before verifying.</p>
+            </div>
+            
+            <form asp-action="MarkBillPaid" method="post" id="verifyForm">
+                <input type="hidden" name="id" id="verifyBillId" />
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeVerifyModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: var(--success);">Confirm Verification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openVerifyModal(billId, amount, doctorName) {
+            document.getElementById('verifyBillId').value = billId;
+            document.getElementById('verifyAmount').innerText = 'Rs. ' + amount.toLocaleString('en-US');
+            document.getElementById('verifyDoctorName').innerText = doctorName;
+            document.getElementById('verifyModal').style.display = 'flex';
+        }
+        
+        function closeVerifyModal() {
+            document.getElementById('verifyModal').style.display = 'none';
+        }
+        
+        $(document).ready(function() {
+            if ($('#adminBillingTable tbody tr td').length > 1) {
+                $('#adminBillingTable').DataTable({
+                    "pageLength": 10,
+                    "ordering": true,
+                    "responsive": true,
+                    "language": {
+                        "search": "Filter:"
+                    }
+                });
+            }
+        });
+    </script>
+}

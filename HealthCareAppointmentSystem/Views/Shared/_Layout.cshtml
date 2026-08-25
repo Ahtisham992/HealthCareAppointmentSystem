@@ -97,10 +97,112 @@
     }
 
     <main class="container">
-        @if (TempData["Message"] != null)
-        {
-            <div class="alert alert-success">@TempData["Message"]</div>
-        }
+        <!-- Global Toast Notifications -->
+        <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+            @if (TempData["Success"] != null)
+            {
+                <div class="custom-toast toast-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <div class="toast-content">
+                        <h4>Success</h4>
+                        <p>@TempData["Success"]</p>
+                    </div>
+                    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+            }
+            @if (TempData["Error"] != null || TempData["ErrorMessage"] != null)
+            {
+                <div class="custom-toast toast-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <div class="toast-content">
+                        <h4>Error</h4>
+                        <p>@(TempData["Error"] ?? TempData["ErrorMessage"])</p>
+                    </div>
+                    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+            }
+            @if (TempData["Message"] != null)
+            {
+                <div class="custom-toast toast-info">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div class="toast-content">
+                        <h4>Notice</h4>
+                        <p>@TempData["Message"]</p>
+                    </div>
+                    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                </div>
+            }
+        </div>
+
+        <style>
+            .custom-toast {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                background: white;
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+                min-width: 300px;
+                max-width: 400px;
+                animation: slideInRight 0.4s ease-out forwards;
+                position: relative;
+                border-left: 5px solid transparent;
+            }
+            .toast-success { border-left-color: var(--success); }
+            .toast-success i { color: var(--success); font-size: 1.5rem; }
+            .toast-error { border-left-color: var(--danger); }
+            .toast-error i { color: var(--danger); font-size: 1.5rem; }
+            .toast-info { border-left-color: var(--primary); }
+            .toast-info i { color: var(--primary); font-size: 1.5rem; }
+            
+            .toast-content h4 {
+                margin: 0 0 4px 0;
+                font-size: 1rem;
+                color: var(--text-dark);
+            }
+            .toast-content p {
+                margin: 0;
+                font-size: 0.9rem;
+                color: var(--text-muted);
+            }
+            .toast-close {
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                color: #94a3b8;
+                cursor: pointer;
+                margin-left: auto;
+                align-self: flex-start;
+                line-height: 1;
+                padding: 0;
+            }
+            .toast-close:hover { color: var(--text-dark); }
+            
+            @@keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @@keyframes fadeOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            .toast-hiding {
+                animation: fadeOutRight 0.4s ease-in forwards;
+            }
+        </style>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const toasts = document.querySelectorAll('.custom-toast');
+                toasts.forEach(toast => {
+                    setTimeout(() => {
+                        toast.classList.add('toast-hiding');
+                        setTimeout(() => toast.remove(), 400);
+                    }, 5000);
+                });
+            });
+        </script>
         @RenderBody()
     </main>
 
@@ -136,8 +238,164 @@
         </div>
     </footer>
 
+    <!-- Global Custom Confirm Modal -->
+    <div id="custom-confirm-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; animation: zoomIn 0.2s ease-out forwards;">
+            <div style="padding: 1.5rem; text-align: center;">
+                <div style="width: 60px; height: 60px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem auto;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; color: var(--danger);"></i>
+                </div>
+                <h3 style="margin: 0 0 0.5rem 0; color: var(--text-dark);">Are you sure?</h3>
+                <p id="custom-confirm-msg" style="margin: 0; color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;"></p>
+            </div>
+            <div style="background: #f8fafc; padding: 1rem 1.5rem; display: flex; gap: 1rem; justify-content: flex-end; border-top: 1px solid var(--border);">
+                <button type="button" class="btn btn-secondary" id="custom-confirm-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="custom-confirm-ok" style="background-color: var(--danger); border-color: var(--danger);">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+    <style>
+        @@keyframes zoomIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    
+    <!-- Global Password Visibility Toggler -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const passwordInputs = document.querySelectorAll('input[type="password"]');
+            passwordInputs.forEach(input => {
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.display = 'flex';
+                wrapper.style.alignItems = 'center';
+                
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+                
+                const toggleIcon = document.createElement('i');
+                toggleIcon.className = 'fa-solid fa-eye';
+                toggleIcon.style.position = 'absolute';
+                toggleIcon.style.right = '15px';
+                toggleIcon.style.cursor = 'pointer';
+                toggleIcon.style.color = 'var(--text-muted)';
+                toggleIcon.style.zIndex = '10';
+                
+                toggleIcon.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        toggleIcon.className = 'fa-solid fa-eye-slash';
+                    } else {
+                        input.type = 'password';
+                        toggleIcon.className = 'fa-solid fa-eye';
+                    }
+                });
+                
+                wrapper.appendChild(toggleIcon);
+                input.style.paddingRight = '45px';
+            });
+
+            // Global Table Scroll Wrapper
+            // Automatically wrap all non-DataTable tables in a scrollable div to prevent them from taking up too much space
+            const tables = document.querySelectorAll('.data-table, .table');
+            tables.forEach(table => {
+                if (table.id) return;
+                
+                const parent = table.parentElement;
+                if (parent && (parent.style.overflowX === 'auto' || parent.style.overflow === 'hidden')) {
+                    parent.style.maxHeight = '400px';
+                    parent.style.overflowY = 'auto';
+                    parent.style.overflowX = 'auto';
+                } else {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.maxHeight = '400px';
+                    wrapper.style.overflowY = 'auto';
+                    wrapper.style.overflowX = 'auto';
+                    wrapper.style.width = '100%';
+                    wrapper.style.borderRadius = '8px';
+                    wrapper.style.boxShadow = 'inset 0 -1px 0 0 var(--border)';
+                    
+                    table.parentNode.insertBefore(wrapper, table);
+                    wrapper.appendChild(table);
+                }
+            });
+
+            // --- Custom Confirm Modal Interception ---
+            
+            function showCustomConfirm(msg, onConfirm) {
+                const modal = document.getElementById('custom-confirm-modal');
+                const msgEl = document.getElementById('custom-confirm-msg');
+                const btnOk = document.getElementById('custom-confirm-ok');
+                const btnCancel = document.getElementById('custom-confirm-cancel');
+                
+                msgEl.innerText = msg;
+                modal.style.display = 'flex';
+                
+                // Clone buttons to remove old event listeners
+                const newBtnOk = btnOk.cloneNode(true);
+                const newBtnCancel = btnCancel.cloneNode(true);
+                btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+                btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+                
+                newBtnCancel.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+                
+                newBtnOk.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                    onConfirm();
+                });
+            }
+
+            // Mutate DOM to replace inline confirms securely
+            document.querySelectorAll('form[onsubmit*="return confirm"]').forEach(form => {
+                let onsubmitStr = form.getAttribute('onsubmit');
+                let match = onsubmitStr.match(/confirm\('([^']+)'\)/);
+                let msg = match ? match[1] : "Are you sure you want to proceed?";
+                
+                // Remove the native confirm immediately so it can never fire
+                form.removeAttribute('onsubmit');
+                
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    showCustomConfirm(msg, function() {
+                        form.submit();
+                    });
+                });
+            });
+
+            document.querySelectorAll('[onclick*="return confirm"]').forEach(btn => {
+                let onclickStr = btn.getAttribute('onclick');
+                let match = onclickStr.match(/confirm\('([^']+)'\)/);
+                let msg = match ? match[1] : "Are you sure you want to proceed?";
+                
+                // Remove the native confirm immediately so it can never fire
+                btn.removeAttribute('onclick');
+                
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showCustomConfirm(msg, function() {
+                        if (btn.type === 'submit' && btn.form) {
+                            btn.form.submit();
+                        } else if (btn.tagName === 'A' && btn.href) {
+                            window.location.href = btn.href;
+                        } else {
+                            // Fallback for non-submit, non-link buttons (rare in this app)
+                            btn.click();
+                        }
+                    });
+                });
+            });
+            // -----------------------------------------
+
+        });
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

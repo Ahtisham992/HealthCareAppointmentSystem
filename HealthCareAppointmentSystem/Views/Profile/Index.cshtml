@@ -5,87 +5,130 @@
     ViewData["Title"] = "My Profile";
 }
 
-<div class="page-header">
-    <h1>My Profile</h1>
-    <a class="btn btn-primary" asp-action="Edit">Edit Profile</a>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h1 style="margin: 0; color: var(--text-dark); font-weight: 800; letter-spacing: -0.5px;">My Profile</h1>
+        <p style="color: var(--text-muted); margin-top: 0.25rem; font-size: 0.95rem;">Manage your personal and professional information.</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Edit" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+        <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+    </a>
 </div>
 
-<div class="detail-card">
-    <dl>
-        <dt>Full Name</dt>
-        <dd>@Model.FullName</dd>
+<div class="profile-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
+    
+    <!-- Identity Card -->
+    <div class="detail-card" style="text-align: center; padding: 2rem; border-top: 5px solid var(--primary);">
+        @if (Model.Role == "Doctor")
+        {
+            <div style="margin-bottom: 1.5rem;">
+                @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                {
+                    <img src="@Model.ProfilePictureUrl" alt="Profile Picture" style="width: 140px; height: 140px; object-fit: cover; border-radius: 50%; border: 4px solid white; box-shadow: 0 8px 16px rgba(0,0,0,0.1);" />
+                }
+                else
+                {
+                    <div style="width: 140px; height: 140px; border-radius: 50%; background-color: #f1f5f9; border: 4px solid white; box-shadow: 0 8px 16px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: var(--secondary); margin: 0 auto;">
+                        <i class="fa-solid fa-user-doctor"></i>
+                    </div>
+                }
+            </div>
+            <h2 style="margin: 0; color: var(--text-dark); font-weight: 700;">Dr. @Model.FullName</h2>
+            <p style="color: var(--primary); font-weight: 600; font-size: 1.1rem; margin-top: 0.25rem;">@(Model.SpecializationName ?? "Specialization Not Set")</p>
+            <div style="margin-top: 1rem;">
+                @if (Model.IsApproved)
+                {
+                    <span class="status-badge status-completed" style="font-size: 0.9rem; padding: 0.4rem 1rem;"><i class="fa-solid fa-circle-check" style="margin-right:5px;"></i> Verified & Approved</span>
+                }
+                else
+                {
+                    <span class="status-badge status-pending" style="font-size: 0.9rem; padding: 0.4rem 1rem;"><i class="fa-solid fa-clock" style="margin-right:5px;"></i> Pending Approval</span>
+                }
+            </div>
+        }
+        else
+        {
+            <div style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; margin: 0 auto 1.5rem auto; box-shadow: 0 8px 16px rgba(0,0,0,0.15);">
+                <i class="fa-solid @(Model.Role == "Patient" ? "fa-user" : "fa-user-shield")"></i>
+            </div>
+            <h2 style="margin: 0; color: var(--text-dark); font-weight: 700;">@Model.FullName</h2>
+            <p style="color: var(--text-muted); font-weight: 500; font-size: 1rem; margin-top: 0.25rem;">@Model.Role</p>
+        }
         
-        <dt>Email</dt>
-        <dd>@Model.Email</dd>
+        <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid var(--border-color);" />
         
-        <dt>Role</dt>
-        <dd>@Model.Role</dd>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 1rem; color: var(--text-dark);">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; color: var(--primary);"><i class="fa-solid fa-envelope"></i></div>
+                <div style="flex: 1; overflow: hidden; text-overflow: ellipsis;">@Model.Email</div>
+            </div>
+            @if (Model.Role == "Patient" && !string.IsNullOrEmpty(Model.PhoneNumber))
+            {
+                <div style="display: flex; align-items: center; gap: 1rem; color: var(--text-dark);">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background-color: #f1f5f9; display: flex; align-items: center; justify-content: center; color: var(--primary);"><i class="fa-solid fa-phone"></i></div>
+                    <div>@Model.PhoneNumber</div>
+                </div>
+            }
+        </div>
+    </div>
 
+    <!-- Details Card -->
+    <div class="detail-card" style="padding: 2rem;">
+        <h3 style="margin-top: 0; color: var(--primary); border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1.5rem;"><i class="fa-solid fa-address-card" style="margin-right: 0.5rem;"></i> Detailed Information</h3>
+        
         @if (Model.Role == "Patient")
         {
-            <hr />
-            <dt>Date of Birth</dt>
-            <dd>@(Model.DateOfBirth?.ToString("d") ?? "-")</dd>
-            
-            <dt>Phone Number</dt>
-            <dd>@(Model.PhoneNumber ?? "-")</dd>
-            
-            <dt>Address</dt>
-            <dd>@(Model.Address ?? "-")</dd>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;">Date of Birth</label>
+                    <div style="font-size: 1.05rem; color: var(--text-dark); font-weight: 500;">@(Model.DateOfBirth?.ToString("MMMM dd, yyyy") ?? "Not provided")</div>
+                </div>
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;">Home Address</label>
+                    <div style="font-size: 1.05rem; color: var(--text-dark); font-weight: 500;">@(Model.Address ?? "Not provided")</div>
+                </div>
+            </div>
         }
         else if (Model.Role == "Doctor")
         {
-            <hr />
-            <div style="display: flex; gap: 2rem; align-items: flex-start; margin-bottom: 2rem;">
-                <div style="flex-shrink: 0; text-align: center;">
-                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
-                    {
-                        <img src="@Model.ProfilePictureUrl" alt="Profile Picture" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%; border: 3px solid var(--primary); box-shadow: var(--shadow-sm);" />
-                    }
-                    else
-                    {
-                        <div style="width: 100px; height: 100px; border-radius: 50%; background-color: var(--bg-color); border: 3px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--secondary);">
-                            <i class="fa-solid fa-user-doctor"></i>
-                        </div>
-                    }
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;">License Number</label>
+                    <div style="font-size: 1.05rem; color: var(--text-dark); font-weight: 500;">@(Model.LicenseNumber ?? "N/A")</div>
                 </div>
-                <div style="flex: 1;">
-                    <h3 style="margin-top: 0; color: var(--primary);">Dr. @Model.FullName</h3>
-                    <p style="font-size: 1.1rem; color: var(--secondary); font-weight: 600;">@(Model.SpecializationName ?? "Specialization Not Set")</p>
-                    <p style="margin-bottom: 0.5rem;">
-                        @if (Model.IsApproved)
-                        {
-                            <span class="status-badge status-completed">Verified & Approved</span>
-                        }
-                        else
-                        {
-                            <span class="status-badge status-pending">Pending Approval</span>
-                        }
-                    </p>
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;">Experience</label>
+                    <div style="font-size: 1.05rem; color: var(--text-dark); font-weight: 500;">@(Model.YearsOfExperience) Years</div>
+                </div>
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;">Consultation Fee</label>
+                    <div style="font-size: 1.05rem; color: var(--success); font-weight: 700;">Rs. @Model.ConsultationFee?.ToString("N0")</div>
+                </div>
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;">Availability</label>
+                    <div style="font-size: 1.05rem; color: var(--text-dark); font-weight: 500;">
+                        @(Model.AvailableFrom?.ToString(@"hh\:mm") ?? "-") to @(Model.AvailableTo?.ToString(@"hh\:mm") ?? "-")
+                    </div>
+                </div>
+                <div class="info-group">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;">Slot Duration</label>
+                    <div style="font-size: 1.05rem; color: var(--text-dark); font-weight: 500;">@(Model.SlotDurationMinutes ?? 20) Mins</div>
                 </div>
             </div>
-
-            <dt>Education & Qualifications</dt>
-            <dd style="white-space: pre-wrap;">@(Model.Education ?? "Not provided yet")</dd>
             
-            <dt>License Number</dt>
-            <dd>@(Model.LicenseNumber ?? "-")</dd>
+            <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid var(--border-color);" />
             
-            <dt>Years of Experience</dt>
-            <dd>@Model.YearsOfExperience</dd>
-            
-            <dt>Consultation Fee</dt>
-            <dd>Rs. @Model.ConsultationFee?.ToString("N0")</dd>
-            
-            <hr />
-            <dt>Available From</dt>
-            <dd>@(Model.AvailableFrom?.ToString(@"hh\:mm") ?? "-")</dd>
-            
-            <dt>Available To</dt>
-            <dd>@(Model.AvailableTo?.ToString(@"hh\:mm") ?? "-")</dd>
-            
-            <dt>Slot Duration</dt>
-            <dd>@(Model.SlotDurationMinutes ?? 20) Mins</dd>
+            <div class="info-group">
+                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem;"><i class="fa-solid fa-graduation-cap" style="margin-right:5px;"></i> Education & Qualifications</label>
+                <div style="font-size: 1.05rem; color: var(--text-dark); font-weight: 500; background-color: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap; line-height: 1.6;">@(Model.Education ?? "Not provided yet")</div>
+            </div>
         }
-    </dl>
+        else
+        {
+            <div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                <i class="fa-solid fa-shield-halved" style="font-size: 3rem; margin-bottom: 1rem; color: #cbd5e1;"></i>
+                <p>As an Administrator, your primary details are managed securely.</p>
+            </div>
+        }
+    </div>
 </div>
