@@ -43,7 +43,7 @@ dotnet tool install --global dotnet-ef
 ```
 
 ### 4. Apply Database Migrations
-Initialize your Docker database with the necessary schema (Tables: Users, Appointments, Invoices, PlatformBills, Reviews, AuditLogs, etc.):
+Initialize your Docker database with the necessary schema (Tables: Users, Wallets, Appointments, Prescriptions, Invoices, WithdrawalRequests, AuditLogs, etc.):
 ```bash
 dotnet ef database update
 ```
@@ -58,13 +58,13 @@ The application will boot up, and the terminal will output the local URL (usuall
 ## Extensive Seeding System
 
 On the very first run, the `DbInitializer` automatically provisions the database with massive amounts of realistic dummy data to allow immediate testing of all features:
-- **Roles & Admin:** `Admin`, `Doctor`, `Receptionist`, `Patient` roles, plus a master admin account (`admin@healthcare.local` / `Admin@123`).
+- **Roles & Admin:** `Admin`, `Accountant`, `Doctor`, `Receptionist`, `Pharmacist`, `Patient` roles. Master admin account (`admin@healthcare.local` / `Admin@123`) and Accountant (`accountant@healthcare.local` / `Accountant@123`).
 - **Doctors:** 20 verified doctors across various specializations.
 - **Patients:** 50 verified patients with CNIC details.
 - **Receptionists:** 2 receptionist accounts (`receptionist1@gmail.com` / `Receptionist1@123`).
-- **Appointments & Finances:** Over 100 appointments in various states (Pending, Confirmed, Completed, Cancelled). Automatically generated `Invoices`, partial refunds, and `PlatformBills` attached to these appointments.
+- **Appointments & Finances:** Over 100 appointments in various states (Pending, Confirmed, Completed, Cancelled). Automatically generated `Invoices`, Wallet Escrow transactions, and Prescriptions attached to these appointments.
 
-**Next Steps:** Log in with the admin credentials, navigate to the Dashboard to view the system statistics and the Billing portal to see the generated platform fees. Log in as `receptionist1@gmail.com` to explore the Cash Drawer.
+**Next Steps:** Log in with the accountant credentials, navigate to the Dashboard to view system finances and pending withdrawal requests. Log in as `receptionist1@gmail.com` to explore the Cash Drawer.
 
 ## Troubleshooting
 
