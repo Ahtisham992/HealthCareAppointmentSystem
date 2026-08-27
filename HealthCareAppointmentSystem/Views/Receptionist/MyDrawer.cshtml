@@ -19,45 +19,26 @@
 
 <div class="card" style="background: var(--surface); border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 2rem;">
     <div class="card-header" style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
-        <h2 style="margin: 0; font-size: 1.25rem;">Doctor Cash Handovers</h2>
+        <h2 style="margin: 0; font-size: 1.25rem;">Cash Deposit to Accountant</h2>
     </div>
-    <div class="card-body" style="padding: 0;">
-        <table class="table" style="width: 100%; border-collapse: collapse;">
-            <thead style="background: var(--bg-color);">
-                <tr>
-                    <th style="padding: 1rem; text-align: left;">Doctor</th>
-                    <th style="padding: 1rem; text-align: left;">Total Collected</th>
-                    <th style="padding: 1rem; text-align: center;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (!Model.DoctorGroups.Any())
-                {
-                    <tr>
-                        <td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-muted);">No pending cash to hand over.</td>
-                    </tr>
-                }
-                else
-                {
-                    foreach (var group in Model.DoctorGroups)
-                    {
-                        <tr style="border-top: 1px solid var(--border-color);">
-                            <td style="padding: 1rem;">@group.DoctorName</td>
-                            <td style="padding: 1rem; font-weight: bold; color: var(--success);">
-                                Rs. @group.TotalCollected.ToString("N0")
-                            </td>
-                            <td style="padding: 1rem; text-align: center;">
-                                <form method="post" asp-action="HandoverCashToDoctor" style="display: inline;">
-                                    <input type="hidden" name="doctorId" value="@group.DoctorId" />
-                                    <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Are you sure you want to hand over Rs. @group.TotalCollected.ToString("N0") to @group.DoctorName?');">
-                                        Handover to Doctor
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
+    <div class="card-body" style="padding: 1.5rem;">
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            Because all doctor and pharmacist earnings are now handled through the centralized Wallet Escrow, the cash you collect must be deposited to the Platform Accountant. 
+        </p>
+
+        @if (Model.TotalDrawerBalance > 0)
+        {
+            <form method="post" asp-action="HandoverCashToPlatform">
+                <button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure you want to hand over Rs. @Model.TotalDrawerBalance.ToString("N0") to the Accountant? This will reset your drawer to zero.');">
+                    <i class="fa-solid fa-building-columns"></i> Deposit Rs. @Model.TotalDrawerBalance.ToString("N0") to Escrow
+                </button>
+            </form>
+        }
+        else
+        {
+            <div style="padding: 2rem; text-align: center; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 8px;">
+                Your cash drawer is empty. No deposits needed.
+            </div>
+        }
     </div>
 </div>

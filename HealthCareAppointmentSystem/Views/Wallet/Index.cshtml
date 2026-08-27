@@ -21,8 +21,8 @@
         
         @if (isPatient)
         {
-            <button type="button" class="btn btn-success" style="padding: 1.25rem 1.5rem; font-size: 1.1rem; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" onclick="document.getElementById('depositModal').style.display='flex'">
-                <i class="fa-solid fa-plus-circle"></i> Add Funds via SafePay
+            <button class="btn btn-primary" onclick="document.getElementById('depositModal').style.display='flex'">
+                <i class="fa-solid fa-plus-circle"></i> Add Funds via Stripe
             </button>
         }
         else if (canWithdraw)
@@ -100,13 +100,13 @@
         <div style="background: white; border-radius: 12px; width: 100%; max-width: 450px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
             <div style="padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
                 <h3 style="margin: 0; color: var(--text-dark); display: flex; align-items: center; gap: 10px;">
-                    <img src="https://getsafepay.com/images/safepay_logo.svg" alt="SafePay" style="height: 24px;" onerror="this.style.display='none'">
-                    Add Funds via SafePay
+                    <i class="fa-brands fa-stripe" style="color: #635bff; font-size: 1.5rem;"></i>
+                    Add Funds via Stripe
                 </h3>
                 <button type="button" onclick="document.getElementById('depositModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
             </div>
             <div style="padding: 1.5rem;">
-                <p style="color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enter the amount you wish to deposit. You will be redirected to the secure SafePay checkout portal to complete your transaction.</p>
+                <p style="color: var(--text-muted); margin-top: 0; margin-bottom: 1.5rem;">Enter the amount you wish to deposit. You will be redirected to the secure Stripe checkout portal to complete your transaction.</p>
                 <form asp-action="InitiateDeposit" method="post">
                     <div class="form-group">
                         <label>Deposit Amount (PKR)</label>
@@ -115,7 +115,7 @@
                     </div>
                     <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
                         <button type="button" class="btn btn-secondary" onclick="document.getElementById('depositModal').style.display='none'">Cancel</button>
-                        <button type="submit" class="btn btn-success" style="background: #22c55e;">Proceed to SafePay</button>
+                        <button type="submit" class="btn btn-success" style="background: #22c55e;">Proceed to Stripe</button>
                     </div>
                 </form>
             </div>

@@ -93,10 +93,11 @@
                             }
                             else if (rx.Status == HealthCareAppointmentSystem.Models.PrescriptionStatus.Processing)
                             {
-                                <form asp-action="CollectPayment" method="post" style="display:inline;" onsubmit="return confirm('Collect Rs. @rx.TotalAmount and dispense?');">
+                                <form asp-action="CollectPayment" method="post" style="display:inline;" onsubmit="return confirm('Collect Rs. @rx.TotalAmount (with indicated cash) and dispense?');">
                                     <input type="hidden" name="id" value="@rx.Id" />
+                                    <input type="number" name="cashAmount" placeholder="Cash Rcvd (Opt)" min="0" max="@rx.TotalAmount" step="0.01" class="form-control form-control-sm" style="width: 130px; display: inline-block; margin-right: 5px;" />
                                     <button type="submit" class="btn btn-sm btn-success" title="Collect Payment & Dispense">
-                                        <i class="fa-solid fa-money-bill-wave"></i> Collect Payment
+                                        <i class="fa-solid fa-money-bill-wave"></i> Pay
                                     </button>
                                 </form>
                             }

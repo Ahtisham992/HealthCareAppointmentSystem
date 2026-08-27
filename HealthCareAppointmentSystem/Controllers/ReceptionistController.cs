@@ -182,5 +182,53 @@ namespace HealthCareAppointmentSystem.Controllers
             }
             return Json(new { found = false });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> MyDrawer()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var receptionist = await _context.Receptionists.FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+            
+            if (receptionist == null) return NotFound();
+
+            var vm = new MyDrawerViewModel
+            {
+                TotalDrawerBalance = receptionist.CashDrawerBalance,
+                DoctorGroups = new List<DoctorCashGroup>() // Not used anymore, kept for backwards compatibility in VM
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> HandoverCashToPlatform()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var receptionist = await _context.Receptionists.FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+            
+            if (receptionist == null) return NotFound();
+
+            if (receptionist.CashDrawerBalance <= 0)
+            {
+                TempData["Error"] = "Drawer is empty.";
+                return RedirectToAction(nameof(MyDrawer));
+            }
+
+            var amount = receptionist.CashDrawerBalance;
+            receptionist.CashDrawerBalance = 0;
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                UserId = User.Identity?.Name ?? "Unknown",
+                Action = "Cash Handover to Platform Escrow",
+                Details = $"Receptionist deposited Rs. {amount.ToString("N2")} physical cash to the platform."
+            });
+
+            await _context.SaveChangesAsync();
+            
+            TempData["Success"] = $"Successfully deposited Rs. {amount.ToString("N2")} to the Platform Accountant.";
+            return RedirectToAction(nameof(MyDrawer));
+        }
     }
 }

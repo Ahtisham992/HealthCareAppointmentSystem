@@ -6,15 +6,18 @@ This project has been carefully architected and styled to serve as a comprehensi
 
 ## Key Features
 
-- **Four Distinct Roles:** 
-  - **Admin**: Complete system visibility, global account management, access to a centralized dashboard featuring statistical charts, real-time audit logs, and a sophisticated incremental platform billing system.
-  - **Doctor**: Manages availability, handles patient appointments, tracks personal earnings via a dynamic financial ledger, and submits platform commission payments.
-  - **Receptionist**: The financial intermediary. Operates the "Cash Drawer" to collect payments from arriving patients, handles appointment refunds, generates print-ready invoices, and hands over collected cash to doctors at the end of shifts.
-  - **Patient**: Books appointments, tracks history, requests cancellations, and leaves reviews for doctors.
+- **Six Distinct Roles:** 
+  - **Admin**: Complete system visibility, global account management, access to a centralized dashboard featuring statistical charts and real-time audit logs.
+  - **Accountant**: Manages the Platform Escrow Wallet, processes user wire withdrawal requests, and reconciles digital vs physical cash flows.
+  - **Doctor**: Manages availability, handles patient appointments, issues prescriptions, and tracks personal digital wallet earnings.
+  - **Pharmacist**: Manages digital prescriptions, sets medication pricing, and processes hybrid (cash + wallet) payments seamlessly routing 5% platform commission to escrow.
+  - **Receptionist**: Operates the "Cash Drawer" to collect payments from arriving patients, handles appointment refunds, generates invoices, and deposits collected physical cash to the Accountant.
+  - **Patient**: Books appointments, receives prescriptions, deposits digital funds via Stripe Checkout, and tracks transaction history.
 
-- **Advanced Financial & Billing Architecture:** 
-  - **Invoices**: Automatically generated upon appointment confirmation. Tracks pending, paid, and refunded states.
-  - **Incremental Billing**: Calculates a 10% platform fee on all *unbilled* earnings for doctors, allowing multiple platform bills to be generated dynamically throughout the month.
+- **Centralized Digital Wallet & Escrow Architecture:** 
+  - **Stripe Hosted Checkout**: Users can instantly top up their digital wallets via secure Stripe integration.
+  - **Automated Escrow Splitting**: Appointments and Pharmacy bills automatically deduct from patient wallets and instantaneously route 90-95% to the provider and 5-10% to the Platform Escrow.
+  - **Hybrid Physical/Digital Clearing**: Receptionists and Pharmacists can accept physical cash. The system automatically debits their digital wallets, ensuring perfect system-wide reconciliation and preventing "cash leaks."
 
 - **Two-Step Cancellation Workflow:** A robust state machine ensuring that cancellations initiated by either party (Patient or Doctor) must be confirmed by the other party to prevent scheduling conflicts.
 

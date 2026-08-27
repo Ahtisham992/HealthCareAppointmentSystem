@@ -24,6 +24,7 @@ namespace HealthCareAppointmentSystem.Data
         public DbSet<PrescriptionItem> PrescriptionItems { get; set; } = null!;
         public DbSet<Wallet> Wallets { get; set; } = null!;
         public DbSet<WalletTransaction> WalletTransactions { get; set; } = null!;
+        public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

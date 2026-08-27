@@ -15,12 +15,53 @@ namespace HealthCareAppointmentSystem.Data
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
             // 1. Seed roles
-            string[] roles = { "Admin", "Doctor", "Patient", "Receptionist", "Pharmacist" };
-            foreach (var role in roles)
+            string[] roleNames = { "Admin", "Doctor", "Patient", "Receptionist", "Pharmacist", "Accountant" };
+            foreach (var roleName in roleNames)
             {
-                if (!await roleManager.RoleExistsAsync(role))
+                var roleExist = await roleManager.RoleExistsAsync(roleName);
+                if (!roleExist)
                 {
-                    await roleManager.CreateAsync(new IdentityRole(role));
+                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                }
+            }
+
+            // --- 2. Create Default Admin ---
+            var adminEmail = "admin@healthcare.local";
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+            if (adminUser == null)
+            {
+                var newAdmin = new ApplicationUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail,
+                    FullName = "System Administrator",
+                    EmailConfirmed = true
+                };
+
+                var createPowerUser = await userManager.CreateAsync(newAdmin, "Admin@123");
+                if (createPowerUser.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newAdmin, "Admin");
+                }
+            }
+            
+            // --- 3. Create Default Accountant ---
+            var accountantEmail = "accountant@healthcare.local";
+            var accountantUser = await userManager.FindByEmailAsync(accountantEmail);
+            if (accountantUser == null)
+            {
+                var newAccountant = new ApplicationUser
+                {
+                    UserName = accountantEmail,
+                    Email = accountantEmail,
+                    FullName = "Platform Accountant",
+                    EmailConfirmed = true
+                };
+
+                var result = await userManager.CreateAsync(newAccountant, "Accountant@123");
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newAccountant, "Accountant");
                 }
             }
 

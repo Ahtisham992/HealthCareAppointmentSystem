@@ -190,6 +190,16 @@ namespace HealthCareAppointmentSystem.Controllers
                 Description = $"Withdrawal Fee collected from {user.FullName}"
             };
 
+            var request = new WithdrawalRequest
+            {
+                WalletId = userWallet.Id,
+                Amount = amount,
+                BankDetails = bankDetails,
+                Status = WithdrawalStatus.Pending,
+                RequestedAt = DateTime.UtcNow
+            };
+
+            _context.WithdrawalRequests.Add(request);
             _context.WalletTransactions.AddRange(withdrawTx, feeTx, platformFeeTx);
             await _context.SaveChangesAsync();
 

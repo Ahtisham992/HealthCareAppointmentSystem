@@ -90,7 +90,7 @@ namespace HealthCareAppointmentSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CollectPayment(int id)
+        public async Task<IActionResult> CollectPayment(int id, decimal cashAmount = 0)
         {
             var p = await _context.Prescriptions
                 .Include(p => p.Appointment).ThenInclude(a => a!.Patient)
@@ -113,10 +113,20 @@ namespace HealthCareAppointmentSystem.Controllers
                 return RedirectToAction("Index");
             }
 
-            if (patientWallet.Balance < p.TotalAmount)
+            if (patientWallet.Balance + cashAmount < p.TotalAmount)
             {
-                TempData["Error"] = $"Patient's wallet has insufficient funds (Balance: Rs. {patientWallet.Balance:N2}). Patient needs to deposit Rs. {p.TotalAmount:N2}.";
+                TempData["Error"] = $"Patient's wallet has insufficient funds (Balance: Rs. {patientWallet.Balance:N2}). They need Rs. {(p.TotalAmount - cashAmount - patientWallet.Balance):N2} more.";
                 return RedirectToAction("Index");
+            }
+
+            if (cashAmount > 0)
+            {
+                // Pharmacist takes physical cash. Pharmacist's digital wallet is deducted, Patient's digital wallet is credited.
+                pharmacistWallet.Balance -= cashAmount;
+                patientWallet.Balance += cashAmount;
+                
+                _context.WalletTransactions.Add(new WalletTransaction { WalletId = pharmacistWallet.Id, Amount = -cashAmount, Type = TransactionType.ServicePayment, Description = $"Received physical cash for RX #{p.Id}", ReferenceId = $"CASH-{p.Id}" });
+                _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = cashAmount, Type = TransactionType.Deposit, Description = $"Cash deposit via Pharmacist for RX #{p.Id}", ReferenceId = $"CASH-{p.Id}" });
             }
 
             // Calculate Split
@@ -124,7 +134,7 @@ namespace HealthCareAppointmentSystem.Controllers
             var platformCommission = totalAmount * 0.05m; // 5% pharmacy platform fee
             var pharmacyEarnings = totalAmount - platformCommission;
 
-            // Apply transactions
+            // Apply digital transactions
             patientWallet.Balance -= totalAmount;
             pharmacistWallet.Balance += pharmacyEarnings;
             platformWallet.Balance += platformCommission;
@@ -146,7 +156,7 @@ namespace HealthCareAppointmentSystem.Controllers
             });
 
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Payment collected from Patient's Wallet and medicines dispensed.";
+            TempData["Success"] = $"Payment collected (Cash: Rs. {cashAmount:N2}, Wallet: Rs. {(totalAmount - cashAmount):N2}) and medicines dispensed.";
             return RedirectToAction("Index");
         }
     }

@@ -5,7 +5,7 @@ namespace HealthCareAppointmentSystem.Models
 {
     public enum TransactionType
     {
-        Deposit = 1,          // User added funds via SafePay
+        Deposit = 1,          // User added funds via Stripe
         Withdrawal = 2,       // User withdrew funds to bank account
         ServicePayment = 3,   // User paid for appointment/medicine (Debit)
         ServiceEarning = 4,   // Doctor/Pharmacist received payment (Credit)
