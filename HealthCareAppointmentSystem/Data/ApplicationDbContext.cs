@@ -25,6 +25,10 @@ namespace HealthCareAppointmentSystem.Data
         public DbSet<Wallet> Wallets { get; set; } = null!;
         public DbSet<WalletTransaction> WalletTransactions { get; set; } = null!;
         public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
+        public DbSet<LabTechnician> LabTechnicians { get; set; } = null!;
+        public DbSet<LabOrder> LabOrders { get; set; } = null!;
+        public DbSet<LabResult> LabResults { get; set; } = null!;
+        public DbSet<MedicalProfile> MedicalProfiles { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -126,6 +130,41 @@ namespace HealthCareAppointmentSystem.Data
                 .WithMany(w => w.Transactions)
                 .HasForeignKey(wt => wt.WalletId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // LabTechnician -> ApplicationUser (1:1)
+            builder.Entity<LabTechnician>()
+                .HasOne(lt => lt.ApplicationUser)
+                .WithOne()
+                .HasForeignKey<LabTechnician>(lt => lt.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // MedicalProfile -> Patient (1:1)
+            builder.Entity<MedicalProfile>()
+                .HasOne(mp => mp.Patient)
+                .WithOne(p => p.MedicalProfile)
+                .HasForeignKey<MedicalProfile>(mp => mp.PatientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // LabOrder -> Appointment (N:1)
+            builder.Entity<LabOrder>()
+                .HasOne(lo => lo.Appointment)
+                .WithMany(a => a.LabOrders)
+                .HasForeignKey(lo => lo.AppointmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // LabResult -> LabOrder (1:1)
+            builder.Entity<LabResult>()
+                .HasOne(lr => lr.LabOrder)
+                .WithOne(lo => lo.LabResult)
+                .HasForeignKey<LabResult>(lr => lr.LabOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // LabResult -> LabTechnician (N:1)
+            builder.Entity<LabResult>()
+                .HasOne(lr => lr.LabTechnician)
+                .WithMany()
+                .HasForeignKey(lr => lr.LabTechnicianId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

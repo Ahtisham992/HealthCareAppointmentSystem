@@ -50,6 +50,8 @@ namespace HealthCareAppointmentSystem.Models
 
         public Prescription? Prescription { get; set; }
 
+        public ICollection<LabOrder> LabOrders { get; set; } = new List<LabOrder>();
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

@@ -1,0 +1,37 @@
+@model HealthCareAppointmentSystem.Models.LabOrder
+@{
+    ViewData["Title"] = "Upload Lab Result";
+}
+
+<div class="form-card">
+    <h2 style="color: var(--primary); margin-bottom: 1.5rem;">Upload Result for Order #@Model.Id</h2>
+    
+    <div style="background: var(--bg); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
+        <p style="margin: 0 0 0.5rem 0;"><strong>Patient:</strong> @Model.Appointment?.Patient?.ApplicationUser?.FullName</p>
+        <p style="margin: 0 0 0.5rem 0;"><strong>Doctor:</strong> @Model.Appointment?.Doctor?.ApplicationUser?.FullName</p>
+        <p style="margin: 0 0 0.5rem 0;"><strong>Test Type:</strong> @Model.TestType</p>
+        @if (!string.IsNullOrEmpty(Model.Notes))
+        {
+            <p style="margin: 0;"><strong>Notes:</strong> @Model.Notes</p>
+        }
+    </div>
+
+    <form asp-action="UploadResult" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="orderId" value="@Model.Id" />
+        
+        <div class="form-group">
+            <label for="resultFile">Upload PDF/Image Result (Required)</label>
+            <input type="file" class="form-control" id="resultFile" name="resultFile" accept=".pdf,.png,.jpg,.jpeg" required />
+        </div>
+
+        <div class="form-group">
+            <label for="resultNotes">Technician Notes (Optional)</label>
+            <textarea class="form-control" id="resultNotes" name="resultNotes" rows="4" placeholder="Enter specific values or remarks..."></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Complete & Upload</button>
+            <a asp-action="Dashboard" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+        </div>
+    </form>
+</div>

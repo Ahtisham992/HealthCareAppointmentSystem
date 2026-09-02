@@ -1,0 +1,72 @@
+@model IEnumerable<HealthCareAppointmentSystem.Models.LabOrder>
+@{
+    ViewData["Title"] = "My Lab Results";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-microscope" style="margin-right: 0.75rem;"></i>My Lab Results</h1>
+        <p style="color: var(--text-muted);">View your complete history of diagnostic tests and lab results.</p>
+    </div>
+</div>
+
+<div class="form-card" style="max-width: 100%;">
+    <table class="data-table" id="labHistoryTable">
+        <thead>
+            <tr>
+                <th>Date Ordered</th>
+                <th>Doctor</th>
+                <th>Test Type</th>
+                <th>Sample ID</th>
+                <th>Payment</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td>@order.OrderedAt.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                    <td>Dr. @order.Appointment?.Doctor?.ApplicationUser?.FullName</td>
+                    <td><strong>@order.TestType</strong></td>
+                    <td>@(string.IsNullOrEmpty(order.SampleId) ? "N/A" : order.SampleId)</td>
+                    <td>
+                        @if (order.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.Paid)
+                        {
+                            <span class="status-badge status-completed">Paid (Rs. @order.Cost)</span>
+                        }
+                        else if (order.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification)
+                        {
+                            <span class="status-badge status-processing">Billed (Rs. @order.Cost)</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-pending">Pending</span>
+                        }
+                    </td>
+                    <td>
+                        @if (order.IsCompleted && order.LabResult != null)
+                        {
+                            <a href="@order.LabResult.FileUrl" target="_blank" class="btn-action btn-action-info"><i class="fa-regular fa-file-pdf"></i> View Result</a>
+                        }
+                        else
+                        {
+                            <span style="color: var(--text-muted); font-size: 0.9rem;">Processing...</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#labHistoryTable').DataTable({
+                "order": [[0, "desc"]],
+                "pageLength": 10
+            });
+        });
+    </script>
+}

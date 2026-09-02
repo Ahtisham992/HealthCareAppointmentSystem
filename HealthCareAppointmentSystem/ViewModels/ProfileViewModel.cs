@@ -25,6 +25,15 @@ namespace HealthCareAppointmentSystem.ViewModels
         [Display(Name = "Address")]
         public string? Address { get; set; }
 
+        [Display(Name = "Blood Group")]
+        public string? BloodGroup { get; set; }
+
+        [Display(Name = "Known Allergies")]
+        public string? KnownAllergies { get; set; }
+
+        [Display(Name = "Chronic Conditions")]
+        public string? ChronicConditions { get; set; }
+
         // Doctor fields
         [Display(Name = "Specialization")]
         public int? SpecializationId { get; set; }

@@ -1,0 +1,154 @@
+@model IEnumerable<HealthCareAppointmentSystem.Models.LabOrder>
+@{
+    ViewData["Title"] = "Lab Technician Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 style="font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">Diagnostic Center</h1>
+        <p style="color: var(--text-muted);">Manage incoming lab orders and upload test results.</p>
+    </div>
+</div>
+
+<div class="form-card" style="max-width: 100%;">
+    <h3 style="color: var(--primary); margin-bottom: 1.5rem;">Pending & Completed Orders</h3>
+    <table class="data-table" id="labOrdersTable">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Date Ordered</th>
+                <th>Patient Name</th>
+                <th>Doctor</th>
+                <th>Test Type</th>
+                <th>Status / Sample ID</th>
+                <th>Payment</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td>#@order.Id</td>
+                    <td>@order.OrderedAt.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</td>
+                    <td>@order.Appointment?.Patient?.ApplicationUser?.FullName</td>
+                    <td>@order.Appointment?.Doctor?.ApplicationUser?.FullName</td>
+                    <td><strong>@order.TestType</strong></td>
+                    <td>
+                        @if (order.IsCompleted)
+                        {
+                            <span class="status-badge status-completed">Completed</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-pending">Pending Result</span>
+                        }
+                        @if (!string.IsNullOrEmpty(order.SampleId))
+                        {
+                            <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark); margin-top: 0.25rem;">@order.SampleId</div>
+                        }
+                    </td>
+                    <td>
+                        @if (order.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.Paid)
+                        {
+                            <span class="status-badge status-completed">Paid (Rs. @order.Cost)</span>
+                        }
+                        else if (order.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification)
+                        {
+                            <span class="status-badge status-processing">Billed (Rs. @order.Cost)</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-pending">Pending Bill</span>
+                        }
+                    </td>
+                    <td>
+                        @if (order.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.Pending)
+                        {
+                            <button class="btn-action btn-action-info" onclick="openBillModal(@order.Id, '@order.TestType')">Bill Test</button>
+                        }
+                        else if (order.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification)
+                        {
+                            <button class="btn-action btn-action-success" onclick="openPaymentModal(@order.Id, @order.Cost, '@order.TestType')">Collect Payment</button>
+                        }
+                        else if (order.PaymentStatus == HealthCareAppointmentSystem.Models.PaymentStatus.Paid && !order.IsCompleted)
+                        {
+                            <a asp-action="UploadResult" asp-route-id="@order.Id" class="btn-action btn-action-primary">Upload Result</a>
+                        }
+                        else if (order.IsCompleted && order.LabResult != null)
+                        {
+                            <a href="@order.LabResult.FileUrl" target="_blank" class="btn-action btn-action-info">View Result</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Bill Modal -->
+<div id="billModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="background-color: #fff; margin: 10% auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <h3 style="color: var(--primary); margin-bottom: 1.5rem;" id="billModalTitle">Bill Test</h3>
+        <form asp-action="BillTest" method="post">
+            <input type="hidden" name="id" id="billOrderId" />
+            <div class="form-group mb-3">
+                <label style="font-weight: 600; margin-bottom: 0.5rem;">Cost of Test (Rs.)</label>
+                <input type="number" step="0.01" name="cost" id="billCost" class="form-control" required min="0" />
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Generate Bill</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModals()" style="flex: 1;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
+    <div class="modal-content" style="background-color: #fff; margin: 10% auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+        <h3 style="color: var(--success); margin-bottom: 1.5rem;" id="paymentModalTitle">Collect Payment</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Total Billed Amount: <strong style="color: var(--text-dark);" id="paymentTotalAmount"></strong></p>
+        <form asp-action="CollectPayment" method="post">
+            <input type="hidden" name="id" id="paymentOrderId" />
+            <div class="form-group mb-3">
+                <label style="font-weight: 600; margin-bottom: 0.5rem;">Collect Cash Amount (Rs.)</label>
+                <input type="number" step="0.01" name="cashAmount" id="cashAmount" class="form-control" value="0" min="0" />
+                <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">If the patient is paying partially or fully with physical cash, enter the amount here. The remainder will be deducted from their digital wallet.</small>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-success" style="flex: 1;">Confirm Payment</button>
+                <button type="button" class="btn btn-secondary" onclick="closeModals()" style="flex: 1;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#labOrdersTable').DataTable({
+                "order": [[1, "desc"]],
+                "pageLength": 10
+            });
+        });
+
+        function openBillModal(id, testType) {
+            document.getElementById('billOrderId').value = id;
+            document.getElementById('billModalTitle').innerText = 'Bill Test: ' + testType;
+            document.getElementById('billModal').style.display = 'block';
+        }
+
+        function openPaymentModal(id, cost, testType) {
+            document.getElementById('paymentOrderId').value = id;
+            document.getElementById('paymentModalTitle').innerText = 'Collect Payment: ' + testType;
+            document.getElementById('paymentTotalAmount').innerText = 'Rs. ' + parseFloat(cost).toFixed(2);
+            document.getElementById('paymentModal').style.display = 'block';
+        }
+
+        function closeModals() {
+            document.getElementById('billModal').style.display = 'none';
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+    </script>
+}

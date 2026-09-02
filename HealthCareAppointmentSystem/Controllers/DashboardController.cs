@@ -29,6 +29,7 @@ namespace HealthCareAppointmentSystem.Controllers
             if (User.IsInRole("Receptionist")) return RedirectToAction("Dashboard", "Receptionist");
             if (User.IsInRole("Pharmacist")) return RedirectToAction("Index", "Pharmacist");
             if (User.IsInRole("Accountant")) return RedirectToAction("Dashboard", "Accountant");
+            if (User.IsInRole("LabTechnician")) return RedirectToAction("Dashboard", "LabTechnician");
 
             return RedirectToAction("Index", "Home");
         }
@@ -112,6 +113,27 @@ namespace HealthCareAppointmentSystem.Controllers
             }
 
             return View(vm);
+        }
+
+        // GET: Dashboard/MyLabResults
+        [Authorize(Roles = "Patient")]
+        public async Task<IActionResult> MyLabResults()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == user!.Id);
+            
+            if (patient == null) return NotFound();
+
+            var labOrders = await _context.LabOrders
+                .Include(lo => lo.Appointment)
+                    .ThenInclude(a => a!.Doctor)
+                        .ThenInclude(d => d!.ApplicationUser)
+                .Include(lo => lo.LabResult)
+                .Where(lo => lo.Appointment!.PatientId == patient.Id)
+                .OrderByDescending(lo => lo.OrderedAt)
+                .ToListAsync();
+
+            return View(labOrders);
         }
 
         [Authorize(Roles = "Patient")]

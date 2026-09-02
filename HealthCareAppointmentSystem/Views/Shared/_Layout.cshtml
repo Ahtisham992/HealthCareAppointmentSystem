@@ -21,10 +21,22 @@
             <ul class="navbar-links">
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
-                    <li><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
-                    @if (!User.IsInRole("Pharmacist") && !User.IsInRole("Accountant"))
+                    @if (!User.IsInRole("Pharmacist") && !User.IsInRole("Accountant") && !User.IsInRole("LabTechnician"))
                     {
+                        <li><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
                         <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
+                    }
+                    @if (User.IsInRole("Patient"))
+                    {
+                        <li><a asp-controller="Dashboard" asp-action="MyLabResults">My Lab Results</a></li>
+                    }
+                    @if (User.IsInRole("Accountant"))
+                    {
+                        <li><a asp-area="" asp-controller="Accountant" asp-action="Dashboard">Accountant Dashboard</a></li>
+                    }
+                    @if (User.IsInRole("LabTechnician"))
+                    {
+                        <li><a asp-area="" asp-controller="LabTechnician" asp-action="Dashboard">Diagnostic Dashboard</a></li>
                     }
                     @if (User.IsInRole("Receptionist"))
                     {

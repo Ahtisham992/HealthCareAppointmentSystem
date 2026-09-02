@@ -37,12 +37,18 @@ namespace HealthCareAppointmentSystem.Controllers
             if (User.IsInRole("Patient"))
             {
                 vm.Role = "Patient";
-                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == user.Id);
+                var patient = await _context.Patients.Include(p => p.MedicalProfile).FirstOrDefaultAsync(p => p.ApplicationUserId == user.Id);
                 if (patient != null)
                 {
                     vm.DateOfBirth = patient.DateOfBirth;
                     vm.PhoneNumber = patient.PhoneNumber;
                     vm.Address = patient.Address;
+                    if (patient.MedicalProfile != null)
+                    {
+                        vm.BloodGroup = patient.MedicalProfile.BloodGroup;
+                        vm.KnownAllergies = patient.MedicalProfile.KnownAllergies;
+                        vm.ChronicConditions = patient.MedicalProfile.ChronicConditions;
+                    }
                 }
             }
             else if (User.IsInRole("Doctor"))
@@ -87,12 +93,18 @@ namespace HealthCareAppointmentSystem.Controllers
             if (User.IsInRole("Patient"))
             {
                 vm.Role = "Patient";
-                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == user.Id);
+                var patient = await _context.Patients.Include(p => p.MedicalProfile).FirstOrDefaultAsync(p => p.ApplicationUserId == user.Id);
                 if (patient != null)
                 {
                     vm.DateOfBirth = patient.DateOfBirth;
                     vm.PhoneNumber = patient.PhoneNumber;
                     vm.Address = patient.Address;
+                    if (patient.MedicalProfile != null)
+                    {
+                        vm.BloodGroup = patient.MedicalProfile.BloodGroup;
+                        vm.KnownAllergies = patient.MedicalProfile.KnownAllergies;
+                        vm.ChronicConditions = patient.MedicalProfile.ChronicConditions;
+                    }
                 }
             }
             else if (User.IsInRole("Doctor"))
@@ -141,12 +153,22 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (User.IsInRole("Patient"))
             {
-                var patient = await _context.Patients.FirstOrDefaultAsync(p => p.ApplicationUserId == user.Id);
+                var patient = await _context.Patients.Include(p => p.MedicalProfile).FirstOrDefaultAsync(p => p.ApplicationUserId == user.Id);
                 if (patient != null)
                 {
                     patient.DateOfBirth = vm.DateOfBirth;
                     patient.PhoneNumber = vm.PhoneNumber;
                     patient.Address = vm.Address;
+
+                    if (patient.MedicalProfile == null)
+                    {
+                        patient.MedicalProfile = new MedicalProfile { PatientId = patient.Id };
+                    }
+                    patient.MedicalProfile.BloodGroup = vm.BloodGroup;
+                    patient.MedicalProfile.KnownAllergies = vm.KnownAllergies;
+                    patient.MedicalProfile.ChronicConditions = vm.ChronicConditions;
+                    patient.MedicalProfile.LastUpdated = DateTime.UtcNow;
+
                     _context.Update(patient);
                     await _context.SaveChangesAsync();
                 }

@@ -34,5 +34,7 @@ namespace HealthCareAppointmentSystem.Models
         public int CancellationCount { get; set; } = 0;
 
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
+        public MedicalProfile? MedicalProfile { get; set; }
     }
 }

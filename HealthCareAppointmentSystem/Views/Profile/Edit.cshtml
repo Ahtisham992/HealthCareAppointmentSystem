@@ -47,6 +47,37 @@
                 <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter your full home address"></textarea>
                 <span asp-validation-for="Address" class="text-danger"></span>
             </div>
+
+            <h3 style="color: var(--primary); font-size: 1.25rem; margin-top: 2.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+                <i class="fa-solid fa-file-medical" style="margin-right: 0.5rem;"></i> Electronic Health Record
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div class="form-group">
+                    <label asp-for="BloodGroup" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                    <select asp-for="BloodGroup" class="form-control">
+                        <option value="">-- Select --</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label asp-for="KnownAllergies" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                <textarea asp-for="KnownAllergies" class="form-control" rows="2" placeholder="e.g. Peanuts, Penicillin"></textarea>
+            </div>
+
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label asp-for="ChronicConditions" style="font-weight: 600; color: var(--text-dark); margin-bottom: 0.5rem;"></label>
+                <textarea asp-for="ChronicConditions" class="form-control" rows="2" placeholder="e.g. Type 2 Diabetes, Asthma"></textarea>
+            </div>
         }
         else if (Model.Role == "Doctor")
         {

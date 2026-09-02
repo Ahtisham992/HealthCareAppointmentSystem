@@ -91,12 +91,37 @@ namespace HealthCareAppointmentSystem.Controllers
             var appointment = await _context.Appointments
                 .Include(a => a.Doctor).ThenInclude(d => d!.ApplicationUser)
                 .Include(a => a.Patient).ThenInclude(p => p!.ApplicationUser)
+                .Include(a => a.Patient).ThenInclude(p => p!.MedicalProfile)
+                .Include(a => a.LabOrders).ThenInclude(lo => lo.LabResult)
                 .Include(a => a.Invoice)
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (appointment is null) return NotFound();
 
             return View(appointment);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Doctor")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OrderLabTest(int appointmentId, string testType, string notes)
+        {
+            var appointment = await _context.Appointments.FindAsync(appointmentId);
+            if (appointment == null) return NotFound();
+
+            var labOrder = new LabOrder
+            {
+                AppointmentId = appointmentId,
+                TestType = testType,
+                Notes = notes,
+                OrderedAt = DateTime.UtcNow
+            };
+
+            _context.LabOrders.Add(labOrder);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Lab Test ordered successfully.";
+            return RedirectToAction(nameof(Details), new { id = appointmentId });
         }
 
         // GET: /Appointments/Create

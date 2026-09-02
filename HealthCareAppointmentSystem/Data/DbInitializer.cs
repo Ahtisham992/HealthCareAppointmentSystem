@@ -15,7 +15,7 @@ namespace HealthCareAppointmentSystem.Data
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
             // 1. Seed roles
-            string[] roleNames = { "Admin", "Doctor", "Patient", "Receptionist", "Pharmacist", "Accountant" };
+            string[] roleNames = { "Admin", "Doctor", "Patient", "Receptionist", "Pharmacist", "Accountant", "LabTechnician" };
             foreach (var roleName in roleNames)
             {
                 var roleExist = await roleManager.RoleExistsAsync(roleName);
@@ -96,6 +96,17 @@ namespace HealthCareAppointmentSystem.Data
                 {
                     ApplicationUserId = pharmUser.Id,
                     IsActive = true
+                });
+                await context.SaveChangesAsync();
+            }
+
+            var labTechUser = await CreateUser("labtech1@healthcare.local", "Lab Technician 1", "LabTechnician", "LabTech1@123");
+            if (labTechUser != null && !await context.LabTechnicians.AnyAsync(p => p.ApplicationUserId == labTechUser.Id))
+            {
+                context.LabTechnicians.Add(new LabTechnician
+                {
+                    ApplicationUserId = labTechUser.Id,
+                    CertificationNumber = "LT-998877"
                 });
                 await context.SaveChangesAsync();
             }
