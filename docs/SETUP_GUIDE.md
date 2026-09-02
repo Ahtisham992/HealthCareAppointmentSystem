@@ -58,9 +58,9 @@ The application will boot up, and the terminal will output the local URL (usuall
 ## Extensive Seeding System
 
 On the very first run, the `DbInitializer` automatically provisions the database with massive amounts of realistic dummy data to allow immediate testing of all features:
-- **Roles & Admin:** `Admin`, `Accountant`, `Doctor`, `Receptionist`, `Pharmacist`, `Patient` roles. Master admin account (`admin@healthcare.local` / `Admin@123`) and Accountant (`accountant@healthcare.local` / `Accountant@123`).
+- **Roles & Admin:** `Admin`, `Accountant`, `Doctor`, `Receptionist`, `Pharmacist`, `LabTechnician`, `Patient` roles. Master admin account (`admin@healthcare.local` / `Admin@123`), Accountant (`accountant@healthcare.local` / `Accountant@123`), and Lab Technician (`labtech1@healthcare.local` / `LabTech1@123`).
 - **Doctors:** 20 verified doctors across various specializations.
-- **Patients:** 50 verified patients with CNIC details.
+- **Patients:** 50 verified patients with CNIC and Medical Profile details.
 - **Receptionists:** 2 receptionist accounts (`receptionist1@gmail.com` / `Receptionist1@123`).
 - **Appointments & Finances:** Over 100 appointments in various states (Pending, Confirmed, Completed, Cancelled). Automatically generated `Invoices`, Wallet Escrow transactions, and Prescriptions attached to these appointments.
 

@@ -24,7 +24,7 @@ The roadmap is divided into logical phases. Each phase introduces new roles, dat
 
 ---
 
-## Phase 2: Diagnostics & EHR (Electronic Health Records) [NEXT TARGET 🎯]
+## Phase 2: Diagnostics & EHR (Electronic Health Records) [COMPLETED ✅]
 **Goal:** Give doctors comprehensive context before a consultation, and allow them to order external tests.
 
 ### New Roles
@@ -66,4 +66,4 @@ The roadmap is divided into logical phases. Each phase introduces new roles, dat
 ## Implementation Strategy
 To maintain system stability, we will implement these features strictly one phase at a time. 
 
-**Recommended Starting Point:** We have successfully completed Phase 1 (Pharmacy Pipeline) and the financial/Wallet components of Phase 3 (Stripe integration, Background Automation). Our next major milestone is **Phase 2: Diagnostics & EHR (Electronic Health Records)**. This will introduce the `LabTechnician` role and allow doctors to order external tests seamlessly.
+**Recommended Starting Point:** We have successfully completed **Phase 1 (Pharmacy Pipeline)** and **Phase 2 (Diagnostics & EHR)**. Our next major milestone is to fully complete **Phase 3: Digital Modernization**. This involves integrating Telehealth (Video Consultations) directly into the Appointment system, completing the final touches for a fully modernized platform.

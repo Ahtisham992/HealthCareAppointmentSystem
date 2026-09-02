@@ -4,13 +4,14 @@
 
 A comprehensive, enterprise-grade healthcare appointment booking and management system built with **ASP.NET Core MVC (.NET 8)**, using **Entity Framework Core** for data access and **ASP.NET Core Identity** for authentication and robust role-based authorization.
 
-The system supports **six distinct roles** with isolated workflows:
+The system supports **seven distinct roles** with isolated workflows:
 - **Admin** — Manages accounts across all roles, system-wide audit logs. Has full visibility over the platform via a centralized dashboard.
-- **Accountant** — Manages the Platform Escrow Wallet, processes user wire withdrawal requests, and reconciles digital vs physical cash flows.
-- **Doctor** — Manages their daily schedule, tracks incoming digital wallet earnings, and reviews patient feedback.
+- **Accountant** — Manages the Platform Escrow Wallet, processes user wire withdrawal requests (with 2% dynamic fee auto-deduction and 100% rejection refunds), and reconciles digital vs physical cash flows.
+- **Doctor** — Manages their daily schedule, orders external lab tests, tracks incoming digital wallet earnings, and reviews patient feedback.
 - **Pharmacist** — Manages digital prescriptions, sets medication pricing, and processes hybrid (cash + wallet) payments routing 5% platform commission to escrow.
+- **Lab Technician** — Receives lab test orders, bills the patient, generates tracking Sample IDs, and uploads PDF diagnostic results, automatically routing 10% commission to the platform.
 - **Receptionist** — Handles on-site operations. Manages the "Cash Drawer", issues refunds for cancelled appointments, and deposits physical cash to the Accountant.
-- **Patient** — Books appointments, tracks history, requests cancellations, deposits digital funds via Stripe Checkout, and purchases medicine via Wallet Escrow.
+- **Patient** — Books appointments, tracks history, reviews their Electronic Health Records (EHR) & Lab Results, deposits digital funds via Stripe Checkout, and purchases medicine via Wallet Escrow.
 
 ## 2. Architectural Pattern
 
@@ -48,6 +49,13 @@ To prevent accidental or unilateral cancellations that disrupt scheduling, the s
 - If a Patient wants to cancel, they trigger a `PatientCancellationRequested` status. The Doctor is notified and must formally confirm it to `Cancelled`.
 - If a Doctor initiates a cancellation, it triggers `DoctorCancellationRequested`, requiring Patient confirmation.
 
+### 3.4 Lab Diagnostics & EHR Workflow
+The system now fully integrates clinical history and testing:
+- **Medical Profiles:** Each patient has a persistent `MedicalProfile` (Blood Group, Allergies, Conditions) visible to Doctors during consultations.
+- **Lab Ordering:** Doctors can order tests (e.g. "Complete Blood Count") directly from the appointment interface.
+- **Diagnostic Billing:** The Lab Technician sets the cost. Payment is collected via the patient's digital wallet (with 10% platform commission routing) before a tracking Sample ID is generated.
+- **Results:** Lab Technicians upload the resulting PDF, which is instantly available in the Patient's "My Lab Results" dashboard and the Doctor's Appointment view.
+
 ### 3.4 Audit Logging
 All critical state changes (appointment bookings, invoice payments, refunds, withdrawals, admin actions) are intercepted and logged into an `AuditLogs` table. The Admin dashboard provides a real-time, scrollable view of these logs for system compliance and monitoring.
 
@@ -63,9 +71,10 @@ All critical state changes (appointment bookings, invoice payments, refunds, wit
 ### 5.1 Models (`/Models`)
 Rich domain entities mapped via EF Core.
 - `ApplicationUser`: Extends `IdentityUser`.
-- `Doctor`, `Patient`, `Pharmacist`: Profile entities linked 1:1 with `ApplicationUser`.
+- `Doctor`, `Patient`, `Pharmacist`, `LabTechnician`: Profile entities linked 1:1 with `ApplicationUser`.
+- `MedicalProfile`: Linked 1:1 with `Patient` for Electronic Health Records.
 - `Wallet`, `WalletTransaction`, `WithdrawalRequest`: Financial system.
-- `Prescription`, `Invoice`: Billing systems.
+- `Prescription`, `Invoice`, `LabOrder`, `LabResult`: Billing and Clinical systems.
 
 ### 5.2 Data Access (`/Data`)
 - `ApplicationDbContext`: Inherits `IdentityDbContext<ApplicationUser>`, configuring all database relationships via the Fluent API.

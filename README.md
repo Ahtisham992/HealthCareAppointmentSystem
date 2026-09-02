@@ -6,13 +6,14 @@ This project has been carefully architected and styled to serve as a comprehensi
 
 ## Key Features
 
-- **Six Distinct Roles:** 
+- **Seven Distinct Roles:** 
   - **Admin**: Complete system visibility, global account management, access to a centralized dashboard featuring statistical charts and real-time audit logs.
   - **Accountant**: Operates the dual-escrow dashboard tracking "System Escrow Liabilities" (total funds held in all user wallets) vs "Platform Earnings", processes user wire withdrawal requests (with automated 2% fee deductions and 100% rejection refunds), and reconciles digital vs physical cash flows.
-  - **Doctor**: Manages availability, handles patient appointments, issues prescriptions, and tracks personal digital wallet earnings.
+  - **Doctor**: Manages availability, handles patient appointments, issues prescriptions, orders lab tests, and tracks personal digital wallet earnings.
   - **Pharmacist**: Manages digital prescriptions, sets medication pricing, and processes hybrid (cash + wallet) payments seamlessly routing 5% platform commission to escrow.
+  - **Lab Technician**: Operates the diagnostic center. Receives lab orders, bills tests to patient digital wallets (with 10% platform commission auto-routed), generates sample IDs, and uploads PDF diagnostic results.
   - **Receptionist**: Operates the "Cash Drawer" to collect payments from arriving patients, handles appointment refunds, generates invoices, and deposits collected physical cash to the Accountant.
-  - **Patient**: Books appointments, receives prescriptions, deposits digital funds via Stripe Checkout, and tracks transaction history.
+  - **Patient**: Books appointments, receives prescriptions, stores Electronic Health Records (EHR) and past lab results, deposits digital funds via Stripe Checkout, and tracks transaction history.
 
 - **Centralized Digital Wallet & Escrow Architecture:** 
   - **Stripe Hosted Checkout**: Users can instantly top up their digital wallets via secure Stripe integration.

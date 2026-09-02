@@ -20,9 +20,11 @@
               │ 1
               │
               │ 1
-        ┌─────▼──────┐
-        │  Invoice   │
-        └────────────┘
+         ┌─────▼──────┐
+         │  Invoice   │
+         └────────────┘
+
+*(Also linked to Appointments: Prescriptions, LabOrders -> LabResults)*
 ```
 
 *(Note: AuditLogs, Wallets, Prescriptions run in parallel to standard workflows to preserve history/earnings).*
@@ -56,6 +58,14 @@
 |---|---|---|
 | **Specializations** | Id, Name | e.g. "Cardiology" |
 | **Doctors** | Id, ApplicationUserId, SpecializationId, Fee | Profile entity linked to AspNetUsers (1:1). |
+
+### Diagnostics & EHR
+| Table | Columns | Notes |
+|---|---|---|
+| **LabTechnicians** | Id, ApplicationUserId, Qualifications | Diagnostic staff profile. |
+| **LabOrders** | Id, AppointmentId, TestType, Cost, PaymentStatus, SampleId | Billable diagnostic test requests. |
+| **LabResults** | Id, LabOrderId, Notes, FileUrl | The uploaded PDF result linked 1:1 to a LabOrder. |
+| **MedicalProfiles** | Id, PatientId, BloodGroup, KnownAllergies | Electronic Health Record linked 1:1 to Patient. |
 
 ### Patients
 | Column | Type | Notes |
