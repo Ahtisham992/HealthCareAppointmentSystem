@@ -392,7 +392,7 @@ namespace HealthCareAppointmentSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient,Doctor")]
-        public async Task<IActionResult> RequestCancellation(int id, IFormFile? refundScreenshot, string? cancellationReason)
+        public async Task<IActionResult> RequestCancellation(int id, string? cancellationReason)
         {
             var appointment = await _context.Appointments
                 .Include(a => a.Invoice)
@@ -420,34 +420,13 @@ namespace HealthCareAppointmentSystem.Controllers
                 else
                 {
                     appointment.Status = AppointmentStatus.PatientCancellationRequested;
+                    appointment.CancellationReason = cancellationReason;
                 }
             }
             else if (User.IsInRole("Doctor") || User.IsInRole("Admin"))
             {
-                if (appointment.Invoice != null && appointment.Invoice.Status == PaymentStatus.Paid)
-                {
-                    if (refundScreenshot == null || refundScreenshot.Length == 0)
-                    {
-                        ModelState.AddModelError("", "Please upload a screenshot of the 100% refund.");
-                        return View(appointment);
-                    }
-
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "screenshots");
-                    Directory.CreateDirectory(uploadsFolder);
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + refundScreenshot.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await refundScreenshot.CopyToAsync(stream);
-                    }
-
-                    appointment.Invoice.RefundScreenshotUrl = "/uploads/screenshots/" + uniqueFileName;
-                    appointment.Invoice.RefundAmount = appointment.Invoice.Amount; // 100%
-                    appointment.Invoice.Status = PaymentStatus.Refunded;
-                }
-                
                 appointment.Status = AppointmentStatus.DoctorCancellationRequested;
+                appointment.CancellationReason = cancellationReason;
             }
             
             _context.Update(appointment);
@@ -484,82 +463,133 @@ namespace HealthCareAppointmentSystem.Controllers
                 }
             }
 
-            // Doctor confirms Patient request, Patient confirms Doctor request, or Patient confirms Refund
             return View(appointment);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Patient,Doctor")]
-        public async Task<IActionResult> ConfirmCancellation(int id, IFormFile? refundScreenshot)
+        public async Task<IActionResult> ConfirmCancellation(int id, string dummy)
         {
             var appointment = await _context.Appointments
                 .Include(a => a.Invoice)
+                .Include(a => a.Patient)
+                .ThenInclude(p => p.ApplicationUser)
+                .Include(a => a.Doctor)
+                .ThenInclude(d => d.ApplicationUser)
                 .FirstOrDefaultAsync(a => a.Id == id);
                 
             if (appointment == null) return NotFound();
             if (!await UserCanModifyAppointment(appointment)) return Forbid();
 
             bool canConfirm = false;
-            if ((User.IsInRole("Doctor") || User.IsInRole("Admin")) && appointment.Status == AppointmentStatus.PatientCancellationRequested)
+            
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                canConfirm = true;
-                
-                if (appointment.Invoice != null && appointment.Invoice.Status == PaymentStatus.Paid)
+                if ((User.IsInRole("Doctor") || User.IsInRole("Admin")) && appointment.Status == AppointmentStatus.PatientCancellationRequested)
                 {
-                    if (refundScreenshot == null || refundScreenshot.Length == 0)
-                    {
-                        ModelState.AddModelError("", "Please upload a screenshot of the 70% refund.");
-                        return View(appointment);
-                    }
-
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "screenshots");
-                    Directory.CreateDirectory(uploadsFolder);
-                    var uniqueFileName = Guid.NewGuid().ToString() + "_" + refundScreenshot.FileName;
-                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await refundScreenshot.CopyToAsync(stream);
-                    }
-
-                    appointment.Invoice.RefundScreenshotUrl = "/uploads/screenshots/" + uniqueFileName;
-                    appointment.Invoice.RefundAmount = appointment.Invoice.Amount * 0.70m; // 70% refund
-                    appointment.Invoice.Status = PaymentStatus.Refunded;
+                    canConfirm = true;
+                    appointment.Status = AppointmentStatus.Cancelled;
                     
-                    // Route to patient verification
-                    appointment.Status = AppointmentStatus.PatientRefundVerificationPending;
+                    if (appointment.Invoice != null && appointment.Invoice.Status == PaymentStatus.Paid)
+                    {
+                        var patientWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == appointment.Patient.ApplicationUserId);
+                        var doctorWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == appointment.Doctor.ApplicationUserId);
+
+                        if (patientWallet != null && doctorWallet != null)
+                        {
+                            var refundAmount = appointment.Invoice.Amount * 0.70m;
+                            
+                            patientWallet.Balance += refundAmount;
+                            doctorWallet.Balance -= refundAmount;
+
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = refundAmount, Type = TransactionType.Deposit, Description = $"70% Refund for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = -refundAmount, Type = TransactionType.Withdrawal, Description = $"70% Refund deduction for cancelled Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+
+                            appointment.Invoice.RefundAmount = refundAmount;
+                            appointment.Invoice.Status = PaymentStatus.Refunded;
+                        }
+                    }
+
+                    // Auto-block logic for Patient
+                    if (appointment.Patient != null)
+                    {
+                        appointment.Patient.CancellationCount += 1;
+                        if (appointment.Patient.CancellationCount >= 3 && appointment.Patient.ApplicationUser != null)
+                        {
+                            await _userManager.SetLockoutEndDateAsync(appointment.Patient.ApplicationUser, DateTimeOffset.MaxValue);
+                        }
+                    }
                 }
-                else
+                else if (User.IsInRole("Patient") && appointment.Status == AppointmentStatus.DoctorCancellationRequested)
                 {
-                    // Unpaid, just cancel
+                    canConfirm = true;
+                    appointment.Status = AppointmentStatus.Cancelled;
+                    
+                    if (appointment.Invoice != null && appointment.Invoice.Status == PaymentStatus.Paid)
+                    {
+                        var patientWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == appointment.Patient.ApplicationUserId);
+                        var doctorWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == appointment.Doctor.ApplicationUserId);
+                        var platformWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == null);
+
+                        if (patientWallet != null && doctorWallet != null && platformWallet != null)
+                        {
+                            var totalAmount = appointment.Invoice.Amount;
+                            var platformCommission = totalAmount * 0.10m;
+                            var doctorEarnings = totalAmount - platformCommission; // 90%
+                            
+                            patientWallet.Balance += totalAmount;
+                            doctorWallet.Balance -= doctorEarnings;
+                            platformWallet.Balance -= platformCommission;
+
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = totalAmount, Type = TransactionType.Deposit, Description = $"100% Refund for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = -doctorEarnings, Type = TransactionType.Withdrawal, Description = $"100% Refund deduction (Doctor share) for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = platformWallet.Id, Amount = -platformCommission, Type = TransactionType.WithdrawalFee, Description = $"100% Refund deduction (Platform share) for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+
+                            appointment.Invoice.RefundAmount = totalAmount;
+                            appointment.Invoice.Status = PaymentStatus.Refunded;
+                        }
+                    }
+
+                    // Auto-block logic for Doctor
+                    if (appointment.Doctor != null)
+                    {
+                        appointment.Doctor.CancellationCount += 1;
+                        if (appointment.Doctor.CancellationCount >= 3 && appointment.Doctor.ApplicationUser != null)
+                        {
+                            await _userManager.SetLockoutEndDateAsync(appointment.Doctor.ApplicationUser, DateTimeOffset.MaxValue);
+                        }
+                    }
+                }
+                // Handle legacy PatientRefundVerificationPending if any
+                else if (User.IsInRole("Patient") && appointment.Status == AppointmentStatus.PatientRefundVerificationPending)
+                {
+                    canConfirm = true;
                     appointment.Status = AppointmentStatus.Cancelled;
                 }
-            }
-            else if (User.IsInRole("Patient") && appointment.Status == AppointmentStatus.DoctorCancellationRequested)
-            {
-                canConfirm = true;
-                appointment.Status = AppointmentStatus.Cancelled;
-            }
-            else if (User.IsInRole("Patient") && appointment.Status == AppointmentStatus.PatientRefundVerificationPending)
-            {
-                canConfirm = true;
-                appointment.Status = AppointmentStatus.Cancelled;
-            }
 
-            if (canConfirm)
-            {
-                _context.Update(appointment);
-                
-                var currentUser = await _userManager.GetUserAsync(User);
-                _context.AuditLogs.Add(new AuditLog
+                if (canConfirm)
                 {
-                    Action = "Confirmed Cancellation",
-                    UserId = currentUser?.Id ?? "System",
-                    Details = $"Cancellation action by {currentUser?.FullName} for Appointment #{appointment.Id}"
-                });
-                
-                await _context.SaveChangesAsync();
+                    _context.Update(appointment);
+                    
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    _context.AuditLogs.Add(new AuditLog
+                    {
+                        Action = "Confirmed Cancellation",
+                        UserId = currentUser?.Id ?? "System",
+                        Details = $"Cancellation action by {currentUser?.FullName} for Appointment #{appointment.Id}"
+                    });
+                    
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                TempData["ErrorMessage"] = "An error occurred while processing the cancellation refund. Please try again.";
+                return RedirectToAction(nameof(Index));
             }
 
             return RedirectToAction(nameof(Index));
@@ -573,6 +603,8 @@ namespace HealthCareAppointmentSystem.Controllers
 
             var doctor = await _context.Doctors.FindAsync(doctorId);
             if (doctor == null) return NotFound("Doctor not found.");
+            
+            if (doctor.IsOnLeave) return Json(new List<string>());
 
             var bookedAppointments = await _context.Appointments
                 .Where(a => a.DoctorId == doctorId && a.AppointmentDateTime.Date == selectedDate.Date && a.Status != AppointmentStatus.Cancelled)

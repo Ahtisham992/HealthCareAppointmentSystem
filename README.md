@@ -49,6 +49,8 @@ Ensure you have .NET 8 and Docker installed.
 # 1. Start the ephemeral SQL Server container
 docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong!Passw0rd" -p 1433:1433 --name hc_db -d mcr.microsoft.com/mssql/server:2022-latest
 
+docker start hc_db
+
 # 2. Enter the project directory
 cd HealthCareAppointmentSystem
 

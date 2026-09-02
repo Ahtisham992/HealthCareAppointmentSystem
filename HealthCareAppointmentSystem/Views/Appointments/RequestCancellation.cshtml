@@ -29,13 +29,12 @@
             @if ((User.IsInRole("Doctor") || User.IsInRole("Admin")) && Model.Invoice != null && Model.Invoice.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Paid)
             {
                 <div class="alert alert-warning" style="background-color: #fef08a; color: #854d0e; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                    <strong>Refund Required:</strong> Since you are cancelling a paid appointment, you must provide a 100% refund (<strong>@Model.Invoice.Amount.ToString("C")</strong>) to the patient.
+                    <strong>Refund Warning:</strong> Since you are cancelling a paid appointment, a 100% refund (<strong>@Model.Invoice.Amount.ToString("C")</strong>) will be issued to the patient. Your wallet will automatically be deducted.
                 </div>
 
-                <div class="form-group">
-                    <label class="control-label">Upload Refund Screenshot (100% Refund) <span style="color:var(--danger)">*</span></label>
-                    <input type="file" name="refundScreenshot" class="form-control" accept="image/*" required />
-                    <small class="form-text text-muted" style="color: var(--text-light); font-size: 0.85rem;">Please upload proof of the refund transaction.</small>
+                <div class="form-group mb-3">
+                    <label class="control-label">Cancellation Reason (Optional)</label>
+                    <textarea name="cancellationReason" class="form-control" rows="3" placeholder="Please briefly explain why you need to cancel this appointment."></textarea>
                 </div>
             }
             else if (User.IsInRole("Patient"))

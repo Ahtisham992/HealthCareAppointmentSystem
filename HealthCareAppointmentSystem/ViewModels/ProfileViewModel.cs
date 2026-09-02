@@ -58,5 +58,8 @@ namespace HealthCareAppointmentSystem.ViewModels
 
         [Display(Name = "Education & Qualifications")]
         public string? Education { get; set; }
+
+        [Display(Name = "On Leave (Pause Account)")]
+        public bool IsOnLeave { get; set; }
     }
 }

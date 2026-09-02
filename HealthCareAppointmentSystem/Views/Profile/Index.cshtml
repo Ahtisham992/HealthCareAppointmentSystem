@@ -44,6 +44,13 @@
                 {
                     <span class="status-badge status-pending" style="font-size: 0.9rem; padding: 0.4rem 1rem;"><i class="fa-solid fa-clock" style="margin-right:5px;"></i> Pending Approval</span>
                 }
+                
+                @if (Model.IsOnLeave)
+                {
+                    <div style="margin-top: 0.5rem;">
+                        <span class="status-badge" style="background: #fef08a; color: #854d0e; font-size: 0.9rem; padding: 0.4rem 1rem;"><i class="fa-solid fa-plane" style="margin-right:5px;"></i> On Leave (Account Paused)</span>
+                    </div>
+                }
             </div>
         }
         else

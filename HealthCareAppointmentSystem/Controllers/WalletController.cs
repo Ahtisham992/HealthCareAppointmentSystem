@@ -132,9 +132,9 @@ namespace HealthCareAppointmentSystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Withdraw Funds (Doctors/Pharmacists)
+        // POST: Withdraw Funds (Doctors/Pharmacists/Patients)
         [HttpPost]
-        [Authorize(Roles = "Doctor,Pharmacist")]
+        [Authorize(Roles = "Doctor,Pharmacist,Patient")]
         public async Task<IActionResult> WithdrawFunds(decimal amount, string bankDetails)
         {
             if (amount < 500)

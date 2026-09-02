@@ -31,6 +31,8 @@ namespace HealthCareAppointmentSystem.Models
         [StringLength(300)]
         public string? Address { get; set; }
 
+        public int CancellationCount { get; set; } = 0;
+
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }

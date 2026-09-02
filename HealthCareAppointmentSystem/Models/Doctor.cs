@@ -53,6 +53,11 @@ namespace HealthCareAppointmentSystem.Models
 
         public string? Education { get; set; }
 
+        [Display(Name = "On Leave (Pause Account)")]
+        public bool IsOnLeave { get; set; } = false;
+
+        public int CancellationCount { get; set; } = 0;
+
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     }
 }

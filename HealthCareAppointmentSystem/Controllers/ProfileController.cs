@@ -62,6 +62,7 @@ namespace HealthCareAppointmentSystem.Controllers
                     vm.SlotDurationMinutes = doctor.SlotDurationMinutes;
                     vm.ProfilePictureUrl = doctor.ProfilePictureUrl;
                     vm.Education = doctor.Education;
+                    vm.IsOnLeave = doctor.IsOnLeave;
                 }
             }
             else
@@ -109,6 +110,7 @@ namespace HealthCareAppointmentSystem.Controllers
                     vm.SlotDurationMinutes = doctor.SlotDurationMinutes;
                     vm.ProfilePictureUrl = doctor.ProfilePictureUrl;
                     vm.Education = doctor.Education;
+                    vm.IsOnLeave = doctor.IsOnLeave;
                 }
                 ViewBag.Specializations = new SelectList(await _context.Specializations.ToListAsync(), "Id", "Name");
             }

@@ -3,7 +3,7 @@
     ViewData["Title"] = "My Digital Wallet";
     var isAdmin = User.IsInRole("Admin");
     var isPatient = User.IsInRole("Patient");
-    var canWithdraw = User.IsInRole("Doctor") || User.IsInRole("Pharmacist");
+    var canWithdraw = User.IsInRole("Doctor") || User.IsInRole("Pharmacist") || User.IsInRole("Patient");
 }
 
 <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem;">
