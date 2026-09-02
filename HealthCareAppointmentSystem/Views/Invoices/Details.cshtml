@@ -243,8 +243,13 @@
 
     @if (User.IsInRole("Receptionist") && (Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.Pending || Model.Status == HealthCareAppointmentSystem.Models.PaymentStatus.AwaitingVerification))
     {
+        var fee = Model.Amount;
+        var bal = (decimal)(ViewBag.PatientWalletBalance ?? 0m);
+        var cashRequired = Math.Max(0, fee - bal);
+        var msg = cashRequired > 0 ? $"You must collect Rs. {cashRequired:N2} in cash. Proceed?" : "Balance covers full amount. Proceed with direct cut?";
+        
         <form asp-action="CollectCashPayment" asp-route-id="@Model.Id" method="post" style="display: inline-block;">
-            <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="return confirm('Confirm you have received Rs. @Model.Amount.ToString("N0") cash?');">
+            <button type="submit" class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="return confirm('@msg');">
                 <i class="fa-solid fa-money-bill-wave"></i> Collect Cash & Mark Paid
             </button>
         </form>

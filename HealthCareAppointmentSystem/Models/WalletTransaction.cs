@@ -11,7 +11,8 @@ namespace HealthCareAppointmentSystem.Models
         ServiceEarning = 4,   // Doctor/Pharmacist received payment (Credit)
         PlatformCommission = 5, // Platform cut from services (Credit to platform)
         WithdrawalFee = 6,    // Fee charged for withdrawal (Debit to user, Credit to platform)
-        CashDeposit = 7       // Physical cash deposited by Receptionist
+        CashDeposit = 7,      // Physical cash deposited by Receptionist
+        Refund = 8            // Refund for cancelled appointment (can be positive for patient, negative for doctor/platform)
     }
 
     public class WalletTransaction

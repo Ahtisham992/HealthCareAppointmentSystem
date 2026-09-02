@@ -153,11 +153,11 @@ namespace HealthCareAppointmentSystem.Controllers
             var userWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == user.Id);
             var platformWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == null);
 
-            var withdrawalFee = 50m; // Flat Rs. 50 fee
+            var withdrawalFee = Math.Round(amount * 0.02m, 2); // 2% fee
 
             if (userWallet == null || platformWallet == null || userWallet.Balance < (amount + withdrawalFee))
             {
-                TempData["Error"] = "Insufficient funds. Remember there is a Rs. 50 withdrawal fee.";
+                TempData["Error"] = "Insufficient funds. Remember there is a 2% withdrawal fee.";
                 return RedirectToAction(nameof(Index));
             }
 

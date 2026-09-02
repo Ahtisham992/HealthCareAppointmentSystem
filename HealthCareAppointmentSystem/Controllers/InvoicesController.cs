@@ -34,6 +34,14 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (!await UserCanAccessInvoice(invoice)) return Forbid();
 
+            decimal patientWalletBalance = 0;
+            if (invoice.Appointment?.Patient?.ApplicationUserId != null)
+            {
+                var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == invoice.Appointment.Patient.ApplicationUserId);
+                if (wallet != null) patientWalletBalance = wallet.Balance;
+            }
+            ViewBag.PatientWalletBalance = patientWalletBalance;
+
             return View(invoice);
         }
 
@@ -128,15 +136,26 @@ namespace HealthCareAppointmentSystem.Controllers
                 return RedirectToAction(nameof(Details), new { id = invoice.Id });
             }
 
-            // 1. Receptionist takes physical cash. Add to CashDrawer.
-            receptionist.CashDrawerBalance += invoice.Amount;
+            var totalAmount = invoice.Amount;
+            var availableBalance = patientWallet.Balance;
+            decimal cashRequired = 0;
 
-            // 2. Deposit digital equivalent to Patient Wallet
-            patientWallet.Balance += invoice.Amount;
-            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = invoice.Amount, Type = TransactionType.CashDeposit, Description = "Cash Deposit by Receptionist", ReferenceId = $"CASH-{invoice.Id}" });
+            if (availableBalance < totalAmount)
+            {
+                cashRequired = totalAmount - availableBalance;
+            }
+
+            if (cashRequired > 0)
+            {
+                // 1. Receptionist takes physical cash for the deficit. Add to CashDrawer.
+                receptionist.CashDrawerBalance += cashRequired;
+
+                // 2. Deposit digital equivalent to Patient Wallet
+                patientWallet.Balance += cashRequired;
+                _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = cashRequired, Type = TransactionType.CashDeposit, Description = "Cash Deposit by Receptionist", ReferenceId = $"CASH-{invoice.Id}" });
+            }
 
             // 3. Process Payment (Split)
-            var totalAmount = invoice.Amount;
             var platformCommission = totalAmount * 0.10m;
             var doctorEarnings = totalAmount - platformCommission;
 
@@ -160,7 +179,19 @@ namespace HealthCareAppointmentSystem.Controllers
 
             await _context.SaveChangesAsync();
             
-            TempData["Success"] = $"Cash collected and payment successfully processed via Ledger.";
+            if (cashRequired > 0 && cashRequired < totalAmount)
+            {
+                TempData["Success"] = $"Collected Rs. {cashRequired:N2} in cash. Remaining Rs. {(totalAmount - cashRequired):N2} deducted from patient wallet.";
+            }
+            else if (cashRequired == totalAmount)
+            {
+                TempData["Success"] = $"Collected Rs. {cashRequired:N2} in cash (Full amount).";
+            }
+            else
+            {
+                TempData["Success"] = $"Full amount Rs. {totalAmount:N2} deducted from patient's wallet automatically. No cash needed.";
+            }
+
             return RedirectToAction(nameof(Details), new { id = invoice.Id });
         }
 

@@ -504,8 +504,8 @@ namespace HealthCareAppointmentSystem.Controllers
                             patientWallet.Balance += refundAmount;
                             doctorWallet.Balance -= refundAmount;
 
-                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = refundAmount, Type = TransactionType.Deposit, Description = $"70% Refund for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
-                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = -refundAmount, Type = TransactionType.Withdrawal, Description = $"70% Refund deduction for cancelled Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = refundAmount, Type = TransactionType.Refund, Description = $"70% Refund for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = -refundAmount, Type = TransactionType.Refund, Description = $"70% Refund deduction for cancelled Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
 
                             appointment.Invoice.RefundAmount = refundAmount;
                             appointment.Invoice.Status = PaymentStatus.Refunded;
@@ -543,9 +543,9 @@ namespace HealthCareAppointmentSystem.Controllers
                             doctorWallet.Balance -= doctorEarnings;
                             platformWallet.Balance -= platformCommission;
 
-                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = totalAmount, Type = TransactionType.Deposit, Description = $"100% Refund for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
-                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = -doctorEarnings, Type = TransactionType.Withdrawal, Description = $"100% Refund deduction (Doctor share) for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
-                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = platformWallet.Id, Amount = -platformCommission, Type = TransactionType.WithdrawalFee, Description = $"100% Refund deduction (Platform share) for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = patientWallet.Id, Amount = totalAmount, Type = TransactionType.Refund, Description = $"100% Refund for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = doctorWallet.Id, Amount = -doctorEarnings, Type = TransactionType.Refund, Description = $"100% Refund deduction (Doctor share) for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
+                            _context.WalletTransactions.Add(new WalletTransaction { WalletId = platformWallet.Id, Amount = -platformCommission, Type = TransactionType.Refund, Description = $"100% Refund deduction (Platform share) for Appointment #{appointment.Id}", ReferenceId = $"REF-{appointment.Id}" });
 
                             appointment.Invoice.RefundAmount = totalAmount;
                             appointment.Invoice.Status = PaymentStatus.Refunded;
@@ -615,8 +615,9 @@ namespace HealthCareAppointmentSystem.Controllers
             var slotDuration = doctor.SlotDurationMinutes > 0 ? doctor.SlotDurationMinutes : 20;
 
             var currentSlot = doctor.AvailableFrom;
-            var isToday = selectedDate.Date == DateTime.Now.Date;
-            var currentTime = DateTime.Now.TimeOfDay;
+            var now = HealthCareAppointmentSystem.Helpers.TimeHelper.Now;
+            var isToday = selectedDate.Date == now.Date;
+            var currentTime = now.TimeOfDay;
 
             while (currentSlot.Add(TimeSpan.FromMinutes(slotDuration)) <= doctor.AvailableTo)
             {

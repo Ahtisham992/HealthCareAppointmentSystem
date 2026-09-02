@@ -31,9 +31,10 @@ namespace HealthCareAppointmentSystem.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var receptionist = await _context.Receptionists.FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
             
-            if (receptionist == null) return NotFound();
+            if (receptionist == null) return NotFound("Receptionist profile not found.");
 
-            var today = DateTime.Today;
+            var now = HealthCareAppointmentSystem.Helpers.TimeHelper.Now;
+            var today = now.Date;
             
             var appointments = await _context.Appointments
                 .Include(a => a.Doctor)
@@ -42,11 +43,24 @@ namespace HealthCareAppointmentSystem.Controllers
                 .ThenInclude(p => p.ApplicationUser)
                 .Include(a => a.Invoice)
                 .Where(a => a.AppointmentDateTime.Date == today)
-                .OrderBy(a => a.AppointmentDateTime)
+                .OrderByDescending(a => a.AppointmentDateTime)
                 .ToListAsync();
 
             var pendingInvoicesCount = await _context.Invoices
                 .CountAsync(i => i.Status == PaymentStatus.Pending);
+
+            var patientIds = appointments.Where(a => a.Patient != null).Select(a => a.Patient!.ApplicationUserId).Distinct().ToList();
+            var wallets = await _context.Wallets.Where(w => patientIds.Contains(w.ApplicationUserId)).ToListAsync();
+            var balances = new Dictionary<int, decimal>();
+            foreach(var apt in appointments)
+            {
+                if (apt.PatientId > 0)
+                {
+                    var w = wallets.FirstOrDefault(w => w.ApplicationUserId == apt.Patient?.ApplicationUserId);
+                    balances[apt.PatientId] = w?.Balance ?? 0;
+                }
+            }
+            ViewBag.PatientWalletBalances = balances;
 
             var vm = new ReceptionistDashboardViewModel
             {
@@ -108,7 +122,8 @@ namespace HealthCareAppointmentSystem.Controllers
                 var result = await _userManager.CreateAsync(user, model.NewPatientPassword);
                 if (!result.Succeeded)
                 {
-                    ModelState.AddModelError("", "Failed to create patient account. Email may already be in use.");
+                    var errors = string.Join(" ", result.Errors.Select(e => e.Description));
+                    ModelState.AddModelError("", $"Failed to create patient account. {errors}");
                     var doctors = _context.Set<Doctor>().Include(d => d.ApplicationUser).Include(d => d.Specialization).ToList();
                     var docList = doctors.Select(d => new { Id = d.Id, Name = $"Dr. {d.ApplicationUser?.FullName} - {d.Specialization?.Name}" }).ToList();
                     ViewBag.Doctors = new SelectList(docList, "Id", "Name");
@@ -116,6 +131,9 @@ namespace HealthCareAppointmentSystem.Controllers
                 }
 
                 await _userManager.AddToRoleAsync(user, "Patient");
+                
+                var wallet = new Wallet { ApplicationUserId = user.Id, Balance = 0, Currency = "PKR" };
+                _context.Wallets.Add(wallet);
 
                 patient = new Patient
                 {

@@ -22,7 +22,7 @@
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
                     <li><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
-                    @if (!User.IsInRole("Pharmacist"))
+                    @if (!User.IsInRole("Pharmacist") && !User.IsInRole("Accountant"))
                     {
                         <li><a asp-controller="Appointments" asp-action="Index">Appointments</a></li>
                     }
@@ -42,7 +42,7 @@
                         <li><a asp-controller="Wallet" asp-action="Index">Platform Wallet</a></li>
                         <li><a asp-controller="AuditLogs" asp-action="Index">Audit Logs</a></li>
                     }
-                    @if (!User.IsInRole("Admin") && !User.IsInRole("Receptionist"))
+                    @if (!User.IsInRole("Admin") && !User.IsInRole("Receptionist") && !User.IsInRole("Accountant"))
                     {
                         <li><a asp-controller="Wallet" asp-action="Index">My Wallet</a></li>
                     }
@@ -388,6 +388,13 @@
                     e.preventDefault();
                     showCustomConfirm(msg, function() {
                         if (btn.type === 'submit' && btn.form) {
+                            if (btn.name) {
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = btn.name;
+                                hiddenInput.value = btn.value;
+                                btn.form.appendChild(hiddenInput);
+                            }
                             btn.form.submit();
                         } else if (btn.tagName === 'A' && btn.href) {
                             window.location.href = btn.href;

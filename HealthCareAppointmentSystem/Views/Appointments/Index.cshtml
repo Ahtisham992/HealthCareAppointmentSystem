@@ -33,7 +33,7 @@
             {
                 <tr>
                     <td style="white-space: nowrap;"><span style="color: var(--secondary); font-family: monospace; font-weight: 600;">#APT-@item.Id.ToString("D4")</span></td>
-                    <td style="white-space: nowrap; font-size: 0.9rem;">@item.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</td>
+                    <td style="white-space: nowrap; font-size: 0.9rem;" data-order="@item.AppointmentDateTime.ToString("o")">@item.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</td>
                     <td>Dr. @item.Doctor?.ApplicationUser?.FullName</td>
                     <td>@item.Patient?.ApplicationUser?.FullName</td>
                     <td>
@@ -168,6 +168,7 @@
             $('#appointmentsTable').DataTable({
                 "pageLength": 10,
                 "ordering": true,
+                "order": [[ 1, "desc" ]],
                 "responsive": true,
                 "language": {
                     "search": "Filter:"

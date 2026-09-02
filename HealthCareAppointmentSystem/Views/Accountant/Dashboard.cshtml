@@ -2,35 +2,39 @@
 @{
     ViewData["Title"] = "Accountant Dashboard";
     var platformBalance = ViewBag.PlatformBalance as decimal? ?? 0m;
+    var escrowBalance = ViewBag.EscrowBalance as decimal? ?? 0m;
     var completedRequests = ViewBag.CompletedRequests as IEnumerable<HealthCareAppointmentSystem.Models.WithdrawalRequest>;
 }
 
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h1 class="h3 mb-3 text-gray-800">Accountant Dashboard</h1>
-        <div class="card bg-success text-white shadow">
-            <div class="card-body">
-                Platform Escrow Balance
-                <div class="text-white-50 small">Current Total Funds Held</div>
-                <div class="h2 mb-0 font-weight-bold">Rs. @platformBalance.ToString("N2")</div>
-            </div>
-        </div>
+<h1 style="font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 2rem;">Accountant Dashboard</h1>
+
+<div class="feature-grid" style="margin-bottom: 3rem;">
+    <div class="feature-card" style="border-left: 4px solid var(--success);">
+        <h3 style="margin-top: 0; color: var(--success); font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Platform Earnings</h3>
+        <div style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">Total Revenue from Commissions & Fees</div>
+        <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);">Rs. @platformBalance.ToString("N2")</div>
+    </div>
+    <div class="feature-card" style="border-left: 4px solid var(--primary);">
+        <h3 style="margin-top: 0; color: var(--primary); font-size: 1.25rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">System Escrow Liabilities</h3>
+        <div style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1rem;">Total Funds held in User Wallets</div>
+        <div style="font-size: 2.5rem; font-weight: 800; color: var(--text);">Rs. @escrowBalance.ToString("N2")</div>
     </div>
 </div>
 
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Pending Withdrawal Requests</h6>
+        <h6 class="m-10 font-weight-bold text-primary">Pending Withdrawal Requests</h6>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered" width="100%" cellspacing="0">
+            <table id="pendingRequestsTable" class="data-table" style="width:100%">
                 <thead>
                     <tr>
                         <th>User</th>
                         <th>Amount</th>
                         <th>Bank Details</th>
                         <th>Requested At</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -38,7 +42,7 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted">No pending withdrawal requests.</td>
+                            <td colspan="6" class="text-center text-muted">No pending withdrawal requests.</td>
                         </tr>
                     }
                     else
@@ -50,12 +54,13 @@
                                 <td class="text-danger font-weight-bold">Rs. @req.Amount.ToString("N2")</td>
                                 <td><pre style="margin: 0; background: #f8f9fa; padding: 5px;">@req.BankDetails</pre></td>
                                 <td>@req.RequestedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td><span class="badge bg-warning text-dark">Pending</span></td>
                                 <td>
                                     <form asp-action="ProcessWithdrawal" method="post" style="display:inline-flex; gap: 5px;">
                                         <input type="hidden" name="id" value="@req.Id" />
                                         <input type="text" name="notes" placeholder="Notes (Optional)" class="form-control form-control-sm" style="width: 150px;" />
-                                        <button type="submit" name="action" value="Approve" class="btn btn-sm btn-success" onclick="return confirm('Confirm wire transfer sent?');">Approve</button>
-                                        <button type="submit" name="action" value="Reject" class="btn btn-sm btn-danger" onclick="return confirm('Reject request and refund wallet?');">Reject</button>
+                                        <button type="submit" name="processAction" value="Approve" class="btn btn-sm btn-success" onclick="return confirm('Confirm wire transfer sent?');">Approve</button>
+                                        <button type="submit" name="processAction" value="Reject" class="btn btn-sm btn-danger" onclick="return confirm('Reject request and refund wallet?');">Reject</button>
                                     </form>
                                 </td>
                             </tr>
@@ -75,7 +80,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-sm text-muted">
+                <table id="completedRequestsTable" class="data-table" style="width:100%">
                     <thead>
                         <tr>
                             <th>User</th>
@@ -110,4 +115,27 @@
             </div>
         </div>
     </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            if ($('#pendingRequestsTable tbody tr td').length > 1) {
+                $('#pendingRequestsTable').DataTable({
+                    "pageLength": 10,
+                    "ordering": true,
+                    "order": [[ 3, "asc" ]],
+                    "responsive": true
+                });
+            }
+            if ($('#completedRequestsTable tbody tr td').length > 1) {
+                $('#completedRequestsTable').DataTable({
+                    "pageLength": 10,
+                    "ordering": true,
+                    "order": [[ 3, "desc" ]],
+                    "responsive": true
+                });
+            }
+        });
+    </script>
 }

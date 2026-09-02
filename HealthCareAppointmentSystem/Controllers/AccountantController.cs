@@ -38,8 +38,10 @@ namespace HealthCareAppointmentSystem.Controllers
                 .ToListAsync();
 
             var platformWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.ApplicationUserId == null);
+            var escrowBalance = await _context.Wallets.Where(w => w.ApplicationUserId != null).SumAsync(w => w.Balance);
 
             ViewBag.PlatformBalance = platformWallet?.Balance ?? 0;
+            ViewBag.EscrowBalance = escrowBalance;
             ViewBag.CompletedRequests = completedRequests;
 
             return View(pendingRequests);
@@ -47,7 +49,7 @@ namespace HealthCareAppointmentSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessWithdrawal(int id, string action, string notes)
+        public async Task<IActionResult> ProcessWithdrawal(int id, string processAction, string notes)
         {
             var request = await _context.WithdrawalRequests
                 .Include(w => w.Wallet)
@@ -59,7 +61,7 @@ namespace HealthCareAppointmentSystem.Controllers
                 return RedirectToAction(nameof(Dashboard));
             }
 
-            if (action == "Approve")
+            if (processAction == "Approve")
             {
                 request.Status = WithdrawalStatus.Completed;
                 request.ProcessedAt = DateTime.UtcNow;
@@ -75,7 +77,7 @@ namespace HealthCareAppointmentSystem.Controllers
 
                 TempData["Success"] = $"Withdrawal #{id} marked as Completed.";
             }
-            else if (action == "Reject")
+            else if (processAction == "Reject")
             {
                 request.Status = WithdrawalStatus.Rejected;
                 request.ProcessedAt = DateTime.UtcNow;
@@ -86,8 +88,8 @@ namespace HealthCareAppointmentSystem.Controllers
                 var wallet = request.Wallet;
                 if (wallet != null)
                 {
-                    // Full amount + 50 withdrawal fee was deducted, so refund it all.
-                    var withdrawalFee = 50m;
+                    // Full amount + 2% withdrawal fee was deducted, so refund it all.
+                    var withdrawalFee = Math.Round(request.Amount * 0.02m, 2);
                     wallet.Balance += (request.Amount + withdrawalFee);
                     
                     _context.WalletTransactions.Add(new WalletTransaction

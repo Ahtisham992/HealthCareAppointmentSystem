@@ -36,7 +36,7 @@ The project follows the **ASP.NET Core MVC** pattern (Model-View-Controller) uti
 The platform handles all financial transactions via a centralized digital wallet architecture to prevent double spending and ensure immediate payout routing.
 - **Stripe Checkout:** Patients deposit funds securely via Stripe.
 - **Immediate Escrow Splitting:** When an appointment or prescription is paid, the patient's wallet is debited, the provider (Doctor/Pharmacist) is instantly credited their cut (90-95%), and the Platform Escrow Wallet receives the commission (5-10%).
-- **Withdrawal Clearances:** Providers request bank withdrawals. Their digital wallet is instantly locked/debited, and an Accountant formally wires the cash and approves the `WithdrawalRequest`.
+- **Withdrawal Clearances & 2% Processing Fee:** Providers and patients can request bank withdrawals. The requested amount is instantly debited from their wallet along with a dynamically calculated **2% processing fee**. The Accountant formally wires the cash and approves the `WithdrawalRequest`. If the Accountant rejects the request, the system guarantees a **100% refund**, automatically crediting both the requested amount and the 2% fee back to the user's wallet.
 
 ### 3.2 Hybrid Physical/Digital Clearing
 Receptionists and Pharmacists can accept physical cash for low-balance patients.

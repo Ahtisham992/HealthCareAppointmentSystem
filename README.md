@@ -8,7 +8,7 @@ This project has been carefully architected and styled to serve as a comprehensi
 
 - **Six Distinct Roles:** 
   - **Admin**: Complete system visibility, global account management, access to a centralized dashboard featuring statistical charts and real-time audit logs.
-  - **Accountant**: Manages the Platform Escrow Wallet, processes user wire withdrawal requests, and reconciles digital vs physical cash flows.
+  - **Accountant**: Operates the dual-escrow dashboard tracking "System Escrow Liabilities" (total funds held in all user wallets) vs "Platform Earnings", processes user wire withdrawal requests (with automated 2% fee deductions and 100% rejection refunds), and reconciles digital vs physical cash flows.
   - **Doctor**: Manages availability, handles patient appointments, issues prescriptions, and tracks personal digital wallet earnings.
   - **Pharmacist**: Manages digital prescriptions, sets medication pricing, and processes hybrid (cash + wallet) payments seamlessly routing 5% platform commission to escrow.
   - **Receptionist**: Operates the "Cash Drawer" to collect payments from arriving patients, handles appointment refunds, generates invoices, and deposits collected physical cash to the Accountant.

@@ -28,6 +28,7 @@ namespace HealthCareAppointmentSystem.Controllers
             if (User.IsInRole("Patient")) return RedirectToAction(nameof(PatientDashboard));
             if (User.IsInRole("Receptionist")) return RedirectToAction("Dashboard", "Receptionist");
             if (User.IsInRole("Pharmacist")) return RedirectToAction("Index", "Pharmacist");
+            if (User.IsInRole("Accountant")) return RedirectToAction("Dashboard", "Accountant");
 
             return RedirectToAction("Index", "Home");
         }
@@ -76,14 +77,14 @@ namespace HealthCareAppointmentSystem.Controllers
 
             if (doctor == null) return NotFound();
 
-            var today = DateTime.UtcNow.Date;
+            var now = HealthCareAppointmentSystem.Helpers.TimeHelper.Now;
+            var today = now.Date;
             var appointments = await _context.Appointments
                 .Include(a => a.Patient).ThenInclude(p => p!.ApplicationUser)
                 .Include(a => a.Invoice)
                 .Where(a => a.DoctorId == doctor.Id)
                 .ToListAsync();
 
-            var now = DateTime.Now;
             var todayAppointments = appointments.Count(a => a.AppointmentDateTime.Date == today.Date);
             var upcomingAppointments = appointments.Where(a => a.AppointmentDateTime >= today && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed)).ToList();
             
@@ -102,7 +103,7 @@ namespace HealthCareAppointmentSystem.Controllers
                 PendingConfirmationsCount = pendingConfirmations,
                 PendingCompletionsCount = pendingCompletions,
                 TotalEarnings = totalEarnings,
-                UpcomingAppointments = upcomingAppointments.OrderBy(a => a.AppointmentDateTime).Take(10).ToList()
+                UpcomingAppointments = upcomingAppointments.OrderByDescending(a => a.AppointmentDateTime).Take(10).ToList()
             };
 
             if (string.IsNullOrWhiteSpace(doctor.Education) || string.IsNullOrWhiteSpace(doctor.ProfilePictureUrl))
@@ -141,7 +142,7 @@ namespace HealthCareAppointmentSystem.Controllers
             
             if (patient != null)
             {
-                var now = DateTime.Now;
+                var now = HealthCareAppointmentSystem.Helpers.TimeHelper.Now;
                 var today = now.Date;
                 var allAppointments = await _context.Appointments
                     .Include(a => a.Doctor).ThenInclude(d => d!.ApplicationUser)
@@ -153,7 +154,7 @@ namespace HealthCareAppointmentSystem.Controllers
                 
                 upcomingAppointments = allAppointments
                     .Where(a => a.AppointmentDateTime >= today && (a.Status == AppointmentStatus.Pending || a.Status == AppointmentStatus.Confirmed))
-                    .OrderBy(a => a.AppointmentDateTime)
+                    .OrderByDescending(a => a.AppointmentDateTime)
                     .Take(5)
                     .ToList();
 

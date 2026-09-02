@@ -6,7 +6,7 @@ The roadmap is divided into logical phases. Each phase introduces new roles, dat
 
 ---
 
-## Phase 1: The Clinical Pipeline (E-Prescriptions & Pharmacy)
+## Phase 1: The Clinical Pipeline (E-Prescriptions & Pharmacy) [COMPLETED ✅]
 **Goal:** Digitize the post-consultation workflow. Instead of doctors just leaving "Notes", they will write structured digital prescriptions that flow directly to a Pharmacy system.
 
 ### New Roles
@@ -24,7 +24,7 @@ The roadmap is divided into logical phases. Each phase introduces new roles, dat
 
 ---
 
-## Phase 2: Diagnostics & EHR (Electronic Health Records)
+## Phase 2: Diagnostics & EHR (Electronic Health Records) [NEXT TARGET 🎯]
 **Goal:** Give doctors comprehensive context before a consultation, and allow them to order external tests.
 
 ### New Roles
@@ -42,7 +42,7 @@ The roadmap is divided into logical phases. Each phase introduces new roles, dat
 
 ---
 
-## Phase 3: Digital Modernization
+## Phase 3: Digital Modernization [PARTIALLY COMPLETED ✅]
 **Goal:** Modernize the patient experience to match top-tier platforms like Zocdoc or Practo.
 
 ### Database Architecture Updates
@@ -66,4 +66,4 @@ The roadmap is divided into logical phases. Each phase introduces new roles, dat
 ## Implementation Strategy
 To maintain system stability, we will implement these features strictly one phase at a time. 
 
-**Recommended Starting Point:** We should begin with **Phase 1: E-Prescriptions**. It is the most visually impressive feature, requires minimal new complex infrastructure, and provides immense value to the Doctor's workflow immediately.
+**Recommended Starting Point:** We have successfully completed Phase 1 (Pharmacy Pipeline) and the financial/Wallet components of Phase 3 (Stripe integration, Background Automation). Our next major milestone is **Phase 2: Diagnostics & EHR (Electronic Health Records)**. This will introduce the `LabTechnician` role and allow doctors to order external tests seamlessly.
